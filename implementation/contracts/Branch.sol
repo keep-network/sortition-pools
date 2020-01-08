@@ -9,9 +9,22 @@ library Branch {
     bytes32 b = bytes32(x);
     bytes memory c = new bytes(32);
     for (uint i=0; i < 32; i++) {
-    c[i] = b[i];
-  }
+      c[i] = b[i];
+    }
     return c;
+  }
+
+  function slotsToUint(uint16[16] memory slots) public view returns (uint) {
+    bytes memory b = new bytes(32);
+
+    for (uint i = 0; i < 16; i++) {
+      bytes2 s = bytes2(slots[i]);
+      uint pos = i*2;
+
+      b[pos] = s[0];
+      b[pos + 1] = s[1];
+    }
+    return b.toUint(0);
   }
 
   function getSlot(uint node, uint position) public view returns (uint16) {
@@ -22,7 +35,11 @@ library Branch {
   }
 
   function setSlot(uint node, uint position, uint16 weight) public view returns (uint) {
-    return 0;
+    uint16[16] memory slots = toSlots(node);
+
+    slots[position] = weight;
+
+    return slotsToUint(slots);
   }
 
   function toSlots(uint node) public view returns (uint16[16] memory) {
@@ -31,16 +48,17 @@ library Branch {
     for (uint i = 0; i < 16; i++) {
       slots[i] = getSlot(node, i);
     }
-
     return slots;
   }
 
-  function sumWeight(uint node) public view returns (uint16) {
-    return 0;
-  }
+  function sumWeight(uint node) public view returns (uint) {
+    uint16[16] memory s = toSlots(node);
 
-  function rootWeight(uint root) public view returns (uint) {
-    return 0;
-  }
+    uint sum = 0;
 
+    for (uint i = 0; i < 16; i++) {
+      sum += s[i];
+    }
+    return sum;
+  }
 }
