@@ -1,12 +1,13 @@
 pragma solidity ^0.5.10;
-
-struct Leaf {
-    uint16 weight;
-    address operator;
-}
+pragma experimental ABIEncoderV2;
 
 contract Sortition {
     address public owner;
+
+    struct Leaf {
+        uint16 weight;
+        address operator;
+    }
 
     // implicit tree
     uint root;
@@ -23,7 +24,7 @@ contract Sortition {
     uint[][16] hasSpace2;
     uint[][16] hasSpace3;
     uint[][16] hasSpace4;
-    unit[][16] hasSpace5;
+    uint[][16] hasSpace5;
 
    constructor() public {
         owner = msg.sender;
@@ -40,11 +41,11 @@ contract Sortition {
       
     }
 
-    function update(uint location, Leaf operatorInfo) {
+    function update(uint location, Leaf memory operatorInfo) public {
       
     }
 
-    function remove(uint location) {
+    function remove(uint location) public {
       
     }
 
