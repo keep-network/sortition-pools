@@ -6,7 +6,11 @@ library Branch {
   using BytesLib for bytes;
 
   function getSlot(uint node, uint position) public view returns (uint16) {
-    
+    nodeBytes = bytes(node);
+
+    theSlot = toUint16(nodeBytes.slice(position * 2, 2));
+
+    return theSlot;
   }
 
   function setSlot(uint node, uint position, uint16 weight) public view returns (uint) {
@@ -16,10 +20,8 @@ library Branch {
   function toSlots(uint node) public view returns (uint16[16]) {
     uint16[16] memory slots;
 
-    nodeBytes = bytes(node)
-
     for (uint i = 0; i < 16; i++) {
-      slots[i] = toUint16(nodeBytes.slice(i * 2, 2));
+      slots[i] = getSlot(node, i);
     }
 
     return slots;
