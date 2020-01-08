@@ -5,22 +5,17 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 library Branch {
   using BytesLib for bytes;
 
-  // function toBytes(uint256 x) public view returns (bytes memory b) {
-  //   b = new bytes(32);
-  //   assembly { mstore(add(b, 32), x) }
-  // }
   function toBytes(uint256 x) public view returns (bytes memory) {
     bytes32 b = bytes32(x);
     bytes memory c = new bytes(32);
     for (uint i=0; i < 32; i++) {
     c[i] = b[i];
   }
-  return c;
-}
+    return c;
+  }
 
   function getSlot(uint node, uint position) public view returns (uint16) {
     bytes memory nodeBytes = toBytes(node);
-
     uint16 theSlot = nodeBytes.toUint16(position * 2);
 
     return theSlot;
@@ -45,7 +40,7 @@ library Branch {
   }
 
   function rootWeight(uint root) public view returns (uint) {
-      return 0;
+    return 0;
   }
 
 }
