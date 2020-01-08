@@ -21,6 +21,7 @@
   "homepage": "https://github.com/keep-network/sortition-pools#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^2.4.0",
+      "solidity-bytes-utils": "0.0.7",
     "solc": "^0.6.1"
   }
 }
