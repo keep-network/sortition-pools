@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-library Trunk {
+contract Trunk {
   uint constant trunkSize = 65536;
 
   // the first leaf of the trunk

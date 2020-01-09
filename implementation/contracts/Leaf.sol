@@ -3,11 +3,10 @@ pragma solidity ^0.5.10;
 import './Branch.sol';
 import "solidity-bytes-utils/contracts/BytesLib.sol";
 
-library Leaf {
-  using Branch for uint;
+contract Leaf is Branch {
   using BytesLib for bytes;
 
-  function make(address operator, uint16 weight) public view returns (uint) {
+  function makeLeaf(address operator, uint16 weight) public view returns (uint) {
     bytes memory padding = new bytes(10);
     for (uint i=0; i < 10; i++) {
       padding[i] = 0;
@@ -32,10 +31,10 @@ library Leaf {
   }
 
   function operator(uint leaf) public view returns (address) {
-    return leaf.toBytes().toAddress(0);
+    return toBytes(leaf).toAddress(0);
   }
 
   function weight(uint leaf) public view returns (uint16) {
-    return leaf.toBytes().toUint16(20);
+    return toBytes(leaf).toUint16(20);
   }
 }

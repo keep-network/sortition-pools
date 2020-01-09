@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "solidity-bytes-utils/contracts/BytesLib.sol";
 
-library Branch {
+contract Branch {
   using BytesLib for bytes;
 
   function toBytes(uint256 x) public view returns (bytes memory) {
