@@ -18,23 +18,20 @@ contract Sortition {
     }
 
     // implicit tree
-    uint public root;
+    uint root;
     uint[16] level2;
     uint[256] level3;
     uint[4096] level4;
     uint[65536] level5;
     Leaf[1048576] leaves;
 
-    // storing nodes with empty children within the specified trunk,
-    // on the specified level
-    //
-    // hasSpace2[trunkN]
-    uint[][16] hasSpace2;
-    uint[][16] hasSpace3;
-    uint[][16] hasSpace4;
-    uint[][16] hasSpace5;
+    // the rightmost occupied leaf of each stack
+    uint[16] rightmostOccupiedLeaves;
+    // the empty leaves in each stack
+    // between 0 and the rightmost occupied leaf
+    uint256[][16] emptyLeaves;
 
-    function setLeaf(uint leafPosition, address op, uint16 leafWeight) public returns (uint){
+    function setLeaf(uint leafPosition, address op, uint16 leafWeight) public {
       Leaf memory theLeaf = Leaf({operator: op, weight: leafWeight});
 
       // set leaf
@@ -82,10 +79,10 @@ contract Sortition {
 
       // set level Root
       childSlot = treePosition.slot();
-      /* uint storage oldRoot = root; */
       root = root.setSlot(childSlot, nodeWeight);
-      /* oldRoot = newRoot; */
+    }
 
+    function getRoot() public view returns (uint){
       return root;
     }
 
