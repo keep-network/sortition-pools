@@ -23,5 +23,10 @@
     "@openzeppelin/contracts": "^2.4.0",
     "solidity-bytes-utils": "0.0.7",
     "solc": "^0.6.1"
+  },
+  "devDependencies": {
+    "eth-gas-reporter": "^0.1.12",
+    "ganache-cli": "^6.4.3",
+    "truffle": "^5.1.0"
   }
 }

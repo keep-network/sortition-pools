@@ -123,8 +123,6 @@ contract Sortition {
       level5[treePosition] = newNode;
       uint16 nodeWeight = uint16(newNode.sumWeight());
 
-      uint node5 = newNode;
-
       // set level 4
       childSlot = treePosition.slot();
       treePosition = treePosition.parent();
@@ -132,8 +130,6 @@ contract Sortition {
       newNode = treeNode.setSlot(childSlot, nodeWeight);
       level4[treePosition] = newNode;
       nodeWeight = uint16(newNode.sumWeight());
-
-      uint node4 = newNode;
 
       // set level 3
       childSlot = treePosition.slot();
@@ -143,8 +139,6 @@ contract Sortition {
       level3[treePosition] = newNode;
       nodeWeight = uint16(newNode.sumWeight());
 
-      uint node3 = newNode;
-
       // set level 2
       childSlot = treePosition.slot();
       treePosition = treePosition.parent();
@@ -152,8 +146,6 @@ contract Sortition {
       newNode = treeNode.setSlot(childSlot, nodeWeight);
       level2[treePosition] = newNode;
       nodeWeight = uint16(newNode.sumWeight());
-
-      uint node2 = newNode;
 
       // set level Root
       childSlot = treePosition.slot();

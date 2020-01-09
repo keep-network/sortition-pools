@@ -81,12 +81,12 @@ module.exports = {
   // Set default mocha options here, use special reporters etc.
   // Set default mocha options here, use special reporters etc.
   mocha: {
-    useColors: true
-    // reporter: 'eth-gas-reporter',
-    // reporterOptions: {
-    //   currency: 'USD',
-    //   gasPrice: 21
-    // }
+    useColors: true,
+    reporter: 'eth-gas-reporter',
+    reporterOptions: {
+      currency: 'USD',
+      gasPrice: 3
+    }
   },
 
   // Configure your compilers
