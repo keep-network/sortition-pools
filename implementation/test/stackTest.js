@@ -8,7 +8,7 @@ const DEPLOY = [
     { name: 'SortitionStub', contract: SortitionStub }]
 
 
-contract('Sortition', (accounts) => {
+contract('Stack', (accounts) => {
   let deployed
 
   before(async () => {
