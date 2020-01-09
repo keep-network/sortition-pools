@@ -168,6 +168,47 @@ contract Sortition {
       return root.sumWeight();
     }
 
+    function pickWeightedLeaf(uint index) public view returns (uint) {
+      require(index < totalWeight(), "Index greater than total weight");
+
+      uint currentIndex = index;
+      uint currentNode = root;
+      uint currentPosition = 0;
+      uint currentSlot;
+
+      // get root slot
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get level 2 slot
+      currentPosition = currentPosition.child(currentSlot);
+      currentNode = level2[currentPosition];
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get level 3 slot
+      currentPosition = currentPosition.child(currentSlot);
+      currentNode = level3[currentPosition];
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get level 4 slot
+      currentPosition = currentPosition.child(currentSlot);
+      currentNode = level4[currentPosition];
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get level 5 slot
+      currentPosition = currentPosition.child(currentSlot);
+      currentNode = level5[currentPosition];
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get leaf
+      uint leafPosition = currentPosition.child(currentSlot);
+
+      return leafPosition;
+    }
+
+    function leafAddress(uint leaf) public view returns (address) {
+      return leaf.operator();
+    }
+
    constructor() public {
         owner = msg.sender;
 
