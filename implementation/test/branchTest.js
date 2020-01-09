@@ -33,7 +33,7 @@ contract('Branch', (accounts) => {
     })
 
     describe('sumWeight()', async () => {
-        it('Changes the correct slot', async () => {
+        it('Returns the correct weight', async () => {
 
             node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
             const weight = await branchInstance.sumWeight.call(node)

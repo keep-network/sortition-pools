@@ -5,19 +5,16 @@ import './StackLib.sol';
 import './Branch.sol';
 import './Position.sol';
 import './Trunk.sol';
+import './Leaf.sol';
 
 contract Sortition {
     using StackLib for uint256[];
     using Branch for uint;
     using Position for uint;
     using Trunk for uint;
+    using Leaf for uint;
 
     address public owner;
-
-    struct Leaf {
-        uint16 weight;
-        address operator;
-    }
 
     // implicit tree
     uint root;
@@ -25,7 +22,7 @@ contract Sortition {
     uint[256] level3;
     uint[4096] level4;
     uint[65536] level5;
-    Leaf[1048576] leaves;
+    uint[1048576] leaves;
 
     // the leaf after the rightmost occupied leaf of each stack
     uint[16] rightmostLeaf;
@@ -50,9 +47,9 @@ contract Sortition {
       if (leavesInStack(trunkN)) {
         return emptyLeaves[trunkN].stackPop();
       } else {
-        uint newLeaf = rightmostLeaf[trunkN];
-        rightmostLeaf[trunkN] = newLeaf + 1;
-        return newLeaf;
+        uint newLeafPosition = rightmostLeaf[trunkN];
+        rightmostLeaf[trunkN] = newLeafPosition + 1;
+        return newLeafPosition;
       }
     }
 
@@ -80,11 +77,40 @@ contract Sortition {
     function insert(address operator, uint16 weight) public {
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
-      setLeaf(position, operator, weight);
+      uint theLeaf = Leaf.make(operator, weight);
+      setLeaf(position, theLeaf);
     }
 
-    function setLeaf(uint leafPosition, address op, uint16 leafWeight) public {
-      Leaf memory theLeaf = Leaf({operator: op, weight: leafWeight});
+    function toLeaf(address operator, uint16 weight) public view returns (uint) {
+      return Leaf.make(operator, weight);
+    }
+
+    function getLeaf(uint position) public view returns (uint) {
+      return leaves[position];
+    }
+
+    function removeLeaf(uint position) public {
+      uint trunkN = position.trunk();
+      uint rightmostSubOne = rightmostLeaf[trunkN] - 1;
+      bool isRightmost = position == rightmostSubOne;
+
+      setLeaf(position, 0);
+
+      if (isRightmost) {
+        rightmostLeaf[trunkN] = rightmostSubOne;
+      } else {
+        emptyLeaves[trunkN].stackPush(position);
+      }
+    }
+
+    function updateLeaf(uint position, uint16 weight) public {
+      address leafOperator = getLeaf(position).operator();
+      uint newLeaf = Leaf.make(leafOperator, weight);
+      setLeaf(position, newLeaf);
+    }
+
+    function setLeaf(uint leafPosition, uint theLeaf) public {
+      uint16 leafWeight = theLeaf.weight();
 
       // set leaf
       leaves[leafPosition] = theLeaf;
@@ -138,6 +164,10 @@ contract Sortition {
       return root;
     }
 
+    function totalWeight() public view returns (uint){
+      return root.sumWeight();
+    }
+
    constructor() public {
         owner = msg.sender;
 
@@ -145,17 +175,13 @@ contract Sortition {
           rightmostLeaf[i] = i.firstLeaf();
         }
     }
+
     function getOwner() public view returns (address){
         return owner;
     }
 
     function select(uint seed) public returns (address){
       return address(0);
-    }
-
-    function update(uint location, Leaf memory operatorInfo) public returns (bool){
-        return true;
-
     }
 
     function remove(uint location) public returns (bool){

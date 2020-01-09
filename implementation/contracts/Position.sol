@@ -17,4 +17,9 @@ library Position {
   function child(uint a, uint s) public view returns (uint) {
     return (a << 4) | slot(s);
   }
+
+  // Return the trunk a leaf's position belongs to
+  function trunk(uint a) public view returns(uint) {
+    return slot(a >> 16);
+  }
 }
