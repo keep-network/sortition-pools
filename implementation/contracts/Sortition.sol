@@ -1,7 +1,11 @@
 pragma solidity ^0.5.10;
 pragma experimental ABIEncoderV2;
 
+import './StackLib.sol';
+
 contract Sortition {
+    using StackLib for uint256[];
+
     address public owner;
 
     struct Leaf {
@@ -34,19 +38,21 @@ contract Sortition {
     }
 
     function insert(address operator, uint16 weight) public returns (bool){
-      
+      return true;
     }
 
     function select(uint seed) public returns (address){
-      
+      return address(0);
     }
 
-    function update(uint location, Leaf memory operatorInfo) public {
-      
+    function update(uint location, Leaf memory operatorInfo) public returns (bool){
+        return true;
+
     }
 
-    function remove(uint location) public {
-      
+    function remove(uint location) public returns (bool){
+        return true;
+
     }
 
 }
