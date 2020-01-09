@@ -28,11 +28,11 @@ contract('Sortition', (accounts) => {
             res1 = await sortitionInstance.setLeaf.call(0xbcdef, operator1, weight1)
             assert.equal(toHex(res1), '0x12340000000000000000')
 
-            // root = await sortitionInstance.root.call()
-            // assert.equal(toHex(root), '0x12340000000000000000')
+            root = await sortitionInstance.root.call()
+            assert.equal(toHex(root), '0x12340000000000000000')
 
-            res2 = await sortitionInstance.setLeaf.call(0xfad00, operator2, weight2)
-            assert.equal(toHex(res2), '0x12340000000000000011')
+            // res2 = await sortitionInstance.setLeaf.call(0xfad00, operator2, weight2)
+            // assert.equal(toHex(res2), '0x12340000000000000011')
         })
     })
 })
