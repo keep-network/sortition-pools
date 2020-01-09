@@ -61,4 +61,27 @@ library Branch {
     }
     return sum;
   }
+
+  function pickWeightedSlot(uint node, uint initialWeight) public view returns (uint, uint) {
+    require(initialWeight < sumWeight(node), "Weight too big for this node");
+    uint16[16] memory theSlots = toSlots(node);
+
+    bool slotFound = false;
+    uint weightRemaining = initialWeight;
+
+    uint currentSlot = 0;
+
+    while (slotFound == false) {
+      uint16 currentSlotWeight = getSlot(node, currentSlot);
+
+      if (weightRemaining < currentSlotWeight) {
+        slotFound = true;
+      } else {
+        currentSlot += 1;
+        weightRemaining -= currentSlotWeight;
+      }
+    }
+
+    return (currentSlot, weightRemaining);
+  }
 }

@@ -101,4 +101,24 @@ contract('Sortition', (accounts) => {
         })
     })
 
+    describe('leaf selection', async () => {
+        it('works as expected', async () => {
+            let index1 = 0xccd0
+            let index2 = 0xccc1
+
+            let position1 = await sortition.pickWeightedLeaf.call(index1)
+            assert.equal(position1, 0x10000)
+
+            let leaf1 = await sortition.getLeaf.call(position1)
+            let address1 = await sortition.leafAddress.call(leaf1)
+            assert.equal(address1, bob)
+
+            let position2 = await sortition.pickWeightedLeaf.call(index2)
+            assert.equal(position2, 0x00001)
+
+            let leaf2 = await sortition.getLeaf.call(position2)
+            let address2 = await sortition.leafAddress.call(leaf2)
+            assert.equal(address2, carol)
+        })
+    })
 })
