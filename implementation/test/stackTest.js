@@ -20,9 +20,21 @@ contract('Sortition', (accounts) => {
         await deployed.SortitionStub.stackPush(new BN(5))
         await deployed.SortitionStub.stackPush(new BN(4))
         await deployed.SortitionStub.stackPush(new BN(3))
-        const value = await deployed.SortitionStub.getSize.call()
-        console.log(value)
+        const size = await deployed.SortitionStub.getSize.call()
+
+        const value = await deployed.SortitionStub.stackPeek.call()
         assert.equal(value, 3)
+        assert.equal(size, 3)
+
+    })
+
+    it('correctly pops from stack', async () => {
+        await deployed.SortitionStub.stackPush(new BN(2))
+        await deployed.SortitionStub.stackPush(new BN(1))
+        await deployed.SortitionStub.stackPop()
+        const value = await deployed.SortitionStub.stackPeek.call()
+        assert.equal(value, 2)
+
     })
   })
 })

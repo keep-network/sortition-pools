@@ -9,15 +9,15 @@ contract SortitionStub is Sortition {
         stack.stackPush(_element);
     }
 
-    function stackPop() public {
-        stack.stackPop();
+    function stackPop() public returns (uint256) {
+        return stack.stackPop();
     }
 
-    function stackPeek() public {
-        stack.stackPeek();
+    function stackPeek() public  returns (uint256) {
+        return stack.stackPeek();
     }
 
-      function getSize() public {
-        stack.getSize();
+    function getSize() public returns (uint256) {
+        return stack.getSize();
     }
 }
