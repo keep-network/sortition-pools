@@ -14,11 +14,11 @@ library Branch {
     return c;
   }
 
-  function slotsToUint(uint16[16] memory slots) internal pure returns (uint) {
+  function slotsToUint(uint[16] memory slots) internal pure returns (uint) {
     bytes memory b = new bytes(32);
 
     for (uint i = 0; i < 16; i++) {
-      bytes2 s = bytes2(slots[i]);
+      bytes2 s = bytes2(uint16(slots[i]));
       uint pos = i*2;
 
       b[pos] = s[0];
@@ -27,23 +27,23 @@ library Branch {
     return b.toUint(0);
   }
 
-  function getSlot(uint node, uint position) internal pure returns (uint16) {
+  function getSlot(uint node, uint position) internal pure returns (uint) {
     bytes memory nodeBytes = toBytes(node);
-    uint16 theSlot = nodeBytes.toUint16(position * 2);
+    uint theSlot = uint(nodeBytes.toUint16(position * 2));
 
     return theSlot;
   }
 
-  function setSlot(uint node, uint position, uint16 weight) internal pure returns (uint) {
-    uint16[16] memory slots = toSlots(node);
+  function setSlot(uint node, uint position, uint weight) internal pure returns (uint) {
+    uint[16] memory slots = toSlots(node);
 
     slots[position] = weight;
 
     return slotsToUint(slots);
   }
 
-  function toSlots(uint node) internal pure returns (uint16[16] memory) {
-    uint16[16] memory slots;
+  function toSlots(uint node) internal pure returns (uint[16] memory) {
+    uint[16] memory slots;
 
     for (uint i = 0; i < 16; i++) {
       slots[i] = getSlot(node, i);
@@ -52,7 +52,7 @@ library Branch {
   }
 
   function sumWeight(uint node) internal pure returns (uint) {
-    uint16[16] memory s = toSlots(node);
+    uint[16] memory s = toSlots(node);
 
     uint sum = 0;
 
@@ -64,13 +64,13 @@ library Branch {
 
   function pickWeightedSlot(uint node, uint initialWeight) internal pure returns (uint, uint) {
     require(initialWeight < sumWeight(node), "Weight too big for this node");
-    uint16[16] memory theSlots = toSlots(node);
+    uint[16] memory theSlots = toSlots(node);
 
     bool slotFound = false;
     uint weightRemaining = initialWeight;
 
     uint currentSlot = 0;
-    uint16 currentSlotWeight;
+    uint currentSlotWeight;
 
     while (slotFound == false) {
       currentSlotWeight = theSlots[currentSlot];

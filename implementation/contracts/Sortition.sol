@@ -50,13 +50,13 @@ contract Sortition {
       }
     }
 
-    function fitsUnderCap(uint16 addedWeight, uint trunkN) internal view returns (bool) {
-      uint16 currentWeight = root.getSlot(trunkN);
+    function fitsUnderCap(uint addedWeight, uint trunkN) internal view returns (bool) {
+      uint currentWeight = root.getSlot(trunkN);
       uint sumWeight = uint(currentWeight) + uint(addedWeight);
       return sumWeight < TRUNK_MAX;
     }
 
-    function suitableTrunk(uint16 addedWeight) internal view returns (uint) {
+    function suitableTrunk(uint addedWeight) internal view returns (uint) {
       uint theTrunk = 0;
       bool selected = false;
       while (!selected) {
@@ -71,14 +71,14 @@ contract Sortition {
       return theTrunk;
     }
 
-    function insert(address operator, uint16 weight) public {
+    function insert(address operator, uint weight) public {
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
       uint theLeaf = Leaf.make(operator, weight);
       setLeaf(position, theLeaf);
     }
 
-    function toLeaf(address operator, uint16 weight) public pure returns (uint) {
+    function toLeaf(address operator, uint weight) public pure returns (uint) {
       return Leaf.make(operator, weight);
     }
 
@@ -100,7 +100,7 @@ contract Sortition {
       }
     }
 
-    function updateLeaf(uint position, uint16 weight) public {
+    function updateLeaf(uint position, uint weight) public {
       address leafOperator = getLeaf(position).operator();
       uint newLeaf = Leaf.make(leafOperator, weight);
       setLeaf(position, newLeaf);
@@ -110,7 +110,7 @@ contract Sortition {
       uint childSlot;
       uint treeNode;
       uint newNode;
-      uint16 nodeWeight = theLeaf.weight();
+      uint nodeWeight = theLeaf.weight();
 
       // set leaf
       leaves[position] = theLeaf;
@@ -122,7 +122,7 @@ contract Sortition {
         treeNode = branches[level][position];
         newNode = treeNode.setSlot(childSlot, nodeWeight);
         branches[level][position] = newNode;
-        nodeWeight = uint16(newNode.sumWeight());
+        nodeWeight = newNode.sumWeight();
       }
 
       // set level Root

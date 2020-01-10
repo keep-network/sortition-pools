@@ -7,10 +7,10 @@ library Leaf {
   using Branch for uint;
   using BytesLib for bytes;
 
-  function make(address operator, uint16 weight) internal pure returns (uint) {
+  function make(address operator, uint weight) internal pure returns (uint) {
     bytes memory leafBytes = new bytes(32);
     bytes20 op = bytes20(operator);
-    bytes2 wt = bytes2(weight);
+    bytes2 wt = bytes2(uint16(weight));
 
     for (uint i=0; i < 20; i++) {
       leafBytes[i] = op[i];
@@ -27,7 +27,7 @@ library Leaf {
     return leaf.toBytes().toAddress(0);
   }
 
-  function weight(uint leaf) internal pure returns (uint16) {
-    return leaf.toBytes().toUint16(20);
+  function weight(uint leaf) internal pure returns (uint) {
+    return uint(leaf.toBytes().toUint16(20));
   }
 }
