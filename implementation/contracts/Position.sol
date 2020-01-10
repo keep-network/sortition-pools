@@ -22,4 +22,22 @@ library Position {
   function trunk(uint a) internal pure returns(uint) {
     return slot(a >> 16);
   }
+
+  // Return the uint p as a flagged position uint:
+  // the least significant 20 bits contain the position
+  // and the 21th bit is set as a flag
+  // to distinguish the position 0x00000 from an empty field.
+  function setFlag(uint p) internal pure returns(uint) {
+    return (p & 0xfffff) | 0x100000;
+  }
+
+  // Turn a flagged position into an unflagged position
+  // by removing the flag at the 21th least significant bit.
+  //
+  // We shouldn't _actually_ need this
+  // as all position-manipulating code should ignore non-position bits anyway
+  // but it's cheap to call so might as well do it.
+  function unsetFlag(uint p) internal pure returns(uint) {
+    return p & 0xfffff;
+  }
 }

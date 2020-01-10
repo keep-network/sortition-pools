@@ -15,23 +15,18 @@ library Branch {
   }
 
   function slotsToUint(uint[16] memory slots) internal pure returns (uint) {
-    bytes memory b = new bytes(32);
+    uint u;
 
     for (uint i = 0; i < 16; i++) {
-      bytes2 s = bytes2(uint16(slots[i]));
-      uint pos = i*2;
-
-      b[pos] = s[0];
-      b[pos + 1] = s[1];
+      u = (u << 16) | (slots[i] & 0xffff);
     }
-    return b.toUint(0);
+    return u;
   }
 
   function getSlot(uint node, uint position) internal pure returns (uint) {
-    bytes memory nodeBytes = toBytes(node);
-    uint theSlot = uint(nodeBytes.toUint16(position * 2));
+    uint shiftBits = (15 - position) * 16;
 
-    return theSlot;
+    return (node >> shiftBits) & 0xffff;
   }
 
   function setSlot(uint node, uint position, uint weight) internal pure returns (uint) {
@@ -53,8 +48,7 @@ library Branch {
 
   function sumWeight(uint node) internal pure returns (uint) {
     uint[16] memory s = toSlots(node);
-
-    uint sum = 0;
+    uint sum;
 
     for (uint i = 0; i < 16; i++) {
       sum += s[i];
@@ -62,27 +56,24 @@ library Branch {
     return sum;
   }
 
-  function pickWeightedSlot(uint node, uint initialWeight) internal pure returns (uint, uint) {
-    require(initialWeight < sumWeight(node), "Weight too big for this node");
+  // Requires that the weight is lower than the sumWeight of the node.
+  // This is not enforced for performance reasons.
+  function pickWeightedSlot(uint node, uint weight) internal pure returns (uint, uint) {
     uint[16] memory theSlots = toSlots(node);
 
-    bool slotFound = false;
-    uint weightRemaining = initialWeight;
-
-    uint currentSlot = 0;
     uint currentSlotWeight;
+    uint currentSlot;
 
-    while (slotFound == false) {
+    for (currentSlot = 0; currentSlot < 16; currentSlot++) {
       currentSlotWeight = theSlots[currentSlot];
 
-      if (weightRemaining < currentSlotWeight) {
-        slotFound = true;
+      if (weight < currentSlotWeight) {
+        break;
       } else {
-        currentSlot += 1;
-        weightRemaining -= currentSlotWeight;
+        weight -= currentSlotWeight;
       }
     }
 
-    return (currentSlot, weightRemaining);
+    return (currentSlot, weight);
   }
 }

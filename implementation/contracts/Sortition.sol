@@ -19,6 +19,10 @@ contract Sortition {
     mapping(uint => mapping(uint => uint)) branches;
     mapping(uint => uint) leaves;
 
+    // the flagged (see setFlag() and unsetFlag() in Position.sol) positions
+    // of all operators present in the pool
+    mapping(address => uint) operatorLeaves;
+
     // the leaf after the rightmost occupied leaf of each stack
     uint[16] rightmostLeaf;
     // the empty leaves in each stack
@@ -57,15 +61,13 @@ contract Sortition {
     }
 
     function suitableTrunk(uint addedWeight) internal view returns (uint) {
-      uint theTrunk = 0;
-      bool selected = false;
-      while (!selected) {
+      uint theTrunk;
+
+      for (theTrunk = 0; theTrunk < 16; theTrunk++) {
         bool weightOkay = fitsUnderCap(addedWeight, theTrunk);
         bool spaceOkay = hasSpace(theTrunk);
         if (weightOkay && spaceOkay) {
-          selected = true;
-        } else {
-          theTrunk += 1;
+          break;
         }
       }
       return theTrunk;
@@ -75,7 +77,16 @@ contract Sortition {
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
       uint theLeaf = Leaf.make(operator, weight);
+
       setLeaf(position, theLeaf);
+
+      // Without position flags,
+      // the position 0x00000 would be treated as empty
+      operatorLeaves[operator] = position.setFlag();
+    }
+
+    function removeOperator(address operator) public {
+      operatorLeaves[operator] = 0;
     }
 
     function toLeaf(address operator, uint weight) public pure returns (uint) {
@@ -139,12 +150,13 @@ contract Sortition {
     }
 
     function pickWeightedLeaf(uint index) public returns (uint) {
-      require(index < totalWeight(), "Index greater than total weight");
 
       uint currentIndex = index;
       uint currentNode = root;
       uint currentPosition = 0;
       uint currentSlot;
+
+      require(index < currentNode.sumWeight(), "Index exceeds weight");
 
       // get root slot
       (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
