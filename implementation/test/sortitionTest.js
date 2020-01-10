@@ -119,6 +119,7 @@ contract('Sortition', (accounts) => {
             let leaf2 = await sortition.getLeaf.call(position2)
             let address2 = await sortition.leafAddress.call(leaf2)
             assert.equal(address2, carol)
+            await sortition.pickWeightedLeaf(index2)
         })
     })
 })

@@ -160,7 +160,7 @@ contract Sortition {
       return root.sumWeight();
     }
 
-    function pickWeightedLeaf(uint index) public view returns (uint) {
+    function pickWeightedLeaf(uint index) public returns (uint) {
       require(index < totalWeight(), "Index greater than total weight");
 
       uint currentIndex = index;
