@@ -17,22 +17,29 @@ contract('Position', (accounts) => {
 
     describe('slot()', async () => {
         it('Returns the last bits', async () => {
-            const result = await positionInstance.slot.call(0x12345)
+            const result = await positionInstance.publicSlot.call(0x12345)
             assert.equal(result, 0x5)
         })
     })
 
     describe('parent()', async () => {
         it('Returns the first bits', async () => {
-            const result = await positionInstance.parent.call(0x12345)
+            const result = await positionInstance.publicParent.call(0x12345)
             assert.equal(result, 0x1234)
         })
     })
 
     describe('child()', async () => {
         it('Returns the child address', async () => {
-            const result = await positionInstance.child.call(0x1234, 0x5)
+            const result = await positionInstance.publicChild.call(0x1234, 0x5)
             assert.equal(result, 0x12345)
+        })
+    })
+
+    describe('trunk()', async () => {
+        it('Returns the trunk number', async () => {
+            const result = await positionInstance.publicTrunk.call(0x12345)
+            assert.equal(result, 0x1)
         })
     })
 })

@@ -3,20 +3,20 @@ pragma experimental ABIEncoderV2;
 
 import '../../contracts/Position.sol';
 
-contract PositionStub {
-  function slot(uint a) public pure returns (uint) {
-    return Position.slot(a);
+contract PositionStub is Position {
+  function publicSlot(uint a) public pure returns (uint) {
+    return slot(a);
   }
 
-  function parent(uint a) public pure returns (uint) {
-    return Position.parent(a);
+  function publicParent(uint a) public pure returns (uint) {
+    return parent(a);
   }
 
-  function child(uint a, uint s) public pure returns (uint) {
-    return Position.child(a, s);
+  function publicChild(uint a, uint s) public pure returns (uint) {
+    return child(a, s);
   }
 
-  function trunk(uint a) public pure returns (uint) {
-    return Position.trunk(a);
+  function publicTrunk(uint a) public pure returns (uint) {
+    return trunk(a);
   }
 }

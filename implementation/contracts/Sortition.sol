@@ -7,12 +7,9 @@ import './Position.sol';
 import './Trunk.sol';
 import './Leaf.sol';
 
-contract Sortition {
+contract Sortition is Leaf, Position {
     using StackLib for uint256[];
-    using Branch for uint;
-    using Position for uint;
     using Trunk for uint;
-    using Leaf for uint;
 
     // implicit tree
     uint root;
@@ -51,7 +48,7 @@ contract Sortition {
     }
 
     function fitsUnderCap(uint addedWeight, uint trunkN) internal view returns (bool) {
-      uint currentWeight = root.getSlot(trunkN);
+      uint currentWeight = getSlot(root, trunkN);
       uint sumWeight = uint(currentWeight) + uint(addedWeight);
       return sumWeight < TRUNK_MAX;
     }
@@ -74,12 +71,12 @@ contract Sortition {
     function insert(address operator, uint weight) public {
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
-      uint theLeaf = Leaf.make(operator, weight);
+      uint theLeaf = makeLeaf(operator, weight);
       setLeaf(position, theLeaf);
     }
 
     function toLeaf(address operator, uint weight) public pure returns (uint) {
-      return Leaf.make(operator, weight);
+      return makeLeaf(operator, weight);
     }
 
     function getLeaf(uint position) public view returns (uint) {
@@ -87,7 +84,7 @@ contract Sortition {
     }
 
     function removeLeaf(uint position) public {
-      uint trunkN = position.trunk();
+      uint trunkN = trunk(position);
       uint rightmostSubOne = rightmostLeaf[trunkN] - 1;
       bool isRightmost = position == rightmostSubOne;
 
@@ -101,8 +98,8 @@ contract Sortition {
     }
 
     function updateLeaf(uint position, uint weight) public {
-      address leafOperator = getLeaf(position).operator();
-      uint newLeaf = Leaf.make(leafOperator, weight);
+      address leafOperator = operator(getLeaf(position));
+      uint newLeaf = makeLeaf(leafOperator, weight);
       setLeaf(position, newLeaf);
     }
 
@@ -110,24 +107,24 @@ contract Sortition {
       uint childSlot;
       uint treeNode;
       uint newNode;
-      uint nodeWeight = theLeaf.weight();
+      uint nodeWeight = weight(theLeaf);
 
       // set leaf
       leaves[position] = theLeaf;
 
       // set levels 5 to 2
       for (uint level = 5; level >= 2; level--) {
-        childSlot = position.slot();
-        position = position.parent();
+        childSlot = slot(position);
+        position = parent(position);
         treeNode = branches[level][position];
-        newNode = treeNode.setSlot(childSlot, nodeWeight);
+        newNode = setSlot(treeNode, childSlot, nodeWeight);
         branches[level][position] = newNode;
-        nodeWeight = newNode.sumWeight();
+        nodeWeight = sumWeight(newNode);
       }
 
       // set level Root
-      childSlot = position.slot();
-      root = root.setSlot(childSlot, nodeWeight);
+      childSlot = slot(position);
+      root = setSlot(root, childSlot, nodeWeight);
     }
 
     function getRoot() public view returns (uint){
@@ -135,7 +132,7 @@ contract Sortition {
     }
 
     function totalWeight() internal view returns (uint){
-      return root.sumWeight();
+      return sumWeight(root);
     }
 
     function pickWeightedLeaf(uint index) public returns (uint) {
@@ -147,21 +144,21 @@ contract Sortition {
       uint currentSlot;
 
       // get root slot
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+      (currentSlot, currentIndex) = pickWeightedSlot(currentNode, currentIndex);
 
       // get slots from levels 2 to 5
       for (uint level = 2; level <= 5; level++) {
-        currentPosition = currentPosition.child(currentSlot);
+        currentPosition = child(currentPosition, currentSlot);
         currentNode = branches[level][currentPosition];
-        (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+        (currentSlot, currentIndex) = pickWeightedSlot(currentNode, currentIndex);
       }
 
       // get leaf position
-      return currentPosition.child(currentSlot);
+      return child(currentPosition, currentSlot);
     }
 
     function leafAddress(uint leaf) public view returns (address) {
-      return leaf.operator();
+      return operator(leaf);
     }
 
    constructor() public {

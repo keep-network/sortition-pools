@@ -3,16 +3,16 @@ pragma experimental ABIEncoderV2;
 
 import '../../contracts/Branch.sol';
 
-contract BranchStub {
-  function getSlot(uint node, uint position) public pure returns (uint) {
-    return Branch.getSlot(node, position);
+contract BranchStub is Branch {
+  function publicGetSlot(uint node, uint position) public pure returns (uint) {
+    return getSlot(node, position);
   }
 
-  function setSlot(uint node, uint position, uint weight) public pure returns (uint) {
-    return Branch.setSlot(node, position, weight);
+  function publicSetSlot(uint node, uint position, uint weight) public pure returns (uint) {
+    return setSlot(node, position, weight);
   }
 
-  function sumWeight(uint node) public pure returns (uint) {
-    return Branch.sumWeight(node);
+  function publicSumWeight(uint node) public pure returns (uint) {
+    return sumWeight(node);
   }
 }

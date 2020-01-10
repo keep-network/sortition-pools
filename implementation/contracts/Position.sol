@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-library Position {
+contract Position {
 
   // Return the last 4 bits of a position number,
   // corresponding to its slot in its parent

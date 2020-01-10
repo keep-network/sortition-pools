@@ -21,7 +21,7 @@ contract('Branch', (accounts) => {
         it('Returns the uint16 in the correct position', async () => {
             node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
 
-            const result = await branchInstance.getSlot.call(node, 3)
+            const result = await branchInstance.publicGetSlot.call(node, 3)
             assert.equal(result, 0x3333)
         })
     })
@@ -33,8 +33,8 @@ contract('Branch', (accounts) => {
             newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
             w = new BN('0x1234', 16)
 
-            const modified = await branchInstance.setSlot.call(node, 3, w)
-            newSlot = await branchInstance.getSlot.call(modified, 3)
+            const modified = await branchInstance.publicSetSlot.call(node, 3, w)
+            newSlot = await branchInstance.publicGetSlot.call(modified, 3)
             assert.equal(toHex(modified), newNode)
         })
     })
@@ -43,7 +43,7 @@ contract('Branch', (accounts) => {
         it('Returns the correct weight', async () => {
 
             node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
-            const weight = await branchInstance.sumWeight.call(node)
+            const weight = await branchInstance.publicSumWeight.call(node)
             expected = 0xffff * 8
             assert.equal(weight, expected)
         })
