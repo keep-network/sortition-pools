@@ -1,13 +1,20 @@
 const Branch = artifacts.require('./contracts/Branch.sol')
+const BranchStub = artifacts.require('BranchStub.sol')
 
 const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
+const utils = require('./utils')
+
+const DEPLOY = [
+    { name: 'Branch', contract: Branch },
+    { name: 'BranchStub', contract: BranchStub }]
 
 contract('Branch', (accounts) => {
     let branchInstance
 
     before(async () => {
-        branchInstance = await Branch.new()
+        deployed = await utils.deploySystem(DEPLOY)
+        branchInstance = deployed.BranchStub
     })
 
     describe('getSlot()', async () => {

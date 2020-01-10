@@ -1,12 +1,18 @@
 const Position = artifacts.require('./contracts/Position.sol')
-
+const PositionStub = artifacts.require('PositionStub.sol')
 const BN = web3.utils.BN
+const utils = require('./utils')
+
+const DEPLOY = [
+    { name: 'Position', contract: Position },
+    { name: 'PositionStub', contract: PositionStub }]
 
 contract('Position', (accounts) => {
     let positionInstance
 
     before(async () => {
-        positionInstance = await Position.new()
+        deployed = await utils.deploySystem(DEPLOY)
+        positionInstance = deployed.PositionStub
     })
 
     describe('slot()', async () => {

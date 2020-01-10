@@ -7,7 +7,7 @@ library Leaf {
   using Branch for uint;
   using BytesLib for bytes;
 
-  function make(address operator, uint16 weight) public view returns (uint) {
+  function make(address operator, uint16 weight) internal pure returns (uint) {
     bytes memory padding = new bytes(10);
     for (uint i=0; i < 10; i++) {
       padding[i] = 0;
@@ -31,11 +31,11 @@ library Leaf {
     return leafBytes.toUint(0);
   }
 
-  function operator(uint leaf) public view returns (address) {
+  function operator(uint leaf) internal pure returns (address) {
     return leaf.toBytes().toAddress(0);
   }
 
-  function weight(uint leaf) public view returns (uint16) {
+  function weight(uint leaf) internal pure returns (uint16) {
     return leaf.toBytes().toUint16(20);
   }
 }

@@ -5,7 +5,7 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 library Branch {
   using BytesLib for bytes;
 
-  function toBytes(uint256 x) public view returns (bytes memory) {
+  function toBytes(uint256 x) internal pure returns (bytes memory) {
     bytes32 b = bytes32(x);
     bytes memory c = new bytes(32);
     for (uint i=0; i < 32; i++) {
@@ -14,7 +14,7 @@ library Branch {
     return c;
   }
 
-  function slotsToUint(uint16[16] memory slots) public view returns (uint) {
+  function slotsToUint(uint16[16] memory slots) internal pure returns (uint) {
     bytes memory b = new bytes(32);
 
     for (uint i = 0; i < 16; i++) {
@@ -27,14 +27,14 @@ library Branch {
     return b.toUint(0);
   }
 
-  function getSlot(uint node, uint position) public view returns (uint16) {
+  function getSlot(uint node, uint position) internal pure returns (uint16) {
     bytes memory nodeBytes = toBytes(node);
     uint16 theSlot = nodeBytes.toUint16(position * 2);
 
     return theSlot;
   }
 
-  function setSlot(uint node, uint position, uint16 weight) public view returns (uint) {
+  function setSlot(uint node, uint position, uint16 weight) internal pure returns (uint) {
     uint16[16] memory slots = toSlots(node);
 
     slots[position] = weight;
@@ -42,7 +42,7 @@ library Branch {
     return slotsToUint(slots);
   }
 
-  function toSlots(uint node) public view returns (uint16[16] memory) {
+  function toSlots(uint node) internal pure returns (uint16[16] memory) {
     uint16[16] memory slots;
 
     for (uint i = 0; i < 16; i++) {
@@ -51,7 +51,7 @@ library Branch {
     return slots;
   }
 
-  function sumWeight(uint node) public view returns (uint) {
+  function sumWeight(uint node) internal pure returns (uint) {
     uint16[16] memory s = toSlots(node);
 
     uint sum = 0;
@@ -62,7 +62,7 @@ library Branch {
     return sum;
   }
 
-  function pickWeightedSlot(uint node, uint initialWeight) public view returns (uint, uint) {
+  function pickWeightedSlot(uint node, uint initialWeight) internal pure returns (uint, uint) {
     require(initialWeight < sumWeight(node), "Weight too big for this node");
     uint16[16] memory theSlots = toSlots(node);
 

@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 pragma experimental ABIEncoderV2;
 
 import '../../contracts/Sortition.sol';
-contract SortitionStub is Sortition {
+contract StackStub is Sortition {
     uint256[] stack;
 
     function stackPush(uint256 _element) public {
