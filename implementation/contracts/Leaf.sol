@@ -7,26 +7,18 @@ library Leaf {
   using Branch for uint;
   using BytesLib for bytes;
 
-  function make(address operator, uint16 weight) internal pure returns (uint) {
-    bytes memory padding = new bytes(10);
-    for (uint i=0; i < 10; i++) {
-      padding[i] = 0;
-    }
-
-    bytes memory addressBytes = new bytes(20);
+  function make(address operator, uint weight) internal pure returns (uint) {
+    bytes memory leafBytes = new bytes(32);
     bytes20 op = bytes20(operator);
+    bytes2 wt = bytes2(uint16(weight));
+
     for (uint i=0; i < 20; i++) {
-      addressBytes[i] = op[i];
+      leafBytes[i] = op[i];
     }
 
-    bytes memory weightBytes = new bytes(2);
-    bytes2 wt = bytes2(weight);
-    for (uint i=0; i < 2; i++) {
-      weightBytes[i] = wt[i];
+    for (uint j=0; j < 2; j++) {
+      leafBytes[j + 20] = wt[j];
     }
-
-    bytes memory contentBytes = addressBytes.concat(weightBytes);
-    bytes memory leafBytes = contentBytes.concat(padding);
 
     return leafBytes.toUint(0);
   }
@@ -35,7 +27,7 @@ library Leaf {
     return leaf.toBytes().toAddress(0);
   }
 
-  function weight(uint leaf) internal pure returns (uint16) {
-    return leaf.toBytes().toUint16(20);
+  function weight(uint leaf) internal pure returns (uint) {
+    return uint(leaf.toBytes().toUint16(20));
   }
 }
