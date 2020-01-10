@@ -76,7 +76,7 @@ contract Sortition {
       setLeaf(position, theLeaf);
     }
 
-    function toLeaf(address operator, uint16 weight) public view returns (uint) {
+    function toLeaf(address operator, uint16 weight) public pure returns (uint) {
       return Leaf.make(operator, weight);
     }
 
