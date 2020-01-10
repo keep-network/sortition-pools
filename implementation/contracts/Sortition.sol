@@ -25,6 +25,8 @@ contract Sortition {
     // between 0 and the rightmost occupied leaf
     uint256[][16] emptyLeaves;
 
+    uint constant TRUNK_MAX = 2**16;
+
     function leavesInStack(uint trunkN) internal view returns (bool) {
       return emptyLeaves[trunkN].getSize() > 0;
     }
@@ -51,7 +53,7 @@ contract Sortition {
     function fitsUnderCap(uint16 addedWeight, uint trunkN) internal view returns (bool) {
       uint16 currentWeight = root.getSlot(trunkN);
       uint sumWeight = uint(currentWeight) + uint(addedWeight);
-      return sumWeight < 65536;
+      return sumWeight < TRUNK_MAX;
     }
 
     function suitableTrunk(uint16 addedWeight) internal view returns (uint) {
@@ -104,28 +106,27 @@ contract Sortition {
       setLeaf(position, newLeaf);
     }
 
-    function setLeaf(uint leafPosition, uint theLeaf) public {
+    function setLeaf(uint position, uint theLeaf) public {
       uint childSlot;
-      uint treePosition = leafPosition;
       uint treeNode;
       uint newNode;
       uint16 nodeWeight = theLeaf.weight();
 
       // set leaf
-      leaves[leafPosition] = theLeaf;
+      leaves[position] = theLeaf;
 
       // set levels 5 to 2
       for (uint level = 5; level >= 2; level--) {
-        childSlot = treePosition.slot();
-        treePosition = treePosition.parent();
-        treeNode = branches[level][treePosition];
+        childSlot = position.slot();
+        position = position.parent();
+        treeNode = branches[level][position];
         newNode = treeNode.setSlot(childSlot, nodeWeight);
-        branches[level][treePosition] = newNode;
+        branches[level][position] = newNode;
         nodeWeight = uint16(newNode.sumWeight());
       }
 
       // set level Root
-      childSlot = treePosition.slot();
+      childSlot = position.slot();
       root = root.setSlot(childSlot, nodeWeight);
     }
 
@@ -155,10 +156,8 @@ contract Sortition {
         (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
       }
 
-      // get leaf
-      uint leafPosition = currentPosition.child(currentSlot);
-
-      return leafPosition;
+      // get leaf position
+      return currentPosition.child(currentSlot);
     }
 
     function leafAddress(uint leaf) public view returns (address) {

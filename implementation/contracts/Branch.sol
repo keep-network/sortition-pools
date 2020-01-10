@@ -70,9 +70,10 @@ library Branch {
     uint weightRemaining = initialWeight;
 
     uint currentSlot = 0;
+    uint16 currentSlotWeight;
 
     while (slotFound == false) {
-      uint16 currentSlotWeight = getSlot(node, currentSlot);
+      currentSlotWeight = theSlots[currentSlot];
 
       if (weightRemaining < currentSlotWeight) {
         slotFound = true;
