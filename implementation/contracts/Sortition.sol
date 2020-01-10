@@ -14,8 +14,6 @@ contract Sortition {
     using Trunk for uint;
     using Leaf for uint;
 
-    address public owner;
-
     // implicit tree
     uint root;
     uint[16] level2;
@@ -30,19 +28,19 @@ contract Sortition {
     // between 0 and the rightmost occupied leaf
     uint256[][16] emptyLeaves;
 
-    function leavesInStack(uint trunkN) public view returns (bool) {
+    function leavesInStack(uint trunkN) internal view returns (bool) {
       return emptyLeaves[trunkN].getSize() > 0;
     }
 
-    function leavesToRight(uint trunkN) public view returns (bool) {
+    function leavesToRight(uint trunkN) internal view returns (bool) {
       return rightmostLeaf[trunkN] <= trunkN.lastLeaf();
     }
 
-    function hasSpace(uint trunkN) public view returns (bool) {
+    function hasSpace(uint trunkN) internal view returns (bool) {
       return leavesInStack(trunkN) || leavesToRight(trunkN);
     }
 
-    function getEmptyLeaf(uint trunkN) public returns (uint) {
+    function getEmptyLeaf(uint trunkN) internal returns (uint) {
       require(hasSpace(trunkN), "Trunk is full");
       if (leavesInStack(trunkN)) {
         return emptyLeaves[trunkN].stackPop();
@@ -53,13 +51,13 @@ contract Sortition {
       }
     }
 
-    function fitsUnderCap(uint16 addedWeight, uint trunkN) public view returns (bool) {
+    function fitsUnderCap(uint16 addedWeight, uint trunkN) internal view returns (bool) {
       uint16 currentWeight = root.getSlot(trunkN);
       uint sumWeight = uint(currentWeight) + uint(addedWeight);
       return sumWeight < 65536;
     }
 
-    function suitableTrunk(uint16 addedWeight) public view returns (uint) {
+    function suitableTrunk(uint16 addedWeight) internal view returns (uint) {
       uint theTrunk = 0;
       bool selected = false;
       while (!selected) {
@@ -156,7 +154,7 @@ contract Sortition {
       return root;
     }
 
-    function totalWeight() public view returns (uint){
+    function totalWeight() internal view returns (uint){
       return root.sumWeight();
     }
 
@@ -202,24 +200,8 @@ contract Sortition {
     }
 
    constructor() public {
-        owner = msg.sender;
-
         for (uint i = 0; i < 16; i++) {
           rightmostLeaf[i] = i.firstLeaf();
         }
     }
-
-    function getOwner() public view returns (address){
-        return owner;
-    }
-
-    function select(uint seed) public returns (address){
-      return address(0);
-    }
-
-    function remove(uint location) public returns (bool){
-        return true;
-
-    }
-
 }

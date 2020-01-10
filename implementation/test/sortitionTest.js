@@ -18,13 +18,6 @@ contract('Sortition', (accounts) => {
 
   })
 
-  describe('init()', async () => {
-    it('Returns correct contract owner', async () => {
-        const owner = await sortitionInstance.getOwner.call()
-        assert.equal(owner, accounts[0])
-    })
-  })
-
     describe('setLeaf()', async () => {
         it('Sets the leaf correctly', async () => {
             let weight1 = new BN('1234', 16)
