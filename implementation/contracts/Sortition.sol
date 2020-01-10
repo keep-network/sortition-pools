@@ -16,11 +16,8 @@ contract Sortition {
 
     // implicit tree
     uint root;
-    uint[16] level2;
-    uint[256] level3;
-    uint[4096] level4;
-    uint[65536] level5;
-    uint[1048576] leaves;
+    mapping(uint => mapping(uint => uint)) branches;
+    mapping(uint => uint) leaves;
 
     // the leaf after the rightmost occupied leaf of each stack
     uint[16] rightmostLeaf;
@@ -108,42 +105,24 @@ contract Sortition {
     }
 
     function setLeaf(uint leafPosition, uint theLeaf) public {
-      uint16 leafWeight = theLeaf.weight();
+      uint childSlot;
+      uint treePosition = leafPosition;
+      uint treeNode;
+      uint newNode;
+      uint16 nodeWeight = theLeaf.weight();
 
       // set leaf
       leaves[leafPosition] = theLeaf;
 
-      // set level 5
-      uint childSlot = leafPosition.slot();
-      uint treePosition = leafPosition.parent();
-      uint treeNode = level5[treePosition];
-      uint newNode = treeNode.setSlot(childSlot, leafWeight);
-      level5[treePosition] = newNode;
-      uint16 nodeWeight = uint16(newNode.sumWeight());
-
-      // set level 4
-      childSlot = treePosition.slot();
-      treePosition = treePosition.parent();
-      treeNode = level4[treePosition];
-      newNode = treeNode.setSlot(childSlot, nodeWeight);
-      level4[treePosition] = newNode;
-      nodeWeight = uint16(newNode.sumWeight());
-
-      // set level 3
-      childSlot = treePosition.slot();
-      treePosition = treePosition.parent();
-      treeNode = level3[treePosition];
-      newNode = treeNode.setSlot(childSlot, nodeWeight);
-      level3[treePosition] = newNode;
-      nodeWeight = uint16(newNode.sumWeight());
-
-      // set level 2
-      childSlot = treePosition.slot();
-      treePosition = treePosition.parent();
-      treeNode = level2[treePosition];
-      newNode = treeNode.setSlot(childSlot, nodeWeight);
-      level2[treePosition] = newNode;
-      nodeWeight = uint16(newNode.sumWeight());
+      // set levels 5 to 2
+      for (uint level = 5; level >= 2; level--) {
+        childSlot = treePosition.slot();
+        treePosition = treePosition.parent();
+        treeNode = branches[level][treePosition];
+        newNode = treeNode.setSlot(childSlot, nodeWeight);
+        branches[level][treePosition] = newNode;
+        nodeWeight = uint16(newNode.sumWeight());
+      }
 
       // set level Root
       childSlot = treePosition.slot();
@@ -169,25 +148,12 @@ contract Sortition {
       // get root slot
       (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
 
-      // get level 2 slot
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = level2[currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
-
-      // get level 3 slot
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = level3[currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
-
-      // get level 4 slot
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = level4[currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
-
-      // get level 5 slot
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = level5[currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+      // get slots from levels 2 to 5
+      for (uint level = 2; level <= 5; level++) {
+        currentPosition = currentPosition.child(currentSlot);
+        currentNode = branches[level][currentPosition];
+        (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+      }
 
       // get leaf
       uint leafPosition = currentPosition.child(currentSlot);
