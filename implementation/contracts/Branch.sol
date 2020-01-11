@@ -52,11 +52,10 @@ library Branch {
   }
 
   function sumWeight(uint node) internal pure returns (uint) {
-    uint[16] memory s = toSlots(node);
     uint sum;
 
     for (uint i = 0; i < 16; i++) {
-      sum += s[i];
+      sum += (node >> (i * 16)) & 0xffff;
     }
     return sum;
   }
