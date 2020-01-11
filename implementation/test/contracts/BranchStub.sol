@@ -8,6 +8,10 @@ contract BranchStub {
     return Branch.getSlot(node, position);
   }
 
+  function clearSlot(uint node, uint position) public pure returns (uint) {
+    return Branch.clearSlot(node, position);
+  }
+
   function setSlot(uint node, uint position, uint weight) public pure returns (uint) {
     return Branch.setSlot(node, position, weight);
   }

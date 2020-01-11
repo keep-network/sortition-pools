@@ -5,6 +5,10 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 library Branch {
   using BytesLib for bytes;
 
+  function slotShift(uint position) internal pure returns (uint) {
+    return (15 - position) * 16;
+  }
+
   function toBytes(uint256 x) internal pure returns (bytes memory) {
     bytes32 b = bytes32(x);
     bytes memory c = new bytes(32);
@@ -25,16 +29,17 @@ library Branch {
 
   function getSlot(uint node, uint position) internal pure returns (uint) {
     uint shiftBits = (15 - position) * 16;
-
     return (node >> shiftBits) & 0xffff;
   }
 
+  function clearSlot(uint node, uint position) internal pure returns (uint) {
+    uint shiftBits = (15 - position) * 16;
+    return node & ~(0xffff << shiftBits);
+  }
+
   function setSlot(uint node, uint position, uint weight) internal pure returns (uint) {
-    uint[16] memory slots = toSlots(node);
-
-    slots[position] = weight;
-
-    return slotsToUint(slots);
+    uint shiftBits = (15 - position) * 16;
+    return node & ~(0xffff << shiftBits) | (weight << shiftBits);
   }
 
   function toSlots(uint node) internal pure returns (uint[16] memory) {

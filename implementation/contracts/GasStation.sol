@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 contract GasStation {
-  uint constant GAS_DEPOSIT_SIZE = 5;
+  uint constant GAS_DEPOSIT_SIZE = 0;
 
   mapping(address => mapping(uint => uint)) gasDeposits;
 

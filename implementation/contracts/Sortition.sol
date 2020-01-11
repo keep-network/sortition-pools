@@ -90,7 +90,8 @@ contract Sortition is GasStation {
 
     }
 
-    function removeOperator(address operator) public returns (uint) {
+    /* function removeOperator(address operator) public returns (uint) { */
+    function removeOperator(address operator) public {
       uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
 
       if (flaggedLeaf != 0) {
@@ -100,11 +101,11 @@ contract Sortition is GasStation {
         removeOperatorLeaf(operator);
       }
 
-      uint a = pickWeightedLeaf(1);
-      uint b = pickWeightedLeaf(2);
-      uint c = pickWeightedLeaf(3);
+      /* uint a = pickWeightedLeaf(1); */
+      /* uint b = pickWeightedLeaf(2); */
+      /* uint c = pickWeightedLeaf(3); */
 
-      return a + b + c;
+      /* return a + b + c; */
     }
 
     function removeOperatorLeaf(address operator) public {

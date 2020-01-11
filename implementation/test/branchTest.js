@@ -26,12 +26,23 @@ contract('Branch', (accounts) => {
         })
     })
 
+    describe('clearSlot()', async () => {
+        it('Clears the correct slot', async () => {
+            node = new BN('0x0000111122220000444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
+            newNode = '0x111122220000444455556666777788889999aaaabbbbccccddddeeeeffff'
+
+            const result = await branchInstance.clearSlot.call(node, 3)
+            assert.equal(toHex(result), newNode)
+        })
+    })
+
     describe('setSlot()', async () => {
         it('Changes the correct slot', async () => {
 
             node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
             newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
-            w = new BN('0x1234', 16)
+            w = 0x1234
+            // w = new BN('0x1234', 16)
 
             const modified = await branchInstance.setSlot.call(node, 3, w)
             newSlot = await branchInstance.getSlot.call(modified, 3)
