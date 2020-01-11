@@ -63,13 +63,13 @@ library Branch {
   // Requires that the weight is lower than the sumWeight of the node.
   // This is not enforced for performance reasons.
   function pickWeightedSlot(uint node, uint weight) internal pure returns (uint, uint) {
-    uint[16] memory theSlots = toSlots(node);
 
     uint currentSlotWeight;
     uint currentSlot;
 
     for (currentSlot = 0; currentSlot < 16; currentSlot++) {
-      currentSlotWeight = theSlots[currentSlot];
+      /* uint shiftBits = ((15 - currentSlot) * 16); */
+      currentSlotWeight = (node >> ((15 - currentSlot) * 16)) & 0xffff;
 
       if (weight < currentSlotWeight) {
         break;
