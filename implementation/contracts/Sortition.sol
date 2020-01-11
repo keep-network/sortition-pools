@@ -6,8 +6,9 @@ import './Branch.sol';
 import './Position.sol';
 import './Trunk.sol';
 import './Leaf.sol';
+import "./GasStation.sol";
 
-contract Sortition {
+contract Sortition is GasStation {
     using StackLib for uint256[];
     using Branch for uint;
     using Position for uint;
@@ -78,15 +79,40 @@ contract Sortition {
       uint position = getEmptyLeaf(theTrunk);
       uint theLeaf = Leaf.make(operator, weight);
 
+      // Set superfluous storage so we can later unset them for a refund
+      depositGas(operator);
+
       setLeaf(position, theLeaf);
 
       // Without position flags,
       // the position 0x00000 would be treated as empty
       operatorLeaves[operator] = position.setFlag();
+
     }
 
-    function removeOperator(address operator) public {
+    function removeOperator(address operator) public returns (uint) {
+      uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
+
+      if (flaggedLeaf != 0) {
+        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
+        releaseGas(operator);
+        removeLeaf(unflaggedLeaf);
+        removeOperatorLeaf(operator);
+      }
+
+      uint a = pickWeightedLeaf(1);
+      uint b = pickWeightedLeaf(2);
+      uint c = pickWeightedLeaf(3);
+
+      return a + b + c;
+    }
+
+    function removeOperatorLeaf(address operator) public {
       operatorLeaves[operator] = 0;
+    }
+
+    function getFlaggedOperatorLeaf(address operator) public view returns (uint) {
+      return operatorLeaves[operator];
     }
 
     function toLeaf(address operator, uint weight) public pure returns (uint) {
@@ -170,6 +196,14 @@ contract Sortition {
 
       // get leaf position
       return currentPosition.child(currentSlot);
+    }
+
+    function pickThreeLeaves(uint ia, uint ib, uint ic) public returns (uint) {
+      uint a = pickWeightedLeaf(ia);
+      uint b = pickWeightedLeaf(ib);
+      uint c = pickWeightedLeaf(ic);
+
+      return (a + b + c);
     }
 
     function leafAddress(uint leaf) public view returns (address) {

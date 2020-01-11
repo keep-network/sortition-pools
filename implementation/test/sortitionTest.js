@@ -66,13 +66,28 @@ contract('Sortition', (accounts) => {
         })
     })
 
+    describe('removeOperator()', async () => {
+        it('removes an operator correctly', async () => {
+            await sortition.removeOperator(david)
+
+            let root = await sortition.getRoot.call()
+
+            assert.equal(toHex(root), '0xffffaaaa00000000000000000000000000000000000000000000000000000000')
+
+            let davidLeaf = await sortition.getFlaggedOperatorLeaf.call(david)
+
+            assert.equal(davidLeaf, 0)
+        })
+    })
+
+
     describe('updateLeaf()', async () => {
         it('updates a leaf correctly', async () => {
             await sortition.updateLeaf(0x00000, 0xeee0)
 
             let root = await sortition.getRoot.call()
 
-            assert.equal(toHex(root), '0xeeefaaab00000000000000000000000000000000000000000000000000000000')
+            assert.equal(toHex(root), '0xeeefaaaa00000000000000000000000000000000000000000000000000000000')
         })
     })
 
@@ -90,7 +105,7 @@ contract('Sortition', (accounts) => {
 
             let root = await sortition.getRoot.call()
 
-            assert.equal(toHex(root), '0xcccfaaab00000000000000000000000000000000000000000000000000000000')
+            assert.equal(toHex(root), '0xcccfaaaa00000000000000000000000000000000000000000000000000000000')
         })
     })
 
@@ -113,6 +128,19 @@ contract('Sortition', (accounts) => {
             let address2 = await sortition.leafAddress.call(leaf2)
             assert.equal(address2, carol)
             await sortition.pickWeightedLeaf(index2)
+        })
+    })
+
+    describe('multi-leaf selection', async () => {
+        it('works as expected', async () => {
+            let index1 = 0x1234
+            let index2 = 0xccc1
+            let index3 = 0xf000
+
+            let ps = await sortition.pickThreeLeaves.call(index1, index2, index3)
+            assert.equal(ps, 0x10001)
+
+            await sortition.pickThreeLeaves(index1, index2, index3)
         })
     })
 })
