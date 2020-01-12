@@ -51,7 +51,7 @@ contract('RNG', (accounts) => {
     })
 
     describe('getManyIndices()', async () => {
-        it('Has reasonable gas costs', async () => {
+        it('Has reasonable gas costs (1000 calls)', async () => {
             r = 0x12345
             s = 0x0bad1dea
 
@@ -59,7 +59,7 @@ contract('RNG', (accounts) => {
 
             assert.isBelow(toNum(toHex(i)), r)
 
-            await rngInstance.getManyIndices(r, 100)
+            await rngInstance.getManyIndices(r, 1000)
         })
     })
 })
