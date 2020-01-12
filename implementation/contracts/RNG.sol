@@ -38,14 +38,7 @@ library RNG {
     uint index;
     while (!found) {
       index = truncate(bits, uint(state));
-
-      // inline toBytes()
-      bytes memory c = new bytes(32);
-      for (uint i=0; i < 32; i++) {
-        c[i] = state[i];
-      }
-
-      state = keccak256(c);
+      state = keccak256(abi.encode(state));
       if (index < range) {
         found = true;
       }
