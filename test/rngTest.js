@@ -23,17 +23,20 @@ contract('RNG', (accounts) => {
             a = 2**19 - 1
             b = 2**16
             c = 2**10 + 1
-            d = 2**19
+            d = 2
+            e = 2**19
 
             ba = await rngInstance.bitsRequired.call(a)
             bb = await rngInstance.bitsRequired.call(b)
             bc = await rngInstance.bitsRequired.call(c)
+            bd = await rngInstance.bitsRequired.call(d)
 
             assert.equal(ba, 19)
             assert.equal(bb, 16)
             assert.equal(bc, 11)
+            assert.equal(bd, 1)
 
-            await rngInstance.bitsRequired(d)
+            await rngInstance.bitsRequired(e)
         })
     })
 
