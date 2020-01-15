@@ -1,6 +1,14 @@
 const Sortition = artifacts.require('./contracts/Sortition.sol')
+const SortitionStub = artifacts.require('SortitionStub.sol')
+
 const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
+const utils = require('./utils')
+
+const DEPLOY = [
+    { name: 'Sortition', contract: Sortition },
+    { name: 'SortitionStub', contract: SortitionStub }]
+
 
 contract('Sortition', (accounts) => {
   let sortitionInstance
@@ -12,10 +20,10 @@ contract('Sortition', (accounts) => {
     let david = accounts[3]
 
   before(async () => {
-      sortitionInstance = await Sortition.new()
-      sortition = sortitionInstance
+      deployed = await utils.deploySystem(DEPLOY)
+      sortition = deployed.SortitionStub
 
-
+      await sortition.initialize()
   })
 
     describe('setLeaf()', async () => {
@@ -31,7 +39,7 @@ contract('Sortition', (accounts) => {
             assert.equal(toHex(res1), '0x12340000')
 
             let leaf2 = await sortition.toLeaf.call(bob, weight2)
-            await sortitionInstance.setLeaf(0xfad00, leaf2)
+            await sortition.setLeaf(0xfad00, leaf2)
             let res2 = await sortition.getRoot.call()
             assert.equal(toHex(res2), '0x12340011')
         })
@@ -128,19 +136,6 @@ contract('Sortition', (accounts) => {
             let address2 = await sortition.leafAddress.call(leaf2)
             assert.equal(address2, carol)
             await sortition.pickWeightedLeaf(index2)
-        })
-    })
-
-    describe('multi-leaf selection', async () => {
-        it('works as expected', async () => {
-            let index1 = 0x1234
-            let index2 = 0xccc1
-            let index3 = 0xf000
-
-            let ps = await sortition.pickThreeLeaves.call(index1, index2, index3)
-            assert.equal(ps, 0x10001)
-
-            await sortition.pickThreeLeaves(index1, index2, index3)
         })
     })
 })

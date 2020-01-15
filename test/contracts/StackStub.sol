@@ -1,7 +1,8 @@
 pragma solidity ^0.5.10;
 
-import '../../contracts/Sortition.sol';
-contract StackStub is Sortition {
+import '../../contracts/StackLib.sol';
+contract StackStub {
+  using StackLib for uint256[];
     uint256[] stack;
 
     function stackPush(uint256 _element) public {
