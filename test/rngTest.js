@@ -24,7 +24,6 @@ contract('RNG', (accounts) => {
             b = 2**16
             c = 2**10 + 1
             d = 2
-            e = 2**19
 
             ba = await rngInstance.bitsRequired.call(a)
             bb = await rngInstance.bitsRequired.call(b)
@@ -35,8 +34,6 @@ contract('RNG', (accounts) => {
             assert.equal(bb, 16)
             assert.equal(bc, 11)
             assert.equal(bd, 1)
-
-            await rngInstance.bitsRequired(e)
         })
     })
 
@@ -66,21 +63,20 @@ contract('RNG', (accounts) => {
             i = await rngInstance.getIndex.call(r, s)
 
             assert.isBelow(toNum(toHex(i)), r)
-
-            await rngInstance.getIndex(r, i)
         })
     })
 
     describe('getManyIndices()', async () => {
-        it('Has reasonable gas costs (1000 calls)', async () => {
+        it('Has reasonable gas costs (less than 600 per call)', async () => {
             r = 0x12345
-            s = 0x0bad1dea
 
-            i = await rngInstance.getIndex.call(r, s)
+            times = 1000
 
-            assert.isBelow(toNum(toHex(i)), r)
+            tx = await rngInstance.getManyIndices(r, times)
 
-            await rngInstance.getManyIndices(r, 1000)
+            gasCost = (tx.receipt.gasUsed - 21000) / times
+
+            assert.isBelow(gasCost, 600)
         })
     })
 })
