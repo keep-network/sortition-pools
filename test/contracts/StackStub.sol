@@ -1,5 +1,4 @@
 pragma solidity ^0.5.10;
-pragma experimental ABIEncoderV2;
 
 import '../../contracts/Sortition.sol';
 contract StackStub is Sortition {
@@ -13,11 +12,11 @@ contract StackStub is Sortition {
         return stack.stackPop();
     }
 
-    function stackPeek() public  returns (uint256) {
+    function stackPeek() public view returns (uint256) {
         return stack.stackPeek();
     }
 
-    function getSize() public returns (uint256) {
+    function getSize() public view returns (uint256) {
         return stack.getSize();
     }
 }

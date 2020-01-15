@@ -1,5 +1,4 @@
 pragma solidity ^0.5.10;
-pragma experimental ABIEncoderV2;
 
 import './StackLib.sol';
 import './Branch.sol';
@@ -176,7 +175,7 @@ contract Sortition is GasStation {
       return root.sumWeight();
     }
 
-    function pickWeightedLeaf(uint index) public returns (uint) {
+    function pickWeightedLeaf(uint index) public view returns (uint) {
 
       uint currentIndex = index;
       uint currentNode = root;
@@ -199,7 +198,7 @@ contract Sortition is GasStation {
       return currentPosition.child(currentSlot);
     }
 
-    function pickThreeLeaves(uint ia, uint ib, uint ic) public returns (uint) {
+    function pickThreeLeaves(uint ia, uint ib, uint ic) public view returns (uint) {
       uint a = pickWeightedLeaf(ia);
       uint b = pickWeightedLeaf(ib);
       uint c = pickWeightedLeaf(ic);
@@ -207,7 +206,7 @@ contract Sortition is GasStation {
       return (a + b + c);
     }
 
-    function leafAddress(uint leaf) public view returns (address) {
+    function leafAddress(uint leaf) public pure returns (address) {
       return leaf.operator();
     }
 
