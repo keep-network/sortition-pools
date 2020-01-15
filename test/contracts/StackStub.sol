@@ -13,11 +13,11 @@ contract StackStub is Sortition {
         return stack.stackPop();
     }
 
-    function stackPeek() public  returns (uint256) {
+    function stackPeek() public view returns (uint256) {
         return stack.stackPeek();
     }
 
-    function getSize() public returns (uint256) {
+    function getSize() public view returns (uint256) {
         return stack.getSize();
     }
 }
