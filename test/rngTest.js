@@ -40,6 +40,24 @@ contract('RNG', (accounts) => {
         })
     })
 
+    describe('truncate()', async () => {
+        it('Truncates a number to the correct number of bits', async () => {
+            a = 0xffffffff
+
+            b = await rngInstance.truncate.call(1, a)
+            c = await rngInstance.truncate.call(2, a)
+            d = await rngInstance.truncate.call(16, a)
+            e = await rngInstance.truncate.call(31, a)
+            f = await rngInstance.truncate.call(64, a)
+
+            assert.equal(b, 0x1)
+            assert.equal(c, 0x3)
+            assert.equal(d, 0xffff)
+            assert.equal(e, 0x7fffffff)
+            assert.equal(f, a)
+        })
+    })
+
     describe('getIndex()', async () => {
         it('Returns an index smaller than the range', async () => {
             r = 0x12345
