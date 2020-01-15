@@ -1,5 +1,5 @@
 {
-  "name": "sortition-pools",
+  "name": "@keep-network/sortition-pools",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
