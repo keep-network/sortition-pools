@@ -1,11 +1,11 @@
 name: NPM
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - "contracts/**"
+  push
+  # branches:
+  #   - master
+  # paths:
+  #   - "contracts/**"
 
 jobs:
   publish-contracts:
