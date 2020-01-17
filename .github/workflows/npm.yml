@@ -24,7 +24,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Bump version
         run: |
-          PACKAGE_VERSION=$(npm version prerelease --preid=pre)
+          PACKAGE_VERSION=$(npm version --no-git-tag-version prerelease --preid=pre)
           echo "::set-env name=PACKAGE_VERSION::$PACKAGE_VERSION"
       - name: Setup git
         run: |
