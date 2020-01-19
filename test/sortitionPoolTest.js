@@ -33,7 +33,6 @@ contract('SortitionPool', (accounts) => {
             await pool.insertOperator(accounts[0], 1)
             
             let group = await pool.selectGroup(5, seed)
-            console.log(group)
             assert.equal(group.length, 5);
         })
     })
