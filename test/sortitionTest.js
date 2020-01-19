@@ -123,17 +123,4 @@ contract('Sortition', (accounts) => {
             await sortition.pickWeightedLeaf(index2)
         })
     })
-
-    describe('multi-leaf selection', async () => {
-        it('works as expected', async () => {
-            let index1 = 0x1234
-            let index2 = 0xccc1
-            let index3 = 0xf000
-
-            let ps = await sortition.pickThreeLeaves.call(index1, index2, index3)
-            assert.equal(ps, 0x10001)
-
-            await sortition.pickThreeLeaves(index1, index2, index3)
-        })
-    })
 })

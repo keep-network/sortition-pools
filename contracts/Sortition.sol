@@ -190,14 +190,6 @@ contract Sortition is GasStation {
       return currentPosition.child(currentSlot);
     }
 
-    function pickThreeLeaves(uint ia, uint ib, uint ic) public view returns (uint) {
-      uint a = pickWeightedLeaf(ia);
-      uint b = pickWeightedLeaf(ib);
-      uint c = pickWeightedLeaf(ic);
-
-      return (a + b + c);
-    }
-
     function leafAddress(uint leaf) public pure returns (address) {
       return leaf.operator();
     }
