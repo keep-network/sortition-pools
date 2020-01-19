@@ -3,8 +3,6 @@ const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
 
 contract('Sortition', (accounts) => {
-  let sortitionInstance
-
     let sortition
     let alice = accounts[0]
     let bob = accounts[1]
@@ -12,18 +10,13 @@ contract('Sortition', (accounts) => {
     let david = accounts[3]
 
   before(async () => {
-      sortitionInstance = await Sortition.new()
-      sortition = sortitionInstance
-
-
+      sortition = await Sortition.new()
   })
 
     describe('setLeaf()', async () => {
         it('Sets the leaf correctly', async () => {
             let weight1 = new BN('1234', 16)
             let weight2 = new BN('11', 16)
-            let weight3 = new BN('2', 16)
-            // let operator2 = accounts[1]
 
             let leaf1 = await sortition.toLeaf.call(alice, weight1)
             await sortition.setLeaf(0xecdef, leaf1)
@@ -31,7 +24,7 @@ contract('Sortition', (accounts) => {
             assert.equal(toHex(res1), '0x12340000')
 
             let leaf2 = await sortition.toLeaf.call(bob, weight2)
-            await sortitionInstance.setLeaf(0xfad00, leaf2)
+            await sortition.setLeaf(0xfad00, leaf2)
             let res2 = await sortition.getRoot.call()
             assert.equal(toHex(res2), '0x12340011')
         })
