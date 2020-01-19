@@ -73,7 +73,7 @@ contract Sortition is GasStation {
       return theTrunk;
     }
 
-    function insert(address operator, uint weight) public {
+    function insertOperator(address operator, uint weight) public {
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
       uint theLeaf = Leaf.make(operator, weight);
@@ -86,7 +86,6 @@ contract Sortition is GasStation {
       // Without position flags,
       // the position 0x00000 would be treated as empty
       operatorLeaves[operator] = position.setFlag();
-
     }
 
     /* function removeOperator(address operator) public returns (uint) { */

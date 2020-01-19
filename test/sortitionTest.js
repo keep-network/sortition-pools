@@ -30,17 +30,17 @@ contract('Sortition', (accounts) => {
         })
     })
 
-    describe('insert()', async () => {
+    describe('insertOperator()', async () => {
         it('Inserts an operator correctly', async () => {
             let weightA = new BN('fff0', 16)
             let weightB = new BN('aaaa', 16)
             let weightC = new BN('f', 16)
             let weightD = new BN('1', 16)
 
-            await sortition.insert(alice, weightA)
-            await sortition.insert(bob, weightB)
-            await sortition.insert(carol, weightC)
-            await sortition.insert(david, weightD)
+            await sortition.insertOperator(alice, weightA)
+            await sortition.insertOperator(bob, weightB)
+            await sortition.insertOperator(carol, weightC)
+            await sortition.insertOperator(david, weightD)
 
             let root = await sortition.getRoot.call()
 
@@ -91,7 +91,7 @@ contract('Sortition', (accounts) => {
             let deletedLeaf = await sortition.getLeaf.call(0x00000)
             assert.equal(deletedLeaf, 0)
 
-            await sortition.insert(alice, 0xccc0)
+            await sortition.insertOperator(alice, 0xccc0)
 
             let undeletedLeaf = await sortition.getLeaf.call(0x00000)
             assert.notEqual(undeletedLeaf, 0)
