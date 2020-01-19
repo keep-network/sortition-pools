@@ -31,6 +31,32 @@ contract Sortition is GasStation {
 
     uint constant TRUNK_MAX = 2**16;
 
+    function insertOperator(address operator, uint weight) public {
+      uint theTrunk = suitableTrunk(weight);
+      uint position = getEmptyLeaf(theTrunk);
+      uint theLeaf = Leaf.make(operator, weight);
+
+      // Set superfluous storage so we can later unset them for a refund
+      depositGas(operator);
+
+      setLeaf(position, theLeaf);
+
+      // Without position flags,
+      // the position 0x00000 would be treated as empty
+      operatorLeaves[operator] = position.setFlag();
+    }
+
+    function removeOperator(address operator) public {
+      uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
+
+      if (flaggedLeaf != 0) {
+        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
+        releaseGas(operator);
+        removeLeaf(unflaggedLeaf);
+        removeOperatorLeaf(operator);
+      }
+    }
+
     function leavesInStack(uint trunkN) internal view returns (bool) {
       return emptyLeaves[trunkN].getSize() > 0;
     }
@@ -71,32 +97,6 @@ contract Sortition is GasStation {
         }
       }
       return theTrunk;
-    }
-
-    function insertOperator(address operator, uint weight) public {
-      uint theTrunk = suitableTrunk(weight);
-      uint position = getEmptyLeaf(theTrunk);
-      uint theLeaf = Leaf.make(operator, weight);
-
-      // Set superfluous storage so we can later unset them for a refund
-      depositGas(operator);
-
-      setLeaf(position, theLeaf);
-
-      // Without position flags,
-      // the position 0x00000 would be treated as empty
-      operatorLeaves[operator] = position.setFlag();
-    }
-
-    function removeOperator(address operator) public {
-      uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
-
-      if (flaggedLeaf != 0) {
-        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
-        releaseGas(operator);
-        removeLeaf(unflaggedLeaf);
-        removeOperatorLeaf(operator);
-      }
     }
 
     function removeOperatorLeaf(address operator) public {
