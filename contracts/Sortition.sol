@@ -88,7 +88,6 @@ contract Sortition is GasStation {
       operatorLeaves[operator] = position.setFlag();
     }
 
-    /* function removeOperator(address operator) public returns (uint) { */
     function removeOperator(address operator) public {
       uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
 
@@ -98,12 +97,6 @@ contract Sortition is GasStation {
         removeLeaf(unflaggedLeaf);
         removeOperatorLeaf(operator);
       }
-
-      /* uint a = pickWeightedLeaf(1); */
-      /* uint b = pickWeightedLeaf(2); */
-      /* uint c = pickWeightedLeaf(3); */
-
-      /* return a + b + c; */
     }
 
     function removeOperatorLeaf(address operator) public {
