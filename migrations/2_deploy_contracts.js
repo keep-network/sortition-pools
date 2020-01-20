@@ -5,7 +5,7 @@ const StackLib = artifacts.require("StackLib");
 const Trunk = artifacts.require("Trunk");
 const Leaf = artifacts.require("Leaf");
 const SortitionPool = artifacts.require("SortitionPool");
-
+const SortitionPoolFactory = artifacts.require("SortitionPoolFactory");
 
 module.exports = async function (deployer) {
   await deployer.deploy(Branch);
@@ -26,4 +26,5 @@ module.exports = async function (deployer) {
   await deployer.link(Trunk, SortitionPool);
   await deployer.link(Leaf, SortitionPool);
   await deployer.deploy(SortitionPool);
+  await deployer.deploy(SortitionPoolFactory, SortitionPool.address);
 };
