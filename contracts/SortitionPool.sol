@@ -21,8 +21,8 @@ contract SortitionPool is Sortition {
     /// the provided pseudo-random seed.
     /// @dev At least one operator has to be registered in the pool, otherwise
     /// the function fails reverting the transaction.
-    /// @param groupSize size of the requested group
-    /// @param seed pseudo-random number used to select operators to group
+    /// @param groupSize Size of the requested group
+    /// @param seed Pseudo-random number used to select operators to group
     function selectGroup(uint256 groupSize, bytes32 seed) public view returns (address[] memory)  {
         uint totalWeight = totalWeight();
         require(totalWeight > 0, "No operators in pool");
