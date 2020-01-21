@@ -30,7 +30,7 @@ contract SortitionPool is Sortition {
         address[] memory selected = new address[](groupSize);
 
         uint idx;
-        bytes32 state = bytes32(seed);
+        bytes32 state = seed;
 
         for (uint i = 0; i < groupSize; i++) {
             (idx, state) = RNG.getIndex(totalWeight, bytes32(state));
