@@ -1,6 +1,6 @@
 {
   "name": "@keep-network/sortition-pools",
-  "version": "0.1.0",
+  "version": "0.1.1-pre.1",
   "description": "",
   "main": "truffle-config.js",
   "directories": {
@@ -21,12 +21,12 @@
   "homepage": "https://github.com/keep-network/sortition-pools#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^2.4.0",
-    "solidity-bytes-utils": "0.0.7",
-    "solc": "^0.6.1"
+    "solidity-bytes-utils": "0.0.7"
   },
   "devDependencies": {
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
+    "solc": "^0.6.1",
     "truffle": "^5.1.0"
   }
 }
