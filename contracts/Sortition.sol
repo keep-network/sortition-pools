@@ -31,6 +31,32 @@ contract Sortition is GasStation {
 
     uint constant TRUNK_MAX = 2**16;
 
+    function insertOperator(address operator, uint weight) public {
+      uint theTrunk = suitableTrunk(weight);
+      uint position = getEmptyLeaf(theTrunk);
+      uint theLeaf = Leaf.make(operator, weight);
+
+      // Set superfluous storage so we can later unset them for a refund
+      depositGas(operator);
+
+      setLeaf(position, theLeaf);
+
+      // Without position flags,
+      // the position 0x00000 would be treated as empty
+      operatorLeaves[operator] = position.setFlag();
+    }
+
+    function removeOperator(address operator) public {
+      uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
+
+      if (flaggedLeaf != 0) {
+        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
+        releaseGas(operator);
+        removeLeaf(unflaggedLeaf);
+        removeOperatorLeaf(operator);
+      }
+    }
+
     function leavesInStack(uint trunkN) internal view returns (bool) {
       return emptyLeaves[trunkN].getSize() > 0;
     }
@@ -71,40 +97,6 @@ contract Sortition is GasStation {
         }
       }
       return theTrunk;
-    }
-
-    function insert(address operator, uint weight) public {
-      uint theTrunk = suitableTrunk(weight);
-      uint position = getEmptyLeaf(theTrunk);
-      uint theLeaf = Leaf.make(operator, weight);
-
-      // Set superfluous storage so we can later unset them for a refund
-      depositGas(operator);
-
-      setLeaf(position, theLeaf);
-
-      // Without position flags,
-      // the position 0x00000 would be treated as empty
-      operatorLeaves[operator] = position.setFlag();
-
-    }
-
-    /* function removeOperator(address operator) public returns (uint) { */
-    function removeOperator(address operator) public {
-      uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
-
-      if (flaggedLeaf != 0) {
-        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
-        releaseGas(operator);
-        removeLeaf(unflaggedLeaf);
-        removeOperatorLeaf(operator);
-      }
-
-      /* uint a = pickWeightedLeaf(1); */
-      /* uint b = pickWeightedLeaf(2); */
-      /* uint c = pickWeightedLeaf(3); */
-
-      /* return a + b + c; */
     }
 
     function removeOperatorLeaf(address operator) public {
@@ -196,14 +188,6 @@ contract Sortition is GasStation {
 
       // get leaf position
       return currentPosition.child(currentSlot);
-    }
-
-    function pickThreeLeaves(uint ia, uint ib, uint ic) public view returns (uint) {
-      uint a = pickWeightedLeaf(ia);
-      uint b = pickWeightedLeaf(ib);
-      uint c = pickWeightedLeaf(ic);
-
-      return (a + b + c);
     }
 
     function leafAddress(uint leaf) public pure returns (address) {

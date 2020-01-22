@@ -3,8 +3,6 @@ const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
 
 contract('Sortition', (accounts) => {
-  let sortitionInstance
-
     let sortition
     let alice = accounts[0]
     let bob = accounts[1]
@@ -12,18 +10,13 @@ contract('Sortition', (accounts) => {
     let david = accounts[3]
 
   before(async () => {
-      sortitionInstance = await Sortition.new()
-      sortition = sortitionInstance
-
-
+      sortition = await Sortition.new()
   })
 
     describe('setLeaf()', async () => {
         it('Sets the leaf correctly', async () => {
             let weight1 = new BN('1234', 16)
             let weight2 = new BN('11', 16)
-            let weight3 = new BN('2', 16)
-            // let operator2 = accounts[1]
 
             let leaf1 = await sortition.toLeaf.call(alice, weight1)
             await sortition.setLeaf(0xecdef, leaf1)
@@ -31,23 +24,23 @@ contract('Sortition', (accounts) => {
             assert.equal(toHex(res1), '0x12340000')
 
             let leaf2 = await sortition.toLeaf.call(bob, weight2)
-            await sortitionInstance.setLeaf(0xfad00, leaf2)
+            await sortition.setLeaf(0xfad00, leaf2)
             let res2 = await sortition.getRoot.call()
             assert.equal(toHex(res2), '0x12340011')
         })
     })
 
-    describe('insert()', async () => {
+    describe('insertOperator()', async () => {
         it('Inserts an operator correctly', async () => {
             let weightA = new BN('fff0', 16)
             let weightB = new BN('aaaa', 16)
             let weightC = new BN('f', 16)
             let weightD = new BN('1', 16)
 
-            await sortition.insert(alice, weightA)
-            await sortition.insert(bob, weightB)
-            await sortition.insert(carol, weightC)
-            await sortition.insert(david, weightD)
+            await sortition.insertOperator(alice, weightA)
+            await sortition.insertOperator(bob, weightB)
+            await sortition.insertOperator(carol, weightC)
+            await sortition.insertOperator(david, weightD)
 
             let root = await sortition.getRoot.call()
 
@@ -98,7 +91,7 @@ contract('Sortition', (accounts) => {
             let deletedLeaf = await sortition.getLeaf.call(0x00000)
             assert.equal(deletedLeaf, 0)
 
-            await sortition.insert(alice, 0xccc0)
+            await sortition.insertOperator(alice, 0xccc0)
 
             let undeletedLeaf = await sortition.getLeaf.call(0x00000)
             assert.notEqual(undeletedLeaf, 0)
@@ -128,19 +121,6 @@ contract('Sortition', (accounts) => {
             let address2 = await sortition.leafAddress.call(leaf2)
             assert.equal(address2, carol)
             await sortition.pickWeightedLeaf(index2)
-        })
-    })
-
-    describe('multi-leaf selection', async () => {
-        it('works as expected', async () => {
-            let index1 = 0x1234
-            let index2 = 0xccc1
-            let index3 = 0xf000
-
-            let ps = await sortition.pickThreeLeaves.call(index1, index2, index3)
-            assert.equal(ps, 0x10001)
-
-            await sortition.pickThreeLeaves(index1, index2, index3)
         })
     })
 })

@@ -29,8 +29,10 @@ library RNG {
     return input & ((1 << bits) - 1);
   }
 
-  // Take `range, state`, return `index, state`.
-  // Threading the state around is necessary for the PRNG.
+  // Take `range, state`, return `index, state`. The initial state needs to be
+  // obtained from trusted randomness oracle (random beacon).
+  // Threading the state around is necessary for the PRNG and we do not want
+  // to keep the state in the storage to avoid costly updates.
   // `index` is in the range [0, range-1].
   function getIndex(uint range, bytes32 state) internal pure returns (uint, bytes32) {
     uint bits = bitsRequired(range);
