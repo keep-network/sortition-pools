@@ -4,7 +4,7 @@ import "./CloneFactory.sol";
 import "../SortitionPool.sol";
 
 /// @title Sortition Pool Factory
-/// @notice Factory for the creation of new sortition pool clones.
+/// @notice Factory for the creation of new sortition pools.
 /// @dev We avoid redeployment of sortition pool contract by using the clone factory.
 /// Proxy delegates calls to sortition pool and therefore does not affect contract's
 /// state. This means that we only need to deploy the sortition pool contract once.
