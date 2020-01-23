@@ -29,7 +29,5 @@ contract SortitionPoolFactory is CloneFactory{
     /// @return Address of the new sortition pool contract instance.
     function createSortitionPool() public payable returns(address cloneAddress) {
         cloneAddress = createClone(masterSortitionPoolAddress);
-
-        emit SortitionPoolCloneCreated(cloneAddress);
     }
 }

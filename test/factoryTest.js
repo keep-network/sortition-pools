@@ -10,18 +10,6 @@ contract('SortitionPoolFactory', (accounts) => {
     })
 
     describe('createSortitionPool()', async () => {
-        it('emits an event', async () => {
-            const blockNumber = await web3.eth.getBlockNumber()
-
-            const sortitionPoolAddress = await sortitionPoolFactory.createSortitionPool.call()
-            await sortitionPoolFactory.createSortitionPool()
-
-            const eventList = await sortitionPoolFactory.getPastEvents('SortitionPoolCloneCreated', { fromBlock: blockNumber, toBlock: 'latest' })
-            const cloneAddress = eventList[0].returnValues.cloneAddress
-
-            assert.equal(cloneAddress, sortitionPoolAddress);
-        })
-
         it('creates independent clones', async () => {
             const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call()
             await sortitionPoolFactory.createSortitionPool()
