@@ -13,6 +13,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
+    "ganache": "ganache-cli -q",
     "test": "NODE_ENV=test truffle test"
   },
   "repository": {
