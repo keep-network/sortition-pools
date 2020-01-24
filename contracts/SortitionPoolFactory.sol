@@ -8,7 +8,7 @@ contract SortitionPoolFactory {
 
     /// @notice Creates a new sortition pool instance.
     /// @return Address of the new sortition pool contract instance.
-    function createSortitionPool() public payable returns(address) {
+    function createSortitionPool() public returns(address) {
         return address(new SortitionPool());
     }
 }
