@@ -4,26 +4,26 @@ const Position = artifacts.require("Position");
 const StackLib = artifacts.require("StackLib");
 const Trunk = artifacts.require("Trunk");
 const Leaf = artifacts.require("Leaf");
-const SortitionPool = artifacts.require("SortitionPool");
+const SortitionPoolFactory = artifacts.require("SortitionPoolFactory");
 
+module.exports = async function (deployer) {
+  await deployer.deploy(Branch);
+  await deployer.deploy(Position);
+  await deployer.deploy(StackLib);
+  await deployer.deploy(Trunk);
+  await deployer.link(Branch, Leaf);
+  await deployer.deploy(Leaf);
+  await deployer.link(Branch, Sortition);
+  await deployer.link(Position, Sortition);
+  await deployer.link(StackLib, Sortition);
+  await deployer.link(Trunk, Sortition);
+  await deployer.link(Leaf, Sortition);
+  await deployer.deploy(Sortition);
 
-module.exports = function(deployer) {
-    deployer.deploy(Branch);
-    deployer.deploy(Position);
-    deployer.deploy(StackLib);
-    deployer.deploy(Trunk);
-    deployer.link(Branch, Leaf);
-    deployer.deploy(Leaf);
-    deployer.link(Branch, Sortition);
-    deployer.link(Position, Sortition);
-    deployer.link(StackLib, Sortition);
-    deployer.link(Trunk, Sortition);
-    deployer.link(Leaf, Sortition);
-    deployer.deploy(Sortition);
-    deployer.link(Branch, SortitionPool);
-    deployer.link(Position, SortitionPool);
-    deployer.link(StackLib, SortitionPool);
-    deployer.link(Trunk, SortitionPool);
-    deployer.link(Leaf, SortitionPool);
-    deployer.deploy(SortitionPool);
+  await deployer.link(Branch, SortitionPoolFactory);
+  await deployer.link(Position, SortitionPoolFactory);
+  await deployer.link(StackLib, SortitionPoolFactory);
+  await deployer.link(Trunk, SortitionPoolFactory);
+  await deployer.link(Leaf, SortitionPoolFactory);
+  await deployer.deploy(SortitionPoolFactory);
 };
