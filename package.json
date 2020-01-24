@@ -6,6 +6,12 @@
   "directories": {
     "test": "test"
   },
+  "files": [
+    "contracts/**/*.sol"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "scripts": {
     "test": "NODE_ENV=test truffle test"
   },
