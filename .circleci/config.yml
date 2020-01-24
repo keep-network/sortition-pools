@@ -1,0 +1,124 @@
+version: 2.1
+
+executors:
+  docker-node:
+    docker:
+      - image: circleci/node:11
+  docker-git:
+    docker:
+      - image: docker:18.06.0-ce-git
+  docker-thesis-buildpack:
+    docker:
+      - image: thesisco/docker-buildpack:bionic
+
+orbs:
+  gcp-cli: circleci/gcp-cli@1.8.2
+  gcp-gcr: circleci/gcp-gcr@0.0.4
+
+jobs:
+  build_and_test_solidity:
+    executor: docker-node
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Run testrpc
+          command: npm run ganache
+          background: true
+      - run:
+          name: Build solidity contracts
+          command: npm run build
+      - run:
+          name: Run solidity tests
+          command: npm run test
+
+  migrate_contracts:
+    executor: docker-thesis-buildpack
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
+      - attach_workspace:
+          at: solidity
+      - run:
+          name: Set Gcloud Auth
+          command: |
+            echo $GCLOUD_SERVICE_KEY_JUMPHOST_SSH > ~/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
+      - run:
+          name: Migrate Contracts
+          command: |
+            export BUILD_TAG=$CIRCLE_SHA1
+            export TRUFFLE_NETWORK=$TRUFFLE_NETWORK
+            mkdir -p /tmp/sortition-pools/contracts
+            scripts/circleci-migrate-contracts.sh
+      - persist_to_workspace:
+          root: /tmp/sortition-pools
+          paths:
+            - contracts
+
+  publish_contract_data:
+    executor: gcp-cli/default
+    steps:
+      - attach_workspace:
+          at: /tmp/sortition-pools
+      - gcp-cli/install
+      - gcp-cli/initialize:
+          google-project-id: GOOGLE_PROJECT_ID
+          google-compute-zone: GOOGLE_COMPUTE_ZONE_A
+          # This param doesn't actually set anything, leaving here as a reminder to check when they fix it.
+          gcloud-service-key: GCLOUD_SERVICE_KEY
+      - run:
+          name: Upload contract data
+          command: |
+            cd /tmp/sortition-pools/contracts
+            gsutil -m cp * gs://${CONTRACT_DATA_BUCKET}/sortition-pools
+
+workflows:
+  version: 2
+  solidity:
+    jobs:
+      - build_and_test_solidity
+  build-test-migrate-publish-keep-dev:
+    jobs:
+      - migrate_contracts:
+          filters:
+            branches:
+              only: master
+          context: keep-dev
+      - publish_contract_data:
+          filters:
+            branches:
+              only: master
+          context: keep-dev
+          requires:
+            - migrate_contracts
+  build-test-migrate-publish-keep-test:
+    jobs:
+      - keep_test_approval:
+          type: approval
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - migrate_contracts:
+          context: keep-test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - keep_test_approval
+      - publish_contract_data:
+          context: keep-test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - migrate_contracts
