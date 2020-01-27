@@ -28,7 +28,7 @@ echo "ssh utilitybox mkdir /tmp/$BUILD_TAG"
 echo "scp -r . utilitybox:/tmp/$BUILD_TAG/"
 ssh utilitybox rm -rf /tmp/$BUILD_TAG
 ssh utilitybox mkdir /tmp/$BUILD_TAG
-scp -r $(pwd) utilitybox:/tmp/$BUILD_TAG/
+scp -r * utilitybox:/tmp/$BUILD_TAG/
 echo ">>>>>>FINISH Prep Utility Box For Migration FINISH>>>>>>"
 
 # Run migration
