@@ -46,15 +46,6 @@ contract('Branch', (accounts) => {
             const modified = await branchInstance.setSlot.call(node, 3, w)
             newSlot = await branchInstance.getSlot.call(modified, 3)
             assert.equal(toHex(modified), newNode)
-        }),
-
-        it('Ruins your damn day if `weight` overflows', async () => {
-            node = 0x12340000
-            w = 0x11234
-
-            const modified = await branchInstance.setSlot.call(node, 15, w)
-            screwedUpSlot = await branchInstance.getSlot.call(modified, 14)
-            assert.equal(screwedUpSlot, 0x1235)
         })
     })
 

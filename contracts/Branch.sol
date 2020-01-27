@@ -47,28 +47,25 @@ library Branch {
 
   /// @notice Return `node` with the `position`th slot set to `weight`.
   ///
-  /// @dev Never call unless `weight` is truncated to 16 bits beforehand,
-  /// or the invariant is otherwise guaranteed to hold.
-  ///
   /// @param weight The weight of of the node.
-  /// ABSOLUTELY REQUIRED to be a 16-bit number;
-  /// i.e. with only the 16 least significant bits (potentially) set.
-  /// If `weight` exceeds `2^16 - 1`,
-  /// the behavior of `setSlot()` becomes ridiculously unsafe
-  /// and everything breaks.
+  /// Safely truncated to a 16-bit number,
+  /// but this should never be called with an overflowing weight regardless.
   function setSlot(uint node, uint position, uint weight) internal pure returns (uint) {
     uint shiftBits = (15 - position) * 16;
     // Clear the `position`th slot like in `clearSlot()`.
     //
-    // Shift `weight` left by `slotShift(position)` bits
+    // Bitwise AND `weight` with `0xffff`
+    // to clear all but the 16 least significant bits.
+    //
+    // Shift this left by `slotShift(position)` bits
     // to obtain a uint256 with all bits unset
     // except in the `position`th slot
-    // which contains `weight`.
+    // which contains the 16-bit value of `weight`.
     //
     // When we bitwise OR these together,
     // all other slots except the `position`th one come from the left argument,
     // and the `position`th gets filled with `weight` from the right argument.
-    return node & ~(0xffff << shiftBits) | (weight << shiftBits);
+    return node & ~(0xffff << shiftBits) | ((weight & 0xffff) << shiftBits);
   }
 
   /// @notice Calculate the summed weight of all slots in the `node`.
