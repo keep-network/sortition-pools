@@ -84,14 +84,14 @@ workflows:
   build-test-migrate-publish-keep-dev:
     jobs:
       - migrate_contracts:
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
           context: keep-dev
       - publish_contract_data:
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
           context: keep-dev
           requires:
             - migrate_contracts
@@ -99,26 +99,26 @@ workflows:
     jobs:
       - keep_test_approval:
           type: approval
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+          # filters:
+          #   tags:
+          #     only: /^v.*/
+          #   branches:
+          #     ignore: /.*/
       - migrate_contracts:
           context: keep-test
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+          # filters:
+          #   tags:
+          #     only: /^v.*/
+          #   branches:
+          #     ignore: /.*/
           requires:
             - keep_test_approval
       - publish_contract_data:
           context: keep-test
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+          # filters:
+          #   tags:
+          #     only: /^v.*/
+          #   branches:
+          #     ignore: /.*/
           requires:
             - migrate_contracts
