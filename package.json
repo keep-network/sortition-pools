@@ -35,6 +35,6 @@
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
     "solc": "^0.6.1",
-    "truffle": "^5.1.0"
+    "truffle": "^5.1.10"
   }
 }
