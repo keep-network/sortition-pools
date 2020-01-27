@@ -41,7 +41,7 @@ jobs:
           docker_layer_caching: true
       - checkout
       - attach_workspace:
-          at: solidity
+          at: .
       - run:
           name: Set Gcloud Auth
           command: |
