@@ -1,3 +1,4 @@
+// Deploys contracts using truffle artifacts and deployer.
 module.exports = async function (artifacts, deployer) {
   const Sortition = artifacts.require("Sortition");
   const Branch = artifacts.require("Branch");
