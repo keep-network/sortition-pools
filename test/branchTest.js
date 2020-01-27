@@ -42,11 +42,19 @@ contract('Branch', (accounts) => {
             node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
             newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
             w = 0x1234
-            // w = new BN('0x1234', 16)
 
             const modified = await branchInstance.setSlot.call(node, 3, w)
             newSlot = await branchInstance.getSlot.call(modified, 3)
             assert.equal(toHex(modified), newNode)
+        }),
+
+        it('Ruins your damn day if `weight` overflows', async () => {
+            node = 0x12340000
+            w = 0x11234
+
+            const modified = await branchInstance.setSlot.call(node, 15, w)
+            screwedUpSlot = await branchInstance.getSlot.call(modified, 14)
+            assert.equal(screwedUpSlot, 0x1235)
         })
     })
 
