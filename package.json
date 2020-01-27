@@ -13,8 +13,9 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
-    "ganache": "ganache-cli -q",
-    "test": "NODE_ENV=test truffle test"
+    "build": "truffle compile",
+    "test": "NODE_ENV=test truffle test",
+    "ganache": "ganache-cli -q"
   },
   "repository": {
     "type": "git",
