@@ -57,6 +57,28 @@ contract Sortition is GasStation {
       }
     }
 
+    function operatorsInTrunk(uint trunkN) public view returns (uint) {
+      // Get the number of leaves that might be occupied;
+      // if `rightmostLeaf` equals `firstLeaf()` the trunk must be empty,
+      // otherwise the difference between these numbers
+      // gives the number of leaves that may be occupied.
+      uint nPossiblyUsedLeaves = rightmostLeaf[trunkN] - trunkN.firstLeaf();
+      // Get the number of empty leaves
+      // not accounted for by the `rightmostLeaf`
+      uint nEmptyLeaves = emptyLeaves[trunkN].getSize();
+
+      return (nPossiblyUsedLeaves - nEmptyLeaves);
+    }
+
+    // Sum the number of operators in each trunk
+    function operatorsInPool() public view returns (uint) {
+      uint sum;
+      for (uint i = 0; i < 16; i++) {
+        sum += operatorsInTrunk(i);
+      }
+      return sum;
+    }
+
     function leavesInStack(uint trunkN) internal view returns (bool) {
       return emptyLeaves[trunkN].getSize() > 0;
     }
