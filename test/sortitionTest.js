@@ -30,6 +30,17 @@ contract('Sortition', (accounts) => {
         })
     })
 
+    describe('removeLeaf()', async () => {
+        it('uses setLeaf(), which removes a leaf correctly', async () => {
+            await sortition.setLeaf(0xecdef, 0)
+            await sortition.setLeaf(0xfad00, 0)
+
+            let root = await sortition.getRoot.call()
+
+            assert.equal(toHex(root), '0x0')
+        })
+    })
+
     describe('insertOperator()', async () => {
         it('Inserts an operator correctly', async () => {
             let weightA = new BN('fff0', 16)
@@ -41,17 +52,6 @@ contract('Sortition', (accounts) => {
             await sortition.insertOperator(bob, weightB)
             await sortition.insertOperator(carol, weightC)
             await sortition.insertOperator(david, weightD)
-
-            let root = await sortition.getRoot.call()
-
-            assert.equal(toHex(root), '0xffffaaab00000000000000000000000000000000000000000000000012340011')
-        })
-    })
-
-    describe('removeLeaf()', async () => {
-        it('removes a leaf correctly', async () => {
-            await sortition.removeLeaf(0xecdef)
-            await sortition.removeLeaf(0xfad00)
 
             let root = await sortition.getRoot.call()
 
@@ -86,7 +86,7 @@ contract('Sortition', (accounts) => {
 
     describe('trunk stacks', async () => {
         it('works as expected', async () => {
-            await sortition.removeLeaf(0x00000)
+            await sortition.removeOperator(alice)
 
             let deletedLeaf = await sortition.getLeaf.call(0x00000)
             assert.equal(deletedLeaf, 0)
@@ -121,6 +121,13 @@ contract('Sortition', (accounts) => {
             let address2 = await sortition.leafAddress.call(leaf2)
             assert.equal(address2, carol)
             await sortition.pickWeightedLeaf(index2)
+        })
+    })
+
+    describe('operatorsInPool()', async () => {
+        it('works as expected', async () => {
+            let nOperators = await sortition.operatorsInPool.call()
+            assert.equal(nOperators, 3)
         })
     })
 })
