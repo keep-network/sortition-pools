@@ -189,7 +189,7 @@ contract Sortition is GasStation {
       return root.sumWeight();
     }
 
-    function pickWeightedLeaf(uint index) public view returns (uint) {
+    function pickWeightedLeafWithIndex(uint index) public view returns (uint, uint) {
 
       uint currentIndex = index;
       uint currentNode = root;
@@ -209,7 +209,19 @@ contract Sortition is GasStation {
       }
 
       // get leaf position
-      return currentPosition.child(currentSlot);
+      uint leafPosition = currentPosition.child(currentSlot);
+      // get the first index of the leaf
+      // This works because the last weight returned from `pickWeightedSlot()`
+      // equals the "overflow" from getting the current slot.
+      uint leafFirstIndex = index - currentIndex;
+      return (leafPosition, leafFirstIndex);
+    }
+
+    function pickWeightedLeaf(uint index) public view returns (uint) {
+      uint leafPosition;
+      uint _ignoredIndex;
+      (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index);
+      return leafPosition;
     }
 
     function leafAddress(uint leaf) public pure returns (address) {
