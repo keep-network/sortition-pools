@@ -47,4 +47,51 @@ contract('SortitionPool', (accounts) => {
             assert.equal(group.length, 5);
         })
     })
+
+    describe('selectSetGroup', async () => {
+        it('returns group of expected size with unique members', async () => {
+            await pool.insertOperator(accounts[0], 10)
+            await pool.insertOperator(accounts[1], 11)
+            await pool.insertOperator(accounts[2], 12)
+            await pool.insertOperator(accounts[3], 5)
+            await pool.insertOperator(accounts[4], 1)
+
+            let group = await pool.selectSetGroup(3, seed)
+            assert.equal(group.length, 3);
+            assert.isFalse(hasDuplicates(group))
+
+            group = await pool.selectSetGroup(5, seed)
+            assert.equal(group.length, 5);
+            assert.isFalse(hasDuplicates(group))
+        })
+
+        function hasDuplicates(array) {
+            return (new Set(array)).size !== array.length;
+        }
+
+        it('reverts when there are no operators in pool', async () => {
+            try {
+                await pool.selectSetGroup(3, seed)
+            } catch (error) {
+                assert.include(error.message, "Not enough operators in pool");
+                return
+            }
+
+            assert.fail('Expected throw not received');
+        })
+
+        it('reverts when there are not enough operators in pool', async () => {
+            await pool.insertOperator(accounts[0], 10)
+            await pool.insertOperator(accounts[1], 11)
+
+            try {
+                await pool.selectSetGroup(3, seed)
+            } catch (error) {
+                assert.include(error.message, "Not enough operators in pool");
+                return
+            }
+
+            assert.fail('Expected throw not received');
+        })
+    })
 })
