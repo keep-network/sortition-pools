@@ -51,4 +51,84 @@ library RNG {
     }
     return (index, state);
   }
+
+  /// @notice Return an index corresponding to a new, unique leaf.
+  ///
+  /// @dev Gets a new index in a truncated range
+  /// with the weights of all previously selected leaves subtracted.
+  /// This index is then mapped to the full range of possible indices,
+  /// skipping the ranges covered by previous leaves.
+  ///
+  /// @param range The full range in which the unique index should be.
+  ///
+  /// @param state The RNG state.
+  ///
+  /// @param previousLeafStartingIndices List of indices
+  /// corresponding to the _first_ index of each previously selected leaf.
+  /// An index number `i` is a starting index of leaf `o`
+  /// if querying for index `i` in the sortition pool returns `o`,
+  /// but querying for `i-1` returns a different leaf.
+  /// This list REALLY needs to be sorted from smallest to largest.
+  ///
+  /// @param previousLeafWeights List of weights of previously selected leaves.
+  /// This list must be the same length as `previousLeafStartingIndices`
+  /// and in the same order.
+  ///
+  /// @param sumPreviousWeights The sum of the weights of previous leaves.
+  /// Could be calculated from `previousLeafWeights`
+  /// but providing it explicitly makes the function a bit simpler.
+  function getUniqueIndex(
+    uint range,
+    bytes32 state,
+    uint[] memory previousLeafStartingIndices,
+    uint[] memory previousLeafWeights,
+    uint sumPreviousWeights
+  ) internal
+    pure
+    returns (uint index, bytes32 newState)
+  {
+    // Get an index in the truncated range.
+    // The truncated range covers only new leaves,
+    // but has to be mapped to the actual range of indices.
+    uint truncatedRange = range - sumPreviousWeights;
+    uint truncatedIndex;
+    (truncatedIndex, newState) = getIndex(truncatedRange, state);
+
+    // Map the truncated index to the available unique indices.
+    index = uniquifyIndex(
+      truncatedIndex,
+      previousLeafStartingIndices,
+      previousLeafWeights
+    );
+
+    return (index, newState);
+  }
+
+  /// @notice A more easily testable utility function
+  /// for turning a truncated index into a unique index.
+  function uniquifyIndex(
+    uint truncatedIndex,
+    uint[] memory previousLeafStartingIndices,
+    uint[] memory previousLeafWeights
+  ) internal
+    pure
+    returns (uint mappedIndex)
+  {
+    // Just a textual convenience
+    uint nPreviousLeaves = previousLeafStartingIndices.length;
+    // Start by setting the index at the truncated index
+    mappedIndex = truncatedIndex;
+
+    for (uint i = 0; i < nPreviousLeaves; i++) {
+      // If the index is greater than the starting index of the `i`th leaf,
+      // we need to skip that leaf.
+      if (mappedIndex >= previousLeafStartingIndices[i]) {
+        // Add the weight of this previous leaf to the index,
+        // ensuring that we skip the leaf.
+        mappedIndex += previousLeafWeights[i];
+      }
+    }
+
+    return mappedIndex;
+  }
 }
