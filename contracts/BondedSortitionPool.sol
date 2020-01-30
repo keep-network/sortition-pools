@@ -43,7 +43,64 @@ contract BondedSortitionPool is Sortition {
     }
 
     function clearSetGroup() public {
-      group = new address[](0);
+      for (uint i = 0; i < group.length; i++) {
+        group[i] = address(0);
+      }
+    }
+
+    function selectSetGroupB(
+      uint256 groupSize,
+      bytes32 seed,
+      uint bondSize,
+      BondingContract bondingContract
+    ) public returns (address[] memory) {
+      uint operatorsRemaining = operatorsInPool();
+
+      address[] memory selected = new address[](groupSize);
+      uint nSelected = 0;
+
+      uint idx;
+      bytes32 rngState = seed;
+
+      uint totalWeight = root.sumWeight();
+
+      uint leafOrWeight;
+      address op;
+      bool duplicate;
+
+      while (nSelected < groupSize) {
+        require(operatorsRemaining >= groupSize, "Not enough operators in pool");
+
+        (idx, rngState) = RNG.getIndex(totalWeight, rngState);
+        /* (idx, rngState) = RNG.getIndex(root.sumWeight(), rngState); */
+
+        leafOrWeight = leaves[pickWeightedLeaf(idx)];
+        op = leafOrWeight.operator();
+        // XXX: awful but saves a slot
+        leafOrWeight = leafOrWeight.weight();
+
+        duplicate = false;
+        for (uint i = 0; i < nSelected; i++) {
+          if (op == selected[i]) {
+            duplicate = true;
+            break;
+          }
+        }
+
+        if (!duplicate) {
+          if (bondingContract.isEligible(op, leafOrWeight, bondSize)) {
+            selected[nSelected] = op;
+            nSelected += 1;
+          } else {
+            removeOperator(op);
+            totalWeight -= leafOrWeight;
+            operatorsRemaining -= 1;
+          }
+        }
+      }
+
+      group = selected;
+      return selected;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -151,8 +208,6 @@ contract BondedSortitionPool is Sortition {
 
         // If nothing has exploded by now,
         // we should have the correct size of group.
-
-        emit Group(selected);
 
         group = selected;
         return selected;
