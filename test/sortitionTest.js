@@ -42,12 +42,12 @@ contract('Sortition', (accounts) => {
   })
 
   describe('insertOperator()', async () => {
-    it('Inserts an operator correctly', async () => {
-      const weightA = new BN('fff0', 16)
-      const weightB = new BN('aaaa', 16)
-      const weightC = new BN('f', 16)
-      const weightD = new BN('1', 16)
+    const weightA = new BN('fff0', 16)
+    const weightB = new BN('aaaa', 16)
+    const weightC = new BN('f', 16)
+    const weightD = new BN('1', 16)
 
+    it('Inserts an operator correctly', async () => {
       await sortition.insertOperator(alice, weightA)
       await sortition.insertOperator(bob, weightB)
       await sortition.insertOperator(carol, weightC)
@@ -56,6 +56,17 @@ contract('Sortition', (accounts) => {
       const root = await sortition.getRoot.call()
 
       assert.equal(toHex(root), '0xffffaaab00000000000000000000000000000000000000000000000000000000')
+    })
+
+    it('reverts if operator is already registered', async () => {
+      try {
+        await sortition.insertOperator(alice, weightB)
+      } catch (error) {
+        assert.include(error.message, 'Operator is already registered in the pool')
+        return
+      }
+
+      assert.fail('Expected throw not received')
     })
   })
 
@@ -71,8 +82,32 @@ contract('Sortition', (accounts) => {
 
       assert.equal(davidLeaf, 0)
     })
+
+    it('reverts if operator is not registered', async () => {
+      try {
+        await sortition.removeOperator('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+      } catch (error) {
+        assert.include(error.message, 'Operator is not registered in the pool')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
   })
 
+  describe('isOperatorRegistered()', async () => {
+    it('returns true if operator is registered', async () => {
+      const result = await sortition.isOperatorRegistered(alice)
+
+      assert.isTrue(result)
+    })
+
+    it('returns false if operator is not registered', async () => {
+      const result = await sortition.isOperatorRegistered('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+
+      assert.isFalse(result)
+    })
+  })
 
   describe('updateLeaf()', async () => {
     it('updates a leaf correctly', async () => {
