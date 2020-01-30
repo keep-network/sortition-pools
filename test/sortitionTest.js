@@ -9,9 +9,9 @@ contract('Sortition', (accounts) => {
     let carol = accounts[2]
     let david = accounts[3]
 
-  before(async () => {
-      sortition = await Sortition.new()
-  })
+    before(async () => {
+        sortition = await Sortition.new()
+    })
 
     describe('setLeaf()', async () => {
         it('Sets the leaf correctly', async () => {
@@ -42,12 +42,12 @@ contract('Sortition', (accounts) => {
     })
 
     describe('insertOperator()', async () => {
-        it('Inserts an operator correctly', async () => {
-            let weightA = new BN('fff0', 16)
-            let weightB = new BN('aaaa', 16)
-            let weightC = new BN('f', 16)
-            let weightD = new BN('1', 16)
+        let weightA = new BN('fff0', 16)
+        let weightB = new BN('aaaa', 16)
+        let weightC = new BN('f', 16)
+        let weightD = new BN('1', 16)
 
+        it('Inserts an operator correctly', async () => {
             await sortition.insertOperator(alice, weightA)
             await sortition.insertOperator(bob, weightB)
             await sortition.insertOperator(carol, weightC)
@@ -56,6 +56,17 @@ contract('Sortition', (accounts) => {
             let root = await sortition.getRoot.call()
 
             assert.equal(toHex(root), '0xffffaaab00000000000000000000000000000000000000000000000000000000')
+        })
+
+        it('reverts if operator is already registered', async () => {
+            try {
+                await sortition.insertOperator(alice, weightB)
+            } catch (error) {
+                assert.include(error.message, "Operator is already registered in the pool")
+                return
+            }
+
+            assert.fail('Expected throw not received');
         })
     })
 
@@ -70,6 +81,17 @@ contract('Sortition', (accounts) => {
             let davidLeaf = await sortition.getFlaggedOperatorLeaf.call(david)
 
             assert.equal(davidLeaf, 0)
+        })
+
+        it('reverts if operator is not registered', async () => {
+            try {
+                await sortition.removeOperator("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            } catch (error) {
+                assert.include(error.message, "Operator is not registered in the pool")
+                return
+            }
+
+            assert.fail('Expected throw not received');
         })
     })
 
