@@ -128,47 +128,50 @@ contract BondedSortitionPool is Sortition {
         RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](groupSize);
         uint selectedTotalWeight = 0;
 
-        uint leaf;
+        // XXX: Position of leaf; the leaf; its weight.
+        // I need to free every local variable slot I can.
+        // Arbitrary name to underline the absurdity.
+        uint foo;
+
         uint tempIdx;
 
-        /* RNG.IndexWeight memory tempIW = new RNG.IndexWeight(0, 0); */
-
         bytes32 rngState = seed;
+
+        uint poolWeight = root.sumWeight();
 
         /* loop */
         while (nSelected < groupSize) {
           require(
-            root.sumWeight() > selectedTotalWeight,
+            poolWeight > selectedTotalWeight,
             "Not enough operators in pool"
           );
 
-          (tempIdx, rngState) = RNG.getUniqueIndex(
-            root.sumWeight(),
-            rngState,
-            selectedLeaves,
-            selectedTotalWeight
-          );
+          // INLINE RNG.getUniqueIndex()
+
+          (tempIdx, rngState) = RNG.getIndex(poolWeight - selectedTotalWeight, rngState);
+          for (uint i = 0; i < nSelected; i++) {
+            if (tempIdx >= selectedLeaves[i].index) {
+              tempIdx += selectedLeaves[i].weight;
+            }
+          }
 
           // XXX: cursed be lack of newtypes
           // on the upside, I can reuse the same variable slot for this
           // but seriously, this is the worst
-          (leaf, tempIdx) = pickWeightedLeafWithIndex(tempIdx);
-          leaf = leaves[leaf];
+          (foo, tempIdx) = pickWeightedLeafWithIndex(tempIdx);
+          foo = leaves[foo];
 
-          address op = leaf.operator();
-          uint wt = leaf.weight();
-
-          /* tempIW.weight = leaf.weight(); */
-          /* tempIW.index = tempIdx; */
+          address op = foo.operator();
+          foo = foo.weight();
 
           // Good operators go into the group and the list to skip,
           // naughty operators go onto the deletion list
-          if (bondingContract.isEligible(op, wt, bondSize)) {
+          if (bondingContract.isEligible(op, foo, bondSize)) {
 
             // We insert the new index and weight into the lists,
             // keeping them both ordered by the starting indices.
             // To do this, we start by holding the new element outside the list.
-            RNG.IndexWeight memory tempIW = RNG.IndexWeight(tempIdx, wt);
+            RNG.IndexWeight memory tempIW = RNG.IndexWeight(tempIdx, foo);
 
             for (uint i = 0; i < nSelected; i++) {
               RNG.IndexWeight memory thisIW = selectedLeaves[i];
@@ -176,7 +179,7 @@ contract BondedSortitionPool is Sortition {
               // we check if the outside element should go before it.
               // If true, we swap that element and the outside element.
               if (tempIW.index < thisIW.index) {
-                selectedLeaves[i] = RNG.IndexWeight(tempIW.index, tempIW.weight);
+                selectedLeaves[i] = tempIW;
                 tempIW = thisIW;
               }
             }
@@ -186,20 +189,18 @@ contract BondedSortitionPool is Sortition {
             selectedLeaves[nSelected] = tempIW;
 
             // And increase the skipped weight.
-            selectedTotalWeight += wt;
+            selectedTotalWeight += foo;
 
             selected[nSelected] = op;
             nSelected += 1;
           } else {
             removeOperator(op);
+            poolWeight -= foo;
 
             // INLINE RNG.remapIndices()
             for (uint i = 0; i < nSelected; i++) {
               if (selectedLeaves[i].index > tempIdx) {
-                selectedLeaves[i] = RNG.IndexWeight(
-                  selectedLeaves[i].index - wt,
-                  selectedLeaves[i].weight
-                );
+                selectedLeaves[i].index -= foo;
               }
             }
           }

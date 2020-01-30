@@ -81,40 +81,68 @@ library RNG {
     uint range,
     bytes32 state,
     IndexWeight[] memory previousLeaves,
-    uint sumPreviousWeights
+    uint sumPreviousWeights,
+    uint nPreviousLeaves
   ) internal
     pure
-    returns (uint index, bytes32 newState)
+    returns (uint uniqueIndex, bytes32 newState)
   {
     // Get an index in the truncated range.
     // The truncated range covers only new leaves,
     // but has to be mapped to the actual range of indices.
     uint truncatedRange = range - sumPreviousWeights;
     uint truncatedIndex;
+    /* (truncatedIndex, newState) = getIndex(truncatedRange, state); */
+
+    /* // Map the truncated index to the available unique indices. */
+    /* index = internalUniquifyIndex( */
+    /*   truncatedIndex, */
+    /*   previousLeaves, */
+    /*   nPreviousLeaves */
+    /* ); */
+
     (truncatedIndex, newState) = getIndex(truncatedRange, state);
+    uniqueIndex = truncatedIndex;
 
-    uint n = previousLeaves.length;
-
-    uint[] memory previousLeafStartingIndices = new uint[](n);
-    uint[] memory previousLeafWeights = new uint[](n);
-
-    for (uint i = 0; i < n; i++) {
-      previousLeafStartingIndices[i] = previousLeaves[i].index;
-      previousLeafWeights[i] = previousLeaves[i].weight;
+    for (uint i = 0; i < nPreviousLeaves; i++) {
+      // If the index is greater than the starting index of the `i`th leaf,
+      // we need to skip that leaf.
+      if (uniqueIndex >= previousLeaves[i].index) {
+        // Add the weight of this previous leaf to the index,
+        // ensuring that we skip the leaf.
+        uniqueIndex += previousLeaves[i].weight;
+      }
     }
-    // Map the truncated index to the available unique indices.
-    index = uniquifyIndex(
-      truncatedIndex,
-      previousLeafStartingIndices,
-      previousLeafWeights
-    );
 
-    return (index, newState);
+    return (uniqueIndex, newState);
   }
 
   struct IndexWeight {
     uint index;
     uint weight;
+  }
+
+  function internalUniquifyIndex(
+    uint truncatedIndex,
+    IndexWeight[] memory previousLeaves,
+    uint nPreviousLeaves
+  ) internal
+    pure
+    returns (uint mappedIndex)
+  {
+    mappedIndex = truncatedIndex;
+
+    for (uint i = 0; i < nPreviousLeaves; i++) {
+      // If the index is greater than the starting index of the `i`th leaf,
+      // we need to skip that leaf.
+      if (mappedIndex >= previousLeaves[i].index) {
+        // Add the weight of this previous leaf to the index,
+        // ensuring that we skip the leaf.
+        mappedIndex += previousLeaves[i].weight;
+      }
+    }
+
+    return mappedIndex;
   }
 
   /// @notice A more easily testable utility function
