@@ -128,12 +128,11 @@ contract BondedSortitionPool is Sortition {
         RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](groupSize);
         uint selectedTotalWeight = 0;
 
-        // XXX: Position of leaf; the leaf; its weight.
-        // I need to free every local variable slot I can.
-        // Arbitrary name to underline the absurdity.
+        // XXX: These two variables do way too varied things,
+        // but I need all variable slots I can free.
+        // Arbitrary names to underline the absurdity.
         uint foo;
-
-        uint tempIdx;
+        uint bar;
 
         bytes32 rngState = seed;
 
@@ -148,30 +147,39 @@ contract BondedSortitionPool is Sortition {
 
           // INLINE RNG.getUniqueIndex()
 
-          (tempIdx, rngState) = RNG.getIndex(poolWeight - selectedTotalWeight, rngState);
+          (bar, rngState) = RNG.getIndex(poolWeight - selectedTotalWeight, rngState);
+          // BAR is now the TRUNCATED INDEX
           for (uint i = 0; i < nSelected; i++) {
-            if (tempIdx >= selectedLeaves[i].index) {
-              tempIdx += selectedLeaves[i].weight;
+            if (bar >= selectedLeaves[i].index) {
+              bar += selectedLeaves[i].weight;
+              // BAR is now the UNIQUE INDEX
             }
           }
 
-          // XXX: cursed be lack of newtypes
-          // on the upside, I can reuse the same variable slot for this
-          // but seriously, this is the worst
-          (foo, tempIdx) = pickWeightedLeafWithIndex(tempIdx);
-          foo = leaves[foo];
+          // BAR starts as the UNIQUE INDEX here
+          (foo, bar) = pickWeightedLeafWithIndex(bar);
+          // FOO is now the POSITION OF THE LEAF
+          // BAR is now the STARTING INDEX of the leaf
 
+          // FOO starts as the POSITION OF THE LEAF here
+          foo = leaves[foo];
+          // FOO is now the LEAF itself
           address op = foo.operator();
           foo = foo.weight();
+          // FOO is now the WEIGHT OF THE OPERATOR
 
           // Good operators go into the group and the list to skip,
-          // naughty operators go onto the deletion list
+          // naughty operators get deleted
+          // FOO is the WEIGHT OF THE OPERATOR here
           if (bondingContract.isEligible(op, foo, bondSize)) {
 
             // We insert the new index and weight into the lists,
             // keeping them both ordered by the starting indices.
             // To do this, we start by holding the new element outside the list.
-            RNG.IndexWeight memory tempIW = RNG.IndexWeight(tempIdx, foo);
+
+            // BAR is the STARTING INDEX of the leaf
+            // FOO is the WEIGHT of the operator
+            RNG.IndexWeight memory tempIW = RNG.IndexWeight(bar, foo);
 
             for (uint i = 0; i < nSelected; i++) {
               RNG.IndexWeight memory thisIW = selectedLeaves[i];
@@ -188,18 +196,23 @@ contract BondedSortitionPool is Sortition {
             // so we push it to the end of the list.
             selectedLeaves[nSelected] = tempIW;
 
-            // And increase the skipped weight.
+            // And increase the skipped weight,
+            // by FOO which is the WEIGHT of the operator
             selectedTotalWeight += foo;
 
             selected[nSelected] = op;
             nSelected += 1;
           } else {
             removeOperator(op);
+            // subtract FOO which is the WEIGHT of the operator
+            // from the pool weight
             poolWeight -= foo;
 
             // INLINE RNG.remapIndices()
+            // BAR is the STARTING INDEX of the removed leaf
+            // FOO is the WEIGHT of the removed operator
             for (uint i = 0; i < nSelected; i++) {
-              if (selectedLeaves[i].index > tempIdx) {
+              if (selectedLeaves[i].index > bar) {
                 selectedLeaves[i].index -= foo;
               }
             }
