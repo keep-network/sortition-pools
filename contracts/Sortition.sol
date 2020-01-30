@@ -32,6 +32,11 @@ contract Sortition is GasStation {
     uint constant TRUNK_MAX = 2**16;
 
     function insertOperator(address operator, uint weight) public {
+      require(
+        getFlaggedOperatorLeaf(operator) == 0,
+        "Operator is already registered in the pool"
+      );
+
       uint theTrunk = suitableTrunk(weight);
       uint position = getEmptyLeaf(theTrunk);
       uint theLeaf = Leaf.make(operator, weight);
@@ -49,12 +54,12 @@ contract Sortition is GasStation {
     function removeOperator(address operator) public {
       uint flaggedLeaf = getFlaggedOperatorLeaf(operator);
 
-      if (flaggedLeaf != 0) {
-        uint unflaggedLeaf = flaggedLeaf.unsetFlag();
-        releaseGas(operator);
-        removeLeaf(unflaggedLeaf);
-        removeOperatorLeaf(operator);
-      }
+      require(flaggedLeaf != 0, "Operator is not registered in the pool");
+
+      uint unflaggedLeaf = flaggedLeaf.unsetFlag();
+      releaseGas(operator);
+      removeLeaf(unflaggedLeaf);
+      removeOperatorLeaf(operator);
     }
 
     function operatorsInTrunk(uint trunkN) public view returns (uint) {
