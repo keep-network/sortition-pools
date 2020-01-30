@@ -95,6 +95,19 @@ contract('Sortition', (accounts) => {
         })
     })
 
+    describe('isOperatorRegistered()', async () => {
+        it('returns true if operator is registered', async () => {
+            let result = await sortition.isOperatorRegistered(alice)
+
+            assert.isTrue(result)
+        })
+
+        it('returns false if operator is not registered', async () => {
+            let result = await sortition.isOperatorRegistered("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+
+            assert.isFalse(result)
+        })
+    })
 
     describe('updateLeaf()', async () => {
         it('updates a leaf correctly', async () => {
