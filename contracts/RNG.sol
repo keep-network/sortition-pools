@@ -63,14 +63,14 @@ library RNG {
   ///
   /// @param state The RNG state.
   ///
-  /// @param previousLeafStartingIndices List of indices
+  /// @param previousLeaves List of indices
   /// corresponding to the _first_ index of each previously selected leaf.
   /// An index number `i` is a starting index of leaf `o`
   /// if querying for index `i` in the sortition pool returns `o`,
   /// but querying for `i-1` returns a different leaf.
   /// This list REALLY needs to be sorted from smallest to largest.
   ///
-  /// @param previousLeafWeights List of weights of previously selected leaves.
+  /// previousLeafWeights List of weights of previously selected leaves.
   /// This list must be the same length as `previousLeafStartingIndices`
   /// and in the same order.
   ///
@@ -80,8 +80,7 @@ library RNG {
   function getUniqueIndex(
     uint range,
     bytes32 state,
-    uint[] memory previousLeafStartingIndices,
-    uint[] memory previousLeafWeights,
+    IndexWeight[] memory previousLeaves,
     uint sumPreviousWeights
   ) internal
     pure
@@ -94,6 +93,15 @@ library RNG {
     uint truncatedIndex;
     (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
+    uint n = previousLeaves.length;
+
+    uint[] memory previousLeafStartingIndices = new uint[](n);
+    uint[] memory previousLeafWeights = new uint[](n);
+
+    for (uint i = 0; i < n; i++) {
+      previousLeafStartingIndices[i] = previousLeaves[i].index;
+      previousLeafWeights[i] = previousLeaves[i].weight;
+    }
     // Map the truncated index to the available unique indices.
     index = uniquifyIndex(
       truncatedIndex,
@@ -102,6 +110,11 @@ library RNG {
     );
 
     return (index, newState);
+  }
+
+  struct IndexWeight {
+    uint index;
+    uint weight;
   }
 
   /// @notice A more easily testable utility function
@@ -130,5 +143,26 @@ library RNG {
     }
 
     return mappedIndex;
+  }
+
+  function remapIndices(
+    uint deletedStartingIndex,
+    uint deletedWeight,
+    IndexWeight[] memory previousLeaves
+  ) internal
+    pure
+    returns (IndexWeight[] memory)
+  {
+    uint nPreviousLeaves = previousLeaves.length;
+
+    for (uint i = 0; i < nPreviousLeaves; i++) {
+      // If index is greater than the index of the deleted leaf,
+      // reduce the starting index by the weight of the deleted leaf.
+      if (previousLeaves[i].index > deletedStartingIndex) {
+        previousLeaves[i].index -= deletedWeight;
+      }
+    }
+
+    return previousLeaves;
   }
 }

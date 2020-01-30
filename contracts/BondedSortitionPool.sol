@@ -34,6 +34,18 @@ interface BondingContract {
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
+    event Group(address[] members);
+
+    address[] group;
+
+    function getSetGroup() public view returns (address[] memory) {
+      return group;
+    }
+
+    function clearSetGroup() public {
+      group = new address[](0);
+    }
+
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed and bonding requirements. All operators
     /// in the group are unique.
@@ -50,23 +62,99 @@ contract BondedSortitionPool is Sortition {
         bytes32 seed,
         uint bondSize,
         BondingContract bondingContract
-    ) public view returns (address[] memory) {
+    ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
         address[] memory selected = new address[](groupSize);
-        uint selectedWeight = 0;
+        uint nSelected = 0;
 
-        //
-        // FIXME! THIS IS NOT A SECURE ALGORITHM AND IT HAS TO BE REPLACED!
-        // IT IS JUST A TEMPORARY SOLUTION ALLOWING US TO CODE AGAINST
-        // THIS INTERFACE.
-        //
-        for (uint i = 0; i < groupSize; i++) {
-            uint leaf = leaves[pickWeightedLeaf(selectedWeight)];
-            selected[i] = leaf.operator();
-            selectedWeight += leaf.weight();
+        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](groupSize);
+        uint selectedTotalWeight = 0;
+
+        uint leaf;
+        uint tempIdx;
+
+        /* RNG.IndexWeight memory tempIW = new RNG.IndexWeight(0, 0); */
+
+        bytes32 rngState = seed;
+
+        /* loop */
+        while (nSelected < groupSize) {
+          require(
+            root.sumWeight() > selectedTotalWeight,
+            "Not enough operators in pool"
+          );
+
+          (tempIdx, rngState) = RNG.getUniqueIndex(
+            root.sumWeight(),
+            rngState,
+            selectedLeaves,
+            selectedTotalWeight
+          );
+
+          // XXX: cursed be lack of newtypes
+          // on the upside, I can reuse the same variable slot for this
+          // but seriously, this is the worst
+          (leaf, tempIdx) = pickWeightedLeafWithIndex(tempIdx);
+          leaf = leaves[leaf];
+
+          address op = leaf.operator();
+          uint wt = leaf.weight();
+
+          /* tempIW.weight = leaf.weight(); */
+          /* tempIW.index = tempIdx; */
+
+          // Good operators go into the group and the list to skip,
+          // naughty operators go onto the deletion list
+          if (bondingContract.isEligible(op, wt, bondSize)) {
+
+            // We insert the new index and weight into the lists,
+            // keeping them both ordered by the starting indices.
+            // To do this, we start by holding the new element outside the list.
+            RNG.IndexWeight memory tempIW = RNG.IndexWeight(tempIdx, wt);
+
+            for (uint i = 0; i < nSelected; i++) {
+              RNG.IndexWeight memory thisIW = selectedLeaves[i];
+              // With each element of the list,
+              // we check if the outside element should go before it.
+              // If true, we swap that element and the outside element.
+              if (tempIW.index < thisIW.index) {
+                selectedLeaves[i] = RNG.IndexWeight(tempIW.index, tempIW.weight);
+                tempIW = thisIW;
+              }
+            }
+
+            // Now the outside element is the last one,
+            // so we push it to the end of the list.
+            selectedLeaves[nSelected] = tempIW;
+
+            // And increase the skipped weight.
+            selectedTotalWeight += wt;
+
+            selected[nSelected] = op;
+            nSelected += 1;
+          } else {
+            removeOperator(op);
+
+            // INLINE RNG.remapIndices()
+            for (uint i = 0; i < nSelected; i++) {
+              if (selectedLeaves[i].index > tempIdx) {
+                selectedLeaves[i] = RNG.IndexWeight(
+                  selectedLeaves[i].index - wt,
+                  selectedLeaves[i].weight
+                );
+              }
+            }
+          }
         }
+        /* pool */
 
+        // If nothing has exploded by now,
+        // we should have the correct size of group.
+
+        emit Group(selected);
+
+        group = selected;
         return selected;
     }
 }
