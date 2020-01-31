@@ -74,5 +74,35 @@ contract('SortitionPool', (accounts) => {
       await pool.selectGroup(5)
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
+
+    it('removes outdated but still operators', async () => {
+      await staking.setStake(alice, 2000)
+      await staking.setStake(bob, 4000000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+
+      await staking.setStake(bob, 390000)
+
+      const group = await pool.selectGroup.call(5)
+      await pool.selectGroup(5)
+      assert.deepEqual(group, [alice, alice, alice, alice, alice])
+    })
+
+    it('lets outdated operators update their status', async () => {
+      await staking.setStake(alice, 2000)
+      await staking.setStake(bob, 4000000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+
+      await staking.setStake(bob, 390000)
+      await staking.setStake(alice, 1000)
+
+      await pool.updatePoolWeight(bob)
+      await pool.updatePoolWeight(alice)
+
+      const group = await pool.selectGroup.call(5)
+      await pool.selectGroup(5)
+      assert.deepEqual(group, [bob, bob, bob, bob, bob])
+    })
   })
 })
