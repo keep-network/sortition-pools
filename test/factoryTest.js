@@ -1,12 +1,17 @@
 const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory.sol')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
+const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
 contract('SortitionPoolFactory', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
+  const minStake = 2000
   let sortitionPoolFactory
+  let staking
 
   before(async () => {
+    staking = await StakingContractStub.new()
     sortitionPoolFactory = await SortitionPoolFactory.deployed()
+    await sortitionPoolFactory.setParams(staking.address, minStake)
   })
 
   describe('createSortitionPool()', async () => {
