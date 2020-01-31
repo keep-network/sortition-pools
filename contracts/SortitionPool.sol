@@ -24,31 +24,54 @@ contract SortitionPool is Sortition {
 
     uint256 MINIMUM_STAKE;
     StakingContract staking;
+    bytes32 rngSeed;
 
     constructor (StakingContract stakingContract, uint256 minimumStake) public {
         MINIMUM_STAKE = minimumStake;
         staking = stakingContract;
     }
 
+    function reseed(bytes32 seed) public {
+        rngSeed = seed;
+    }
+
     /// @notice Selects a new group of operators of the provided size based on
-    /// the provided pseudo-random seed.
+    /// the stored pseudo-random seed.
     /// @dev At least one operator has to be registered in the pool, otherwise
     /// the function fails reverting the transaction.
     /// @param groupSize Size of the requested group
-    /// @param seed Pseudo-random number used to select operators to group
-    function selectGroup(uint256 groupSize, bytes32 seed) public view returns (address[] memory)  {
-        uint totalWeight = totalWeight();
-        require(totalWeight > 0, "No operators in pool");
+    function selectGroup(uint256 groupSize) public returns (address[] memory)  {
+        uint256 poolWeight = totalWeight();
+        require(poolWeight > 0, "No operators in pool");
 
         address[] memory selected = new address[](groupSize);
+        uint256 nSelected = 0;
 
-        uint idx;
-        bytes32 state = seed;
+        uint256 idx;
+        uint256 leaf;
+        address op;
+        uint256 wt;
 
-        for (uint i = 0; i < groupSize; i++) {
-            (idx, state) = RNG.getIndex(totalWeight, bytes32(state));
-            selected[i] = leaves[pickWeightedLeaf(idx)].operator();
+        bytes32 rngState = rngSeed;
+
+        while (nSelected < groupSize) {
+            require(poolWeight > 0, "No eligible operators");
+
+            (idx, rngState) = RNG.getIndex(poolWeight, rngState);
+            leaf = leaves[pickWeightedLeaf(idx)];
+            op = leaf.operator();
+            wt = leaf.weight();
+
+            if (getEligibleWeight(op) >= wt) {
+                selected[nSelected] = op;
+                nSelected += 1;
+            } else {
+                removeOperator(op);
+                poolWeight -= wt;
+            }
         }
+
+        rngSeed = rngState;
 
         return selected;
     }
