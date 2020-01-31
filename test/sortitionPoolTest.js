@@ -4,9 +4,12 @@ const StackLib = artifacts.require('StackLib')
 const Trunk = artifacts.require('Trunk')
 const Leaf = artifacts.require('Leaf')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
+const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
 contract('SortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
+  const minStake = 2000
+  let staking
   let pool
 
   beforeEach(async () => {
@@ -15,7 +18,8 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(StackLib)
     SortitionPool.link(Trunk)
     SortitionPool.link(Leaf)
-    pool = await SortitionPool.new()
+    staking = await StakingContractStub.new()
+    pool = await SortitionPool.new(staking.address, minStake)
   })
 
   describe('selectGroup', async () => {

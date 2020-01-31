@@ -75,6 +75,17 @@ contract Sortition is GasStation {
         removeOperatorLeaf(operator);
     }
 
+    function updateOperator(address operator, uint256 weight) public {
+        require(
+            isOperatorRegistered(operator),
+            "Operator is not registered in the pool"
+        );
+
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
+        updateLeaf(unflaggedLeaf, weight);
+    }
+
     function operatorsInTrunk(uint256 trunkN) public view returns (uint256) {
         // Get the number of leaves that might be occupied;
         // if `rightmostLeaf` equals `firstLeaf()` the trunk must be empty,
