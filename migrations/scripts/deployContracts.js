@@ -7,6 +7,7 @@ module.exports = async function (artifacts, deployer) {
   const Trunk = artifacts.require("Trunk");
   const Leaf = artifacts.require("Leaf");
   const SortitionPoolFactory = artifacts.require("SortitionPoolFactory");
+  const BondedSortitionPoolFactory = artifacts.require("BondedSortitionPoolFactory");
 
   await deployer.deploy(Branch);
   await deployer.deploy(Position);
@@ -14,6 +15,8 @@ module.exports = async function (artifacts, deployer) {
   await deployer.deploy(Trunk);
   await deployer.link(Branch, Leaf);
   await deployer.deploy(Leaf);
+
+  // Sortition
   await deployer.link(Branch, Sortition);
   await deployer.link(Position, Sortition);
   await deployer.link(StackLib, Sortition);
@@ -21,10 +24,19 @@ module.exports = async function (artifacts, deployer) {
   await deployer.link(Leaf, Sortition);
   await deployer.deploy(Sortition);
 
+  // Sortition Pool Factory
   await deployer.link(Branch, SortitionPoolFactory);
   await deployer.link(Position, SortitionPoolFactory);
   await deployer.link(StackLib, SortitionPoolFactory);
   await deployer.link(Trunk, SortitionPoolFactory);
   await deployer.link(Leaf, SortitionPoolFactory);
   await deployer.deploy(SortitionPoolFactory);
+
+  // Bonded Sortition Pool Factory
+  await deployer.link(Branch, BondedSortitionPoolFactory);
+  await deployer.link(Position, BondedSortitionPoolFactory);
+  await deployer.link(StackLib, BondedSortitionPoolFactory);
+  await deployer.link(Trunk, BondedSortitionPoolFactory);
+  await deployer.link(Leaf, BondedSortitionPoolFactory);
+  await deployer.deploy(BondedSortitionPoolFactory);
 };
