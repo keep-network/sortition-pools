@@ -45,7 +45,7 @@ contract('BondedSortitionPool', (accounts) => {
 
             await pool.clearSetGroup()
 
-            pool.selectSetGroup(5, seed, bond, bondingContract.address)
+            await pool.selectSetGroup(5, seed, bond, bondingContract.address)
             group = await pool.getSetGroup()
             assert.equal(group.length, 5);
             assert.isFalse(hasDuplicates(group))
