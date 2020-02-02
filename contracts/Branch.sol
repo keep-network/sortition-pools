@@ -98,6 +98,6 @@ library Branch {
             }
         }
 
-        return (currentSlot, weight);
+        return (currentSlot, pickedWeight);
     }
 }
