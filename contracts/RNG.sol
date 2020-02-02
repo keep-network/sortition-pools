@@ -53,14 +53,15 @@ library RNG {
     {
         bool found = false;
         uint256 index;
+        bytes32 newState = state;
         while (!found) {
-            index = truncate(bits, uint256(state));
-            state = keccak256(abi.encode(state));
+            index = truncate(bits, uint256(newState));
+            newState = keccak256(abi.encode(newState));
             if (index < range) {
                 found = true;
             }
         }
-        return (index, state);
+        return (index, newState);
     }
 
     /// @notice Return an index corresponding to a new, unique leaf.
