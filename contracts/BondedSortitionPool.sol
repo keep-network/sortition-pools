@@ -34,20 +34,6 @@ interface BondingContract {
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
-    event Group(address[] members);
-
-    address[] group;
-
-    function getSetGroup() public view returns (address[] memory) {
-      return group;
-    }
-
-    function clearSetGroup() public {
-      for (uint i = 0; i < group.length; i++) {
-        group[i] = address(0);
-      }
-    }
-
     function selectSetGroupB(
       uint256 groupSize,
       bytes32 seed,
@@ -99,7 +85,6 @@ contract BondedSortitionPool is Sortition {
         }
       }
 
-      group = selected;
       return selected;
     }
 
@@ -131,8 +116,8 @@ contract BondedSortitionPool is Sortition {
         // XXX: These two variables do way too varied things,
         // but I need all variable slots I can free.
         // Arbitrary names to underline the absurdity.
-        uint foo;
-        uint bar;
+        /* uint foo; */
+        /* uint bar; */
 
         bytes32 rngState = seed;
 
@@ -147,6 +132,7 @@ contract BondedSortitionPool is Sortition {
 
           // INLINE RNG.getUniqueIndex()
 
+          uint bar;
           (bar, rngState) = RNG.getIndex(poolWeight - selectedTotalWeight, rngState);
           // BAR is now the TRUNCATED INDEX
           for (uint i = 0; i < nSelected; i++) {
@@ -156,6 +142,7 @@ contract BondedSortitionPool is Sortition {
             }
           }
 
+          uint foo;
           // BAR starts as the UNIQUE INDEX here
           (foo, bar) = pickWeightedLeafWithIndex(bar);
           // FOO is now the POSITION OF THE LEAF
@@ -223,7 +210,6 @@ contract BondedSortitionPool is Sortition {
         // If nothing has exploded by now,
         // we should have the correct size of group.
 
-        group = selected;
         return selected;
     }
 }

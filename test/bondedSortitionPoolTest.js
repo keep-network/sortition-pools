@@ -38,15 +38,12 @@ contract('BondedSortitionPool', (accounts) => {
 
             let group
 
+            group = await pool.selectSetGroup.call(3, seed, bond, bondingContract.address)
             await pool.selectSetGroup(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
-            await pool.clearSetGroup()
-
-            await pool.selectSetGroup(5, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroup.call(5, seed, bond, bondingContract.address)
             assert.equal(group.length, 5);
             assert.isFalse(hasDuplicates(group))
         })
@@ -93,9 +90,8 @@ contract('BondedSortitionPool', (accounts) => {
             } catch (error) {
                 assert.include(error.message, "Not enough operators in pool");
 
-                await pool.selectSetGroup(3, seed, bond, bondingContract.address)
+                group = await pool.selectSetGroup.call(3, seed, bond, bondingContract.address)
 
-                group = await pool.getSetGroup()
                 assert.equal(group.length, 3);
                 assert.isFalse(hasDuplicates(group))
 
@@ -112,8 +108,7 @@ contract('BondedSortitionPool', (accounts) => {
 
             await bondingContract.setWeight(accounts[2], 15)
 
-            await pool.selectSetGroup(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroup.call(3, seed, bond, bondingContract.address)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
         })
@@ -138,8 +133,8 @@ contract('BondedSortitionPool', (accounts) => {
             await bondingContract.setWeight(accounts[7], 1)
             await bondingContract.setWeight(accounts[9], 1)
 
+            group = await pool.selectSetGroup.call(3, seed, bond, bondingContract.address)
             await pool.selectSetGroup(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
@@ -165,8 +160,8 @@ contract('BondedSortitionPool', (accounts) => {
             await prepareOperator(accounts[8], 1)
             await prepareOperator(accounts[9], 1)
 
+            group = await pool.selectSetGroup.call(3, seed, bond, bondingContract.address)
             await pool.selectSetGroup(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
         })
@@ -182,15 +177,12 @@ contract('BondedSortitionPool', (accounts) => {
 
             let group
 
+            group = await pool.selectSetGroupB.call(3, seed, bond, bondingContract.address)
             await pool.selectSetGroupB(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
-            await pool.clearSetGroup()
-
-            await pool.selectSetGroupB(5, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroupB.call(5, seed, bond, bondingContract.address)
             assert.equal(group.length, 5);
             assert.isFalse(hasDuplicates(group))
         })
@@ -237,9 +229,8 @@ contract('BondedSortitionPool', (accounts) => {
             } catch (error) {
                 assert.include(error.message, "Not enough operators in pool");
 
-                await pool.selectSetGroupB(3, seed, bond, bondingContract.address)
+                group = await pool.selectSetGroupB.call(3, seed, bond, bondingContract.address)
 
-                group = await pool.getSetGroup()
                 assert.equal(group.length, 3);
                 assert.isFalse(hasDuplicates(group))
 
@@ -256,8 +247,7 @@ contract('BondedSortitionPool', (accounts) => {
 
             await bondingContract.setWeight(accounts[2], 15)
 
-            await pool.selectSetGroupB(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroupB.call(3, seed, bond, bondingContract.address)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
         })
@@ -282,8 +272,7 @@ contract('BondedSortitionPool', (accounts) => {
             await bondingContract.setWeight(accounts[7], 1)
             await bondingContract.setWeight(accounts[9], 1)
 
-            await pool.selectSetGroupB(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroupB.call(3, seed, bond, bondingContract.address)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
@@ -309,8 +298,7 @@ contract('BondedSortitionPool', (accounts) => {
             await prepareOperator(accounts[8], 1)
             await prepareOperator(accounts[9], 1)
 
-            await pool.selectSetGroupB(3, seed, bond, bondingContract.address)
-            group = await pool.getSetGroup()
+            group = await pool.selectSetGroupB.call(3, seed, bond, bondingContract.address)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
         })
