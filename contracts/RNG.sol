@@ -4,8 +4,8 @@ library RNG {
 
     // Our sortition pool can support up to 2**19 virtual stakers
     // Therefore we determine how many bits we need from 1 to 19
-    function bitsRequired(uint range) internal pure returns (uint) {
-        uint bits;
+    function bitsRequired(uint256 range) internal pure returns (uint) {
+        uint256 bits;
         // Start at 19 to be faster for large ranges
         for (bits = 18; bits >= 0; bits--) {
             // Left shift by `bits`,
@@ -25,7 +25,7 @@ library RNG {
     }
 
     // Truncate `input` to `bits` bits.
-    function truncate(uint bits, uint input) internal pure returns (uint) {
+    function truncate(uint256 bits, uint256 input) internal pure returns (uint) {
         return input & ((1 << bits) - 1);
     }
 
@@ -34,22 +34,22 @@ library RNG {
     // Threading the state around is necessary for the PRNG and we do not want
     // to keep the state in the storage to avoid costly updates.
     // `index` is in the range [0, range-1].
-    function getIndex(uint range, bytes32 state)
+    function getIndex(uint256 range, bytes32 state)
         internal
         pure
         returns (uint, bytes32)
     {
-        uint bits = bitsRequired(range);
+        uint256 bits = bitsRequired(range);
         return efficientGetIndex(range, bits, state);
     }
 
-    function efficientGetIndex(uint range, uint bits, bytes32 state)
+    function efficientGetIndex(uint256 range, uint256 bits, bytes32 state)
         internal
         pure
         returns (uint, bytes32)
     {
         bool found = false;
-        uint index;
+        uint256 index;
         while (!found) {
             index = truncate(bits, uint(state));
             state = keccak256(abi.encode(state));
@@ -86,21 +86,21 @@ library RNG {
     /// Could be calculated from `previousLeafWeights`
     /// but providing it explicitly makes the function a bit simpler.
     function getUniqueIndex(
-        uint range,
+        uint256 range,
         bytes32 state,
         IndexWeight[] memory previousLeaves,
-        uint sumPreviousWeights,
-        uint nPreviousLeaves
+        uint256 sumPreviousWeights,
+        uint256 nPreviousLeaves
     )
         internal
         pure
-        returns (uint uniqueIndex, bytes32 newState)
+        returns (uint256 uniqueIndex, bytes32 newState)
     {
         // Get an index in the truncated range.
         // The truncated range covers only new leaves,
         // but has to be mapped to the actual range of indices.
-        uint truncatedRange = range - sumPreviousWeights;
-        uint truncatedIndex;
+        uint256 truncatedRange = range - sumPreviousWeights;
+        uint256 truncatedIndex;
         /* (truncatedIndex, newState) = getIndex(truncatedRange, state); */
 
         /* // Map the truncated index to the available unique indices. */
@@ -113,7 +113,7 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
         uniqueIndex = truncatedIndex;
 
-        for (uint i = 0; i < nPreviousLeaves; i++) {
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
             if (uniqueIndex >= previousLeaves[i].index) {
@@ -127,22 +127,22 @@ library RNG {
     }
 
     struct IndexWeight {
-        uint index;
-        uint weight;
+        uint256 index;
+        uint256 weight;
     }
 
     function internalUniquifyIndex(
-        uint truncatedIndex,
+        uint256 truncatedIndex,
         IndexWeight[] memory previousLeaves,
-        uint nPreviousLeaves
+        uint256 nPreviousLeaves
     )
         internal
         pure
-        returns (uint mappedIndex)
+        returns (uint256 mappedIndex)
     {
         mappedIndex = truncatedIndex;
 
-        for (uint i = 0; i < nPreviousLeaves; i++) {
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
             if (mappedIndex >= previousLeaves[i].index) {
@@ -158,20 +158,20 @@ library RNG {
     /// @notice A more easily testable utility function
     /// for turning a truncated index into a unique index.
     function uniquifyIndex(
-        uint truncatedIndex,
+        uint256 truncatedIndex,
         uint[] memory previousLeafStartingIndices,
         uint[] memory previousLeafWeights
     )
         internal
         pure
-        returns (uint mappedIndex)
+        returns (uint256 mappedIndex)
     {
         // Just a textual convenience
-        uint nPreviousLeaves = previousLeafStartingIndices.length;
+        uint256 nPreviousLeaves = previousLeafStartingIndices.length;
         // Start by setting the index at the truncated index
         mappedIndex = truncatedIndex;
 
-        for (uint i = 0; i < nPreviousLeaves; i++) {
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
             if (mappedIndex >= previousLeafStartingIndices[i]) {
@@ -185,17 +185,17 @@ library RNG {
     }
 
     function remapIndices(
-        uint deletedStartingIndex,
-        uint deletedWeight,
+        uint256 deletedStartingIndex,
+        uint256 deletedWeight,
         IndexWeight[] memory previousLeaves
     )
         internal
         pure
         returns (IndexWeight[] memory)
     {
-        uint nPreviousLeaves = previousLeaves.length;
+        uint256 nPreviousLeaves = previousLeaves.length;
 
-        for (uint i = 0; i < nPreviousLeaves; i++) {
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
             // If index is greater than the index of the deleted leaf,
             // reduce the starting index by the weight of the deleted leaf.
             if (previousLeaves[i].index > deletedStartingIndex) {
