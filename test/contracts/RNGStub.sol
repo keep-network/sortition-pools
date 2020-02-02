@@ -30,4 +30,19 @@ contract RNGStub {
     }
     return sum;
   }
+
+  function uniquifyIndex(
+    uint truncatedIndex,
+    uint[] memory previousLeafStartingIndices,
+    uint[] memory previousLeafWeights
+  ) public
+    pure
+    returns (uint mappedIndex)
+  {
+    return RNG.uniquifyIndex(
+      truncatedIndex,
+      previousLeafStartingIndices,
+      previousLeafWeights
+    );
+  }
 }
