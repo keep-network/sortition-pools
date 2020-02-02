@@ -4,7 +4,7 @@ library RNG {
 
     // Our sortition pool can support up to 2**19 virtual stakers
     // Therefore we determine how many bits we need from 1 to 19
-    function bitsRequired(uint256 range) internal pure returns (uint) {
+    function bitsRequired(uint256 range) internal pure returns (uint256) {
         uint256 bits;
         // Start at 19 to be faster for large ranges
         for (bits = 18; bits >= 0; bits--) {
@@ -25,7 +25,11 @@ library RNG {
     }
 
     // Truncate `input` to `bits` bits.
-    function truncate(uint256 bits, uint256 input) internal pure returns (uint) {
+    function truncate(uint256 bits, uint256 input)
+        internal
+        pure
+        returns (uint256)
+    {
         return input & ((1 << bits) - 1);
     }
 
@@ -37,7 +41,7 @@ library RNG {
     function getIndex(uint256 range, bytes32 state)
         internal
         pure
-        returns (uint, bytes32)
+        returns (uint256, bytes32)
     {
         uint256 bits = bitsRequired(range);
         return efficientGetIndex(range, bits, state);
@@ -46,12 +50,12 @@ library RNG {
     function efficientGetIndex(uint256 range, uint256 bits, bytes32 state)
         internal
         pure
-        returns (uint, bytes32)
+        returns (uint256, bytes32)
     {
         bool found = false;
         uint256 index;
         while (!found) {
-            index = truncate(bits, uint(state));
+            index = truncate(bits, uint256(state));
             state = keccak256(abi.encode(state));
             if (index < range) {
                 found = true;
@@ -159,8 +163,8 @@ library RNG {
     /// for turning a truncated index into a unique index.
     function uniquifyIndex(
         uint256 truncatedIndex,
-        uint[] memory previousLeafStartingIndices,
-        uint[] memory previousLeafWeights
+        uint256[] memory previousLeafStartingIndices,
+        uint256[] memory previousLeafWeights
     )
         internal
         pure
