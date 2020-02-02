@@ -1,7 +1,6 @@
 pragma solidity ^0.5.10;
 
 library RNG {
-
     // Our sortition pool can support up to 2**19 virtual stakers
     // Therefore we determine how many bits we need from 1 to 19
     function bitsRequired(uint256 range) internal pure returns (uint256) {
