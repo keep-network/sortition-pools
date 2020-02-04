@@ -2,10 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
-
-interface StakingContract {
-    function eligibleStake(address operator) external view returns (uint);
-}
+import "./StakingContractInterface.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -56,7 +53,7 @@ contract SortitionPool is Sortition {
     }
 
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        uint256 operatorStake = staking.eligibleStake(operator);
+        uint256 operatorStake = staking.eligibleStake(operator, address(this));
         uint256 operatorWeight = operatorStake / MINIMUM_STAKE;
 
         return operatorWeight;

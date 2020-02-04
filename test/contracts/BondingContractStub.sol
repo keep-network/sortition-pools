@@ -1,10 +1,9 @@
 pragma solidity ^0.5.10;
 
 contract BondingContractStub {
-    function isEligible(
+    function availableUnbondedValue(
         address operator,
-        uint stakingWeight,
-        uint bondSize
+        address bondCreator
     ) external returns (bool) {
         return true;
     }
