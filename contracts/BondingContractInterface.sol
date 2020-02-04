@@ -9,8 +9,21 @@ interface BondingContract {
     function availableUnbondedValue(
         address operator,
         address bondCreator
-    )
-        external
-        view
-        returns (uint256);
+    ) external view returns (uint256);
+
+    // Create a bond, throwing an exception on failure
+    function createBond(
+        address operator,
+        address holder,
+        uint256 referenceID,
+        uint256 amount
+    ) external;
+
+    // Reassign a bond, throwing an exception on failure
+    function reassignBond(
+        address operator,
+        uint256 referenceID,
+        address newHolder,
+        uint256 newReferenceID
+    ) external;
 }
