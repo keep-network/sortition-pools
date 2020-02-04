@@ -6,7 +6,6 @@ import "./RNG.sol";
 /// @title A third party Bonding Contract providing information to the pool
 /// about operator's eligibility for work selection.
 interface BondingContract {
-
     /// @notice Function checks if the provided operator is eligible for work
     /// selection given the bonding requirements.
     ///
@@ -23,11 +22,10 @@ interface BondingContract {
     /// pool and not taken into account for work selection.
     function isEligible(
         address operator,
-        uint stakingWeight,
-        uint bondSize
+        uint256 stakingWeight,
+        uint256 bondSize
     ) external returns (bool);
 }
-
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -37,28 +35,28 @@ contract BondedSortitionPool is Sortition {
     function selectSetGroupB(
         uint256 groupSize,
         bytes32 seed,
-        uint bondSize,
+        uint256 bondSize,
         BondingContract bondingContract
-    )
-        public
-        returns (address[] memory)
-    {
-        uint operatorsRemaining = operatorsInPool();
+    ) public returns (address[] memory) {
+        uint256 operatorsRemaining = operatorsInPool();
 
         address[] memory selected = new address[](groupSize);
-        uint nSelected = 0;
+        uint256 nSelected = 0;
 
-        uint idx;
+        uint256 idx;
         bytes32 rngState = seed;
 
-        uint totalWeight = root.sumWeight();
+        uint256 totalWeight = root.sumWeight();
 
-        uint leafOrWeight;
+        uint256 leafOrWeight;
         address op;
         bool duplicate;
 
         while (nSelected < groupSize) {
-            require(operatorsRemaining >= groupSize, "Not enough operators in pool");
+            require(
+                operatorsRemaining >= groupSize,
+                "Not enough operators in pool"
+            );
 
             (idx, rngState) = RNG.getIndex(totalWeight, rngState);
             /* (idx, rngState) = RNG.getIndex(root.sumWeight(), rngState); */
@@ -69,7 +67,7 @@ contract BondedSortitionPool is Sortition {
             leafOrWeight = leafOrWeight.weight();
 
             duplicate = false;
-            for (uint i = 0; i < nSelected; i++) {
+            for (uint256 i = 0; i < nSelected; i++) {
                 if (op == selected[i]) {
                     duplicate = true;
                     break;
@@ -105,19 +103,18 @@ contract BondedSortitionPool is Sortition {
     function selectSetGroup(
         uint256 groupSize,
         bytes32 seed,
-        uint bondSize,
+        uint256 bondSize,
         BondingContract bondingContract
-    )
-        public
-        returns (address[] memory)
-    {
+    ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
         address[] memory selected = new address[](groupSize);
-        uint nSelected = 0;
+        uint256 nSelected = 0;
 
-        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](groupSize);
-        uint selectedTotalWeight = 0;
+        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
+            groupSize
+        );
+        uint256 selectedTotalWeight = 0;
 
         // XXX: These two variables do way too varied things,
         // but I need all variable slots I can free.
@@ -127,7 +124,7 @@ contract BondedSortitionPool is Sortition {
 
         bytes32 rngState = seed;
 
-        uint poolWeight = root.sumWeight();
+        uint256 poolWeight = root.sumWeight();
 
         /* loop */
         while (nSelected < groupSize) {
@@ -138,17 +135,20 @@ contract BondedSortitionPool is Sortition {
 
             // INLINE RNG.getUniqueIndex()
 
-            uint bar;
-            (bar, rngState) = RNG.getIndex(poolWeight - selectedTotalWeight, rngState);
+            uint256 bar;
+            (bar, rngState) = RNG.getIndex(
+                poolWeight - selectedTotalWeight,
+                rngState
+            );
             // BAR is now the TRUNCATED INDEX
-            for (uint i = 0; i < nSelected; i++) {
+            for (uint256 i = 0; i < nSelected; i++) {
                 if (bar >= selectedLeaves[i].index) {
                     bar += selectedLeaves[i].weight;
                     // BAR is now the UNIQUE INDEX
                 }
             }
 
-            uint foo;
+            uint256 foo;
             // BAR starts as the UNIQUE INDEX here
             (foo, bar) = pickWeightedLeafWithIndex(bar);
             // FOO is now the POSITION OF THE LEAF
@@ -165,7 +165,6 @@ contract BondedSortitionPool is Sortition {
             // naughty operators get deleted
             // FOO is the WEIGHT OF THE OPERATOR here
             if (bondingContract.isEligible(op, foo, bondSize)) {
-
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
@@ -174,7 +173,7 @@ contract BondedSortitionPool is Sortition {
                 // FOO is the WEIGHT of the operator
                 RNG.IndexWeight memory tempIW = RNG.IndexWeight(bar, foo);
 
-                for (uint i = 0; i < nSelected; i++) {
+                for (uint256 i = 0; i < nSelected; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
                     // With each element of the list,
                     // we check if the outside element should go before it.
@@ -204,7 +203,7 @@ contract BondedSortitionPool is Sortition {
                 // INLINE RNG.remapIndices()
                 // BAR is the STARTING INDEX of the removed leaf
                 // FOO is the WEIGHT of the removed operator
-                for (uint i = 0; i < nSelected; i++) {
+                for (uint256 i = 0; i < nSelected; i++) {
                     if (selectedLeaves[i].index > bar) {
                         selectedLeaves[i].index -= foo;
                     }
