@@ -1,6 +1,6 @@
 {
   "name": "@keep-network/sortition-pools",
-  "version": "0.1.1-pre.6",
+  "version": "0.1.1-pre.8",
   "description": "",
   "main": "truffle-config.js",
   "directories": {
@@ -15,7 +15,14 @@
   },
   "scripts": {
     "ganache": "ganache-cli -q",
-    "test": "NODE_ENV=test truffle test"
+    "test": "NODE_ENV=test truffle test",
+    "js:lint": "eslint ${npm_package_config_eslintPaths}",
+    "js:lint:fix": "eslint --fix ${npm_package_config_eslintPaths}",
+    "sol:lint": "solium -d contracts/",
+    "sol:lint:fix": "solium -d contracts/ --fix"
+  },
+  "config": {
+    "eslintPaths": "test/ migrations/"
   },
   "repository": {
     "type": "git",
@@ -32,9 +39,13 @@
     "solidity-bytes-utils": "0.0.7"
   },
   "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-keep": "github:keep-network/eslint-config-keep",
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
     "solc": "^0.6.1",
+    "solium": "^1.2.5",
+    "solium-config-keep": "github:keep-network/solium-config-keep",
     "truffle": "^5.1.0"
   }
 }
