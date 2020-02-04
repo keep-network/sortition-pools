@@ -19,7 +19,7 @@ contract SortitionPool is Sortition {
 
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
-    // registered in the pool, otherwise the function fails reverting the
+    /// registered in the pool, otherwise the function fails reverting the
     /// transaction.
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
