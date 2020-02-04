@@ -10,8 +10,5 @@ interface StakingContract {
     function eligibleStake(
         address operator,
         address operatorContract
-    )
-        external
-        view
-        returns (uint256);
+    ) external view returns (uint256);
 }
