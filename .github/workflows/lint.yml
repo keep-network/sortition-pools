@@ -1,0 +1,30 @@
+name: Run linters
+
+on: [push]
+
+jobs:
+  lint-js:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "11.x"
+      - name: Install dependencies
+        run: npm install
+      - name: Run JS linter
+        run: npm run js:lint
+
+  lint-sol:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "11.x"
+      - name: Install dependencies
+        run: npm install
+      - name: Run Solidity linter
+        run: npm run sol:lint
