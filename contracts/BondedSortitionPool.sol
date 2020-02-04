@@ -38,7 +38,7 @@ contract BondedSortitionPool is Sortition {
         uint256 groupSize,
         bytes32 seed,
         uint bondSize
-    ) public view returns (address[] memory) {
+    ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
         address[] memory selected = new address[](groupSize);
