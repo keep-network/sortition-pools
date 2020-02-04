@@ -10,18 +10,17 @@ contract('SortitionPoolFactory', (accounts) => {
 
   before(async () => {
     staking = await StakingContractStub.new()
-    sortitionPoolFactory = await SortitionPoolFactory.deployed()
-    await sortitionPoolFactory.setParams(staking.address, minStake)
+    sortitionPoolFactory = await SortitionPoolFactory.new()
   })
 
   describe('createSortitionPool()', async () => {
     it('creates independent clones', async () => {
-      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call()
-      await sortitionPoolFactory.createSortitionPool()
+      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
+      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool1 = await SortitionPool.at(sortitionPool1Address)
 
-      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call()
-      await sortitionPoolFactory.createSortitionPool()
+      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
+      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
       await sortitionPool1.insertOperator(accounts[1], 11)

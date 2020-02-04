@@ -5,21 +5,24 @@ const StackLib = artifacts.require("StackLib")
 const Trunk = artifacts.require("Trunk")
 const Leaf = artifacts.require("Leaf")
 const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.sol')
+const StakingContractStub = artifacts.require('StakingContractStub.sol')
 const BondingContractStub = artifacts.require('BondingContractStub.sol')
 
 contract('BondedSortitionPool', (accounts) => {
     const seed = "0xff39d6cca87853892d2854566e883008bc"
     const bond = 100000000
+    const minStake = 2000
     let pool
 
     beforeEach(async () => {
-        BondedSortitionPool.link(Branch);
-        BondedSortitionPool.link(Position);
-        BondedSortitionPool.link(StackLib);
-        BondedSortitionPool.link(Trunk);
-        BondedSortitionPool.link(Leaf);
-        pool = await BondedSortitionPool.new()
-        bondingContract = await BondingContractStub.new()
+      BondedSortitionPool.link(Branch);
+      BondedSortitionPool.link(Position);
+      BondedSortitionPool.link(StackLib);
+      BondedSortitionPool.link(Trunk);
+      BondedSortitionPool.link(Leaf);
+      staking = await StakingContractStub.new()
+      bonding = await BondingContractStub.new()
+      pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake)
     })
 
     describe('selectSetGroup', async () => {
@@ -32,11 +35,11 @@ contract('BondedSortitionPool', (accounts) => {
 
             let group
             
-            group = await pool.selectSetGroup(3, seed, bond, bondingContract.address)
+            group = await pool.selectSetGroup(3, seed, bond)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
-            group = await pool.selectSetGroup(5, seed, bond, bondingContract.address)
+            group = await pool.selectSetGroup(5, seed, bond)
             assert.equal(group.length, 5);
             assert.isFalse(hasDuplicates(group))
         })
@@ -47,7 +50,7 @@ contract('BondedSortitionPool', (accounts) => {
 
         it('reverts when there are no operators in pool', async () => {
             try {
-                await pool.selectSetGroup(3, seed, bond, bondingContract.address)
+                await pool.selectSetGroup(3, seed, bond)
             } catch (error) {
                 assert.include(error.message, "Not enough operators in pool");
                 return
@@ -61,7 +64,7 @@ contract('BondedSortitionPool', (accounts) => {
             await pool.insertOperator(accounts[1], 11)
 
             try {
-                await pool.selectSetGroup(3, seed, bond, bondingContract.address)
+                await pool.selectSetGroup(3, seed, bond)
             } catch (error) {
                 assert.include(error.message, "Not enough operators in pool");
                 return

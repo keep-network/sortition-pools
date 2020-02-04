@@ -2,6 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
+import "./StakingContractInterface.sol";
 import "./BondingContractInterface.sol";
 
 /// @title Bonded Sortition Pool
@@ -9,6 +10,20 @@ import "./BondingContractInterface.sol";
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
+    StakingContract stakingContract;
+    BondingContract bondingContract;
+    uint256 minimumStake;
+
+    constructor(
+        StakingContract staking,
+        BondingContract bonding,
+        uint256 minStake
+    ) public {
+        stakingContract = staking;
+        bondingContract = bonding;
+        minimumStake = minStake;
+    }
+
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed and bonding requirements. All operators
     /// in the group are unique.
@@ -19,12 +34,10 @@ contract BondedSortitionPool is Sortition {
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
     /// @param bondSize Size of the requested bond per operator
-    /// @param bondingContract 3rd party contract checking bond requirements
     function selectSetGroup(
         uint256 groupSize,
         bytes32 seed,
-        uint bondSize,
-        BondingContract bondingContract
+        uint bondSize
     ) public view returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
