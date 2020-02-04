@@ -35,11 +35,11 @@ contract('BondedSortitionPool', (accounts) => {
 
             let group
             
-            group = await pool.selectSetGroup(3, seed, bond)
+            group = await pool.selectSetGroup.call(3, seed, bond)
             assert.equal(group.length, 3);
             assert.isFalse(hasDuplicates(group))
 
-            group = await pool.selectSetGroup(5, seed, bond)
+            group = await pool.selectSetGroup.call(5, seed, bond)
             assert.equal(group.length, 5);
             assert.isFalse(hasDuplicates(group))
         })
