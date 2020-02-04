@@ -52,14 +52,14 @@ contract SortitionPool is Sortition {
         return selected;
     }
 
-    function getEligibleWeight(address operator) internal view returns (uint256) {
+    function getEligibleWeight(address operator) public view returns (uint256) {
         uint256 operatorStake = staking.eligibleStake(operator, address(this));
         uint256 operatorWeight = operatorStake / MINIMUM_STAKE;
 
         return operatorWeight;
     }
 
-    function getPoolWeight(address operator) internal view returns (uint256) {
+    function getPoolWeight(address operator) public view returns (uint256) {
         uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         if (flaggedLeaf == 0) {
             return 0;
@@ -94,5 +94,11 @@ contract SortitionPool is Sortition {
         } else {
             updateOperator(operator, eligibleWeight);
         }
+    }
+
+    // Add the operator to the pool if not present,
+    // or update the operator's weight if present.
+    function joinOrUpdate(address operator) public {
+        assert(true);
     }
 }

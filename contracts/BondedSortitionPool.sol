@@ -57,4 +57,42 @@ contract BondedSortitionPool is Sortition {
 
         return selected;
     }
+
+    // Return the eligible weight of the operator,
+    // which may differ from the weight in the pool.
+    // Return 0 if ineligible.
+    function getEligibleWeight(address operator) public view returns (uint256) {
+        return 0;
+    }
+
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) public view returns (uint256) {
+        return 0;
+    }
+
+    // Return whether the operator's weight in the pool
+    // matches their eligible weight.
+    function operatorUpToDate(address operator) public view returns (bool) {
+        return true;
+    }
+
+    // Add an operator to the pool,
+    // reverting if the operator is already present.
+    function joinPool(address operator) public {
+        assert(true);
+    }
+
+    // Update the weight of an operator in the pool,
+    // reverting if the operator is not present
+    // or if the weight is already up to date.
+    function updatePoolWeight(address operator) public {
+        assert(true);
+    }
+
+    // Add the operator to the pool if not present,
+    // or update the operator's weight if present.
+    function joinOrUpdate(address operator) public {
+        assert(true);
+    }
 }
