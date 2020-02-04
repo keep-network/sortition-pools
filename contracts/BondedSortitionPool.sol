@@ -5,7 +5,7 @@ import "./RNG.sol";
 
 /// @title A third party Bonding Contract providing information to the pool
 /// about operator's eligibility for work selection.
-interface BondingContract {
+interface IBondingContract {
     /// @notice Function checks if the provided operator is eligible for work
     /// selection given the bonding requirements.
     ///
@@ -36,7 +36,7 @@ contract BondedSortitionPool is Sortition {
         uint256 groupSize,
         bytes32 seed,
         uint256 bondSize,
-        BondingContract bondingContract
+        IBondingContract bondingContract
     ) public returns (address[] memory) {
         uint256 operatorsRemaining = operatorsInPool();
 
@@ -104,7 +104,7 @@ contract BondedSortitionPool is Sortition {
         uint256 groupSize,
         bytes32 seed,
         uint256 bondSize,
-        BondingContract bondingContract
+        IBondingContract bondingContract
     ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
