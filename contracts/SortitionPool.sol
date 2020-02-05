@@ -19,12 +19,12 @@ contract SortitionPool is Sortition {
     using Leaf for uint256;
     using Position for uint256;
 
-    uint256 MINIMUM_STAKE;
-    StakingContract staking;
+    StakingContract stakingContract;
+    uint256 minimumStake;
 
-    constructor (StakingContract stakingContract, uint256 minimumStake) public {
-        MINIMUM_STAKE = minimumStake;
-        staking = stakingContract;
+    constructor (StakingContract _stakingContract, uint256 _minimumStake) public {
+        stakingContract = _stakingContract;
+        minimumStake = _minimumStake;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
