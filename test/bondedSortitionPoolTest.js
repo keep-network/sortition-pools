@@ -1,15 +1,15 @@
-const Sortition = artifacts.require("Sortition")
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const StackLib = artifacts.require("StackLib")
-const Trunk = artifacts.require("Trunk")
-const Leaf = artifacts.require("Leaf")
+const Sortition = artifacts.require('Sortition')
+const Branch = artifacts.require('Branch')
+const Position = artifacts.require('Position')
+const StackLib = artifacts.require('StackLib')
+const Trunk = artifacts.require('Trunk')
+const Leaf = artifacts.require('Leaf')
 const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 const BondingContractStub = artifacts.require('BondingContractStub.sol')
 
 contract('BondedSortitionPool', (accounts) => {
-  const seed = "0xff39d6cca87853892d2854566e883008bc"
+  const seed = '0xff39d6cca87853892d2854566e883008bc'
   const bond = 100000000
   const minStake = 2000
   const minBond = 100
