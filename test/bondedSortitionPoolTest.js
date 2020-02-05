@@ -52,7 +52,7 @@ contract('BondedSortitionPool', (accounts) => {
       try {
         await pool.selectSetGroup(3, seed, bond)
       } catch (error) {
-        assert.include(error.message, "Not enough operators in pool");
+        assert.include(error.message, 'Not enough operators in pool');
         return
       }
 
@@ -66,7 +66,7 @@ contract('BondedSortitionPool', (accounts) => {
       try {
         await pool.selectSetGroup(3, seed, bond)
       } catch (error) {
-        assert.include(error.message, "Not enough operators in pool");
+        assert.include(error.message, 'Not enough operators in pool');
         return
       }
 
