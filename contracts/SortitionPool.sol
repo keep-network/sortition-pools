@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
-import "./IStaking.sol";
+import "./api/IStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible

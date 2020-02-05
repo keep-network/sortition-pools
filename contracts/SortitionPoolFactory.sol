@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "./SortitionPool.sol";
-import "./IStaking.sol";
+import "./api/IStaking.sol";
 
 /// @title Sortition Pool Factory
 /// @notice Factory for the creation of new sortition pools.

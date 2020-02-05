@@ -2,8 +2,8 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
-import "./IStaking.sol";
-import "./IBonding.sol";
+import "./api/IStaking.sol";
+import "./api/IBonding.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
