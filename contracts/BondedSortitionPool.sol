@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
-import "./StakingContractInterface.sol";
+import "./IStaking.sol";
 import "./IBonding.sol";
 
 /// @title Bonded Sortition Pool
@@ -10,13 +10,13 @@ import "./IBonding.sol";
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
-    StakingContract stakingContract;
+    IStaking stakingContract;
     IBonding bondingContract;
     uint256 minimumStake;
     uint256 minimumBondableValue;
 
     constructor(
-        StakingContract _stakingContract,
+        IStaking _stakingContract,
         IBonding _bondingContract,
         uint256 _minimumStake,
         uint256 _minimumBondableValue

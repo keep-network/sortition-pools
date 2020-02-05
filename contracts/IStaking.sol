@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-interface StakingContract {
+interface IStaking {
     // Gives the amount of KEEP tokens staked by the `operator`
     // eligible for work selection in the specified `operatorContract`.
     //

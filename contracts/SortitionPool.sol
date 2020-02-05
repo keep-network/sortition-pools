@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./Sortition.sol";
 import "./RNG.sol";
-import "./StakingContractInterface.sol";
+import "./IStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -19,10 +19,10 @@ contract SortitionPool is Sortition {
     using Leaf for uint256;
     using Position for uint256;
 
-    StakingContract stakingContract;
+    IStaking stakingContract;
     uint256 minimumStake;
 
-    constructor (StakingContract _stakingContract, uint256 _minimumStake) public {
+    constructor (IStaking _stakingContract, uint256 _minimumStake) public {
         stakingContract = _stakingContract;
         minimumStake = _minimumStake;
     }
