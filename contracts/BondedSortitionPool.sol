@@ -73,7 +73,7 @@ contract BondedSortitionPool is Sortition {
 
     // Return whether the operator's weight in the pool
     // matches their eligible weight.
-    function operatorUpToDate(address operator) public view returns (bool) {
+    function isOperatorUpToDate(address operator) public view returns (bool) {
         return true;
     }
 
