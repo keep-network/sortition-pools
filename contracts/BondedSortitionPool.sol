@@ -91,8 +91,9 @@ contract BondedSortitionPool is Sortition {
     }
 
     // Add the operator to the pool if not present,
-    // or update the operator's weight if present.
-    function joinOrUpdate(address operator) public {
+    // update the operator's weight if present and eligible,
+    // or remove from the pool if ineligible.
+    function updatePoolStatus(address operator) public {
         assert(true);
     }
 }
