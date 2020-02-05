@@ -15,13 +15,13 @@ contract BondedSortitionPool is Sortition {
     uint256 minimumStake;
 
     constructor(
-        StakingContract staking,
-        BondingContract bonding,
-        uint256 minStake
+        StakingContract _stakingContract,
+        BondingContract _bondingContract,
+        uint256 _minimumStake
     ) public {
-        stakingContract = staking;
-        bondingContract = bonding;
-        minimumStake = minStake;
+        stakingContract = _stakingContract;
+        bondingContract = _bondingContract;
+        minimumStake = _minimumStake;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
