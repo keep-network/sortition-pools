@@ -56,7 +56,7 @@ contract('BondedSortitionPool', (accounts) => {
         return
       }
 
-      assert.fail('Expected throw not received');
+      assert.fail('Expected throw not received')
     })
 
     it('reverts when there are not enough operators in pool', async () => {
