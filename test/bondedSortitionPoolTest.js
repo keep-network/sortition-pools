@@ -15,11 +15,11 @@ contract('BondedSortitionPool', (accounts) => {
   let pool
 
   beforeEach(async () => {
-    BondedSortitionPool.link(Branch);
-    BondedSortitionPool.link(Position);
-    BondedSortitionPool.link(StackLib);
-    BondedSortitionPool.link(Trunk);
-    BondedSortitionPool.link(Leaf);
+    BondedSortitionPool.link(Branch)
+    BondedSortitionPool.link(Position)
+    BondedSortitionPool.link(StackLib)
+    BondedSortitionPool.link(Trunk)
+    BondedSortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     bonding = await BondingContractStub.new()
     pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, minBond)
@@ -36,23 +36,23 @@ contract('BondedSortitionPool', (accounts) => {
       let group
 
       group = await pool.selectSetGroup.call(3, seed, bond)
-      assert.equal(group.length, 3);
+      assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
 
       group = await pool.selectSetGroup.call(5, seed, bond)
-      assert.equal(group.length, 5);
+      assert.equal(group.length, 5)
       assert.isFalse(hasDuplicates(group))
     })
 
     function hasDuplicates(array) {
-      return (new Set(array)).size !== array.length;
+      return (new Set(array)).size !== array.length
     }
 
     it('reverts when there are no operators in pool', async () => {
       try {
         await pool.selectSetGroup(3, seed, bond)
       } catch (error) {
-        assert.include(error.message, 'Not enough operators in pool');
+        assert.include(error.message, 'Not enough operators in pool')
         return
       }
 
@@ -66,11 +66,11 @@ contract('BondedSortitionPool', (accounts) => {
       try {
         await pool.selectSetGroup(3, seed, bond)
       } catch (error) {
-        assert.include(error.message, 'Not enough operators in pool');
+        assert.include(error.message, 'Not enough operators in pool')
         return
       }
 
-      assert.fail('Expected throw not received');
+      assert.fail('Expected throw not received')
     })
   })
 })
