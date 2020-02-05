@@ -52,6 +52,9 @@ contract SortitionPool is Sortition {
         return selected;
     }
 
+    // Return the eligible weight of the operator,
+    // which may differ from the weight in the pool.
+    // Return 0 if ineligible.
     function getEligibleWeight(address operator) public view returns (uint256) {
         uint256 operatorStake = stakingContract.eligibleStake(operator, address(this));
         uint256 operatorWeight = operatorStake / minimumStake;
@@ -59,6 +62,8 @@ contract SortitionPool is Sortition {
         return operatorWeight;
     }
 
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
     function getPoolWeight(address operator) public view returns (uint256) {
         uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         if (flaggedLeaf == 0) {
@@ -70,6 +75,14 @@ contract SortitionPool is Sortition {
         }
     }
 
+    // Return whether the operator's weight in the pool
+    // matches their eligible weight.
+    function isOperatorUpToDate(address operator) public view returns (bool) {
+        return true;
+    }
+
+    // Add an operator to the pool,
+    // reverting if the operator is already present.
     function joinPool(address operator) public {
         uint256 eligibleWeight = getEligibleWeight(operator);
         require(
@@ -80,7 +93,10 @@ contract SortitionPool is Sortition {
         insertOperator(operator, eligibleWeight);
     }
 
-    function updatePoolWeight(address operator) public {
+    // Update the weight of an operator in the pool,
+    // reverting if the operator is not present
+    // or if the weight is already up to date.
+    function updateOperatorWeight(address operator) public {
         uint256 eligibleWeight = getEligibleWeight(operator);
         uint256 inPoolWeight = getPoolWeight(operator);
 
@@ -97,8 +113,9 @@ contract SortitionPool is Sortition {
     }
 
     // Add the operator to the pool if not present,
-    // or update the operator's weight if present.
-    function joinOrUpdate(address operator) public {
+    // update the operator's weight if present and eligible,
+    // or remove from the pool if ineligible.
+    function updateOperatorStatus(address operator) public {
         assert(true);
     }
 }
