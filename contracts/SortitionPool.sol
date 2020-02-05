@@ -29,10 +29,11 @@ contract SortitionPool is Sortition {
 
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
-    // registered in the pool, otherwise the function fails reverting the
+    /// registered in the pool, otherwise the function fails reverting the
     /// transaction.
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
+    /// @return selected Members of the selected group
     function selectGroup(
         uint256 groupSize, bytes32 seed
     ) public view returns (address[] memory)  {
@@ -52,27 +53,14 @@ contract SortitionPool is Sortition {
         return selected;
     }
 
-    // Return the eligible weight of the operator,
-    // which may differ from the weight in the pool.
-    // Return 0 if ineligible.
-    function getEligibleWeight(address operator) public view returns (uint256) {
-        uint256 operatorStake = stakingContract.eligibleStake(operator, address(this));
-        uint256 operatorWeight = operatorStake / minimumStake;
-
-        return operatorWeight;
+    // Return whether the operator is eligible for the pool.
+    function isOperatorEligible(address operator) public view returns (bool) {
+        return true;
     }
 
-    // Return the weight of the operator in the pool,
-    // which may or may not be out of date.
-    function getPoolWeight(address operator) public view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        if (flaggedLeaf == 0) {
-            return 0;
-        } else {
-            uint256 leafPosition = flaggedLeaf.unsetFlag();
-            uint256 leafWeight = leaves[leafPosition].weight();
-            return leafWeight;
-        }
+    // Return whether the operator is present in the pool.
+    function isOperatorInPool(address operator) public view returns (bool) {
+        return true;
     }
 
     // Return whether the operator's weight in the pool
@@ -94,8 +82,7 @@ contract SortitionPool is Sortition {
     }
 
     // Update the weight of an operator in the pool,
-    // reverting if the operator is not present
-    // or if the weight is already up to date.
+    // reverting if the operator is not present.
     function updateOperatorWeight(address operator) public {
         uint256 eligibleWeight = getEligibleWeight(operator);
         uint256 inPoolWeight = getPoolWeight(operator);
@@ -117,5 +104,28 @@ contract SortitionPool is Sortition {
     // or remove from the pool if ineligible.
     function updateOperatorStatus(address operator) public {
         assert(true);
+    }
+
+    // Return the eligible weight of the operator,
+    // which may differ from the weight in the pool.
+    // Return 0 if ineligible.
+    function getEligibleWeight(address operator) internal view returns (uint256) {
+        uint256 operatorStake = stakingContract.eligibleStake(operator, address(this));
+        uint256 operatorWeight = operatorStake / minimumStake;
+
+        return operatorWeight;
+    }
+
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) internal view returns (uint256) {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        if (flaggedLeaf == 0) {
+            return 0;
+        } else {
+            uint256 leafPosition = flaggedLeaf.unsetFlag();
+            uint256 leafWeight = leaves[leafPosition].weight();
+            return leafWeight;
+        }
     }
 }
