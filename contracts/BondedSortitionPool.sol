@@ -37,7 +37,7 @@ contract BondedSortitionPool is Sortition {
     function selectSetGroup(
         uint256 groupSize,
         bytes32 seed,
-        uint bondSize
+        uint256 bondSize
     ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
