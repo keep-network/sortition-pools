@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "./BondedSortitionPool.sol";
-import "./BondingContractInterface.sol";
+import "./IBonding.sol";
 import "./StakingContractInterface.sol";
 
 /// @title Bonded Sortition Pool Factory
@@ -12,7 +12,7 @@ contract BondedSortitionPoolFactory {
     /// @return Address of the new bonded sortition pool contract instance.
     function createSortitionPool(
         StakingContract stakingContract,
-        BondingContract bondingContract,
+        IBonding bondingContract,
         uint256 minimumStake,
         uint256 initialMinimumBond
     ) public returns (address) {

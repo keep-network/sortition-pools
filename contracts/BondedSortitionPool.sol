@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import "./Sortition.sol";
 import "./RNG.sol";
 import "./StakingContractInterface.sol";
-import "./BondingContractInterface.sol";
+import "./IBonding.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -11,13 +11,13 @@ import "./BondingContractInterface.sol";
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
     StakingContract stakingContract;
-    BondingContract bondingContract;
+    IBonding bondingContract;
     uint256 minimumStake;
     uint256 minimumBondableValue;
 
     constructor(
         StakingContract _stakingContract,
-        BondingContract _bondingContract,
+        IBonding _bondingContract,
         uint256 _minimumStake,
         uint256 _minimumBondableValue
     ) public {
