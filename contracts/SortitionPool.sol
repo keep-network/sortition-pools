@@ -53,8 +53,8 @@ contract SortitionPool is Sortition {
     }
 
     function getEligibleWeight(address operator) public view returns (uint256) {
-        uint256 operatorStake = staking.eligibleStake(operator, address(this));
-        uint256 operatorWeight = operatorStake / MINIMUM_STAKE;
+        uint256 operatorStake = stakingContract.eligibleStake(operator, address(this));
+        uint256 operatorWeight = operatorStake / minimumStake;
 
         return operatorWeight;
     }
