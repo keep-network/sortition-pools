@@ -13,13 +13,15 @@ contract BondedSortitionPoolFactory {
     function createSortitionPool(
         StakingContract stakingContract,
         BondingContract bondingContract,
-        uint256 minimumStake
+        uint256 minimumStake,
+        uint256 initialMinimumBond
     ) public returns (address) {
         return address(
             new BondedSortitionPool(
                 stakingContract,
                 bondingContract,
-                minimumStake
+                minimumStake,
+                initialMinimumBond
             )
         );
     }
