@@ -81,9 +81,9 @@ contract SortitionPool is Sortition {
         insertOperator(operator, eligibleWeight);
     }
 
-    // Update the weight of an operator in the pool,
-    // reverting if the operator is not present.
-    function updateOperatorWeight(address operator) public {
+    // Update the operator's weight if present and eligible,
+    // or remove from the pool if present and ineligible.
+    function updateOperatorStatus(address operator) public {
         uint256 eligibleWeight = getEligibleWeight(operator);
         uint256 inPoolWeight = getPoolWeight(operator);
 
@@ -97,13 +97,6 @@ contract SortitionPool is Sortition {
         } else {
             updateOperator(operator, eligibleWeight);
         }
-    }
-
-    // Add the operator to the pool if not present,
-    // update the operator's weight if present and eligible,
-    // or remove from the pool if ineligible.
-    function updateOperatorStatus(address operator) public {
-        assert(true);
     }
 
     // Return the eligible weight of the operator,

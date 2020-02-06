@@ -42,12 +42,7 @@ interface IBondedSortitionPool {
     // reverting if the operator is already present.
     function joinPool(address operator) external;
 
-    // Update the weight of an operator in the pool,
-    // reverting if the operator is not present.
-    function updateOperatorWeight(address operator) external;
-
-    // Add the operator to the pool if not present,
-    // update the operator's weight if present and eligible,
-    // or remove from the pool if ineligible.
+    // Update the operator's weight if present and eligible,
+    // or remove from the pool if present and ineligible.
     function updateOperatorStatus(address operator) external;
 }
