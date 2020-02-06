@@ -22,8 +22,8 @@ contract BondedSortitionPool is Sortition {
 
     // The contract (e.g. Keep factory) this specific pool serves.
     // To prevent griefing,
-    // only the pool owner can modify the minimum bondable value.
-    // Not required for non-bonded sortition pools.
+    // only the pool owner can request groups
+    // or modify the minimum bondable value.
     address poolOwner;
 
     constructor(

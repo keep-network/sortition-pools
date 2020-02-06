@@ -16,7 +16,8 @@ contract SortitionPoolFactory {
         return address(
             new SortitionPool(
                 stakingContract,
-                minimumStake
+                minimumStake,
+                msg.sender
             )
         );
     }

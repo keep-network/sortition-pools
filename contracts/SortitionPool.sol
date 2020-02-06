@@ -22,9 +22,18 @@ contract SortitionPool is Sortition {
     IStaking stakingContract;
     uint256 minimumStake;
 
-    constructor (IStaking _stakingContract, uint256 _minimumStake) public {
+    // The contract (e.g. Keep factory) this specific pool serves.
+    // Only the pool owner can request groups.
+    address poolOwner;
+
+    constructor(
+        IStaking _stakingContract,
+        uint256 _minimumStake,
+        address _poolOwner
+    ) public {
         stakingContract = _stakingContract;
         minimumStake = _minimumStake;
+        poolOwner = _poolOwner;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
