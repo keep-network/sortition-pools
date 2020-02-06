@@ -13,6 +13,11 @@ contract BondedSortitionPool is Sortition {
     IStaking stakingContract;
     IBonding bondingContract;
     uint256 minimumStake;
+    // The pool should specify a reasonable minimum bond
+    // for operators trying to join the pool,
+    // to prevent griefing by operators joining without enough bondable value.
+    // After we start selecting groups
+    // this value can be set to equal the most recent request's bondValue.
     uint256 minimumBondableValue;
 
     constructor(
