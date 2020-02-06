@@ -11,17 +11,6 @@ interface ISortitionPool {
     function selectGroup(uint256 groupSize, bytes32 seed)
         external returns (address[] memory selected);
 
-    /// @notice Selects a new group of operators of the provided size based on
-    /// the provided pseudo-random seed. All operators in the group are unique.
-    ///
-    /// If there are not enough operators in a pool to form a group or not
-    /// enough operators are eligible for work selection, the function fails.
-    /// @param groupSize Size of the requested group
-    /// @param seed Pseudo-random number used to select operators to group
-    /// @return selected Members of the selected group
-    function selectSetGroup(uint256 groupSize, bytes32 seed)
-        external returns (address[] memory selected);
-
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) external view returns (bool);
 

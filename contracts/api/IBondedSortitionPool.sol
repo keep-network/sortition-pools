@@ -2,19 +2,6 @@ pragma solidity ^0.5.10;
 
 interface IBondedSortitionPool {
     /// @notice Selects a new group of operators of the provided size based on
-    /// the provided pseudo-random seed and bonding requirements.
-    ///
-    /// If there are no operators in a pool to form a group or not
-    /// enough operators are eligible for work selection given the bonding
-    /// requirements, the function fails.
-    /// @param groupSize Size of the requested group
-    /// @param seed Pseudo-random number used to select operators to group
-    /// @param bondSize Size of the requested bond per operator
-    /// @return selected Members of the selected group
-    function selectGroup(uint256 groupSize, bytes32 seed, uint256 bondValue)
-        external returns (address[] memory selected);
-
-    /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed and bonding requirements. All operators
     /// in the group are unique.
     ///
