@@ -10,7 +10,7 @@ interface IBondedSortitionPool {
     /// requirements, the function fails.
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
-    /// @param bondSize Size of the requested bond per operator
+    /// @param bondValue Size of the requested bond per operator
     /// @return selected Members of the selected group
     function selectSetGroup(uint256 groupSize, bytes32 seed, uint256 bondValue)
         external returns (address[] memory selected);
