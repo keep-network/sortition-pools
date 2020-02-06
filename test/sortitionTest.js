@@ -1,4 +1,10 @@
-const Sortition = artifacts.require('./contracts/Sortition.sol')
+const StackLib = artifacts.require('StackLib')
+const Branch = artifacts.require('Branch')
+const Position = artifacts.require('Position')
+const Trunk = artifacts.require('Trunk')
+const Leaf = artifacts.require('Leaf')
+const Sortition = artifacts.require('Sortition')
+
 const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
 
@@ -10,6 +16,11 @@ contract('Sortition', (accounts) => {
   const david = accounts[3]
 
   before(async () => {
+    Sortition.link(StackLib)
+    Sortition.link(Branch)
+    Sortition.link(Position)
+    Sortition.link(Trunk)
+    Sortition.link(Leaf)
     sortition = await Sortition.new()
   })
 
