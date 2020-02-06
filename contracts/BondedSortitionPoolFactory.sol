@@ -21,7 +21,8 @@ contract BondedSortitionPoolFactory {
                 stakingContract,
                 bondingContract,
                 minimumStake,
-                initialMinimumBond
+                initialMinimumBond,
+                msg.sender
             )
         );
     }

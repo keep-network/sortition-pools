@@ -22,7 +22,7 @@ contract('BondedSortitionPool', (accounts) => {
     BondedSortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     bonding = await BondingContractStub.new()
-    pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, minBond)
+    pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, minBond, accounts[9])
   })
 
   describe('selectSetGroup', async () => {

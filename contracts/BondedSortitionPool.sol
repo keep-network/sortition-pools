@@ -20,16 +20,24 @@ contract BondedSortitionPool is Sortition {
     // this value can be set to equal the most recent request's bondValue.
     uint256 minimumBondableValue;
 
+    // The contract (e.g. Keep factory) this specific pool serves.
+    // To prevent griefing,
+    // only the pool owner can modify the minimum bondable value.
+    // Not required for non-bonded sortition pools.
+    address poolOwner;
+
     constructor(
         IStaking _stakingContract,
         IBonding _bondingContract,
         uint256 _minimumStake,
-        uint256 _minimumBondableValue
+        uint256 _minimumBondableValue,
+        address _poolOwner
     ) public {
         stakingContract = _stakingContract;
         bondingContract = _bondingContract;
         minimumStake = _minimumStake;
         minimumBondableValue = _minimumBondableValue;
+        poolOwner = _poolOwner;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
