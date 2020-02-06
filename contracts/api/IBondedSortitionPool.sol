@@ -16,12 +16,15 @@ interface IBondedSortitionPool {
         external returns (address[] memory selected);
 
     // Return whether the operator is eligible for the pool.
+    // Checks that the operator has sufficient staked tokens and bondable value,
+    // and the required authorizations.
     function isOperatorEligible(address operator) external view returns (bool);
 
     // Return whether the operator is present in the pool.
     function isOperatorInPool(address operator) external view returns (bool);
 
-    // Return whether the operator is up to date in the pool.
+    // Return whether the operator is up to date in the pool,
+    // i.e. whether its eligible weight matches its current weight in the pool.
     // If the operator is eligible but not present, return False.
     function isOperatorUpToDate(address operator) external view returns (bool);
 
