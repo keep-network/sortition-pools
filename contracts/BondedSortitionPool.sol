@@ -81,7 +81,7 @@ contract BondedSortitionPool is Sortition {
 
     // Return whether the operator is present in the pool.
     function isOperatorInPool(address operator) public view returns (bool) {
-        return true;
+        return isOperatorRegistered(operator);
     }
 
     // Return whether the operator's weight in the pool
@@ -93,7 +93,10 @@ contract BondedSortitionPool is Sortition {
     // Add an operator to the pool,
     // reverting if the operator is already present.
     function joinPool(address operator) public {
-        assert(true);
+        // TODO: Implement, this is just a stub.
+        uint256 eligibleWeight = 100;
+
+        insertOperator(operator, eligibleWeight);
     }
 
     // Update the operator's weight if present and eligible,
