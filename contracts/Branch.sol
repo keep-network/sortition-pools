@@ -104,7 +104,7 @@ library Branch {
     ///
     /// @return newIndex The index of the `index`th virtual staker of `node`
     /// within the returned slot.
-    function pickWeightedSlot(uint node, uint index)
+    function pickWeightedSlot(uint256 node, uint256 index)
         internal
         pure
         returns (uint slot, uint newIndex)
