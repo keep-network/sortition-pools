@@ -14,7 +14,6 @@ contract('SortitionPool', (accounts) => {
   const alice = accounts[0]
   const bob = accounts[1]
   const carol = accounts[2]
-  const david = accounts[3]
 
   beforeEach(async () => {
     SortitionPool.link(Branch)
@@ -23,8 +22,7 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(Trunk)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
-    pool = await SortitionPool.new(staking.address, minStake)
-    await pool.reseed(seed)
+    pool = await SortitionPool.new(staking.address, minStake, accounts[9])
   })
 
   describe('selectGroup', async () => {
@@ -36,15 +34,15 @@ contract('SortitionPool', (accounts) => {
       await pool.joinPool(bob)
       await pool.joinPool(carol)
 
-      const group = await pool.selectGroup.call(3)
-      await pool.selectGroup(3)
+      const group = await pool.selectGroup.call(3, seed)
+      await pool.selectGroup(3, seed)
 
       assert.equal(group.length, 3)
     })
 
     it('reverts when there are no operators in pool', async () => {
       try {
-        await pool.selectGroup.call(3)
+        await pool.selectGroup.call(3, seed)
       } catch (error) {
         assert.include(error.message, 'No operators in pool')
         return
@@ -57,8 +55,8 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(alice, 2000)
       await pool.joinPool(alice)
 
-      const group = await pool.selectGroup.call(5)
-      await pool.selectGroup(5)
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
       assert.equal(group.length, 5)
     })
 
@@ -70,8 +68,8 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 1000)
 
-      const group = await pool.selectGroup.call(5)
-      await pool.selectGroup(5)
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -83,8 +81,8 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 390000)
 
-      const group = await pool.selectGroup.call(5)
-      await pool.selectGroup(5)
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -97,11 +95,11 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(bob, 390000)
       await staking.setStake(alice, 1000)
 
-      await pool.updatePoolWeight(bob)
-      await pool.updatePoolWeight(alice)
+      await pool.updateOperatorStatus(bob)
+      await pool.updateOperatorStatus(alice)
 
-      const group = await pool.selectGroup.call(5)
-      await pool.selectGroup(5)
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
   })

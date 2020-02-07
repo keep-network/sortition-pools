@@ -1,5 +1,4 @@
 pragma solidity ^0.5.10;
-pragma experimental ABIEncoderV2;
 
 import '../../contracts/RNG.sol';
 
@@ -24,8 +23,8 @@ contract RNGStub {
     bytes32 s;
     uint sum;
     uint bits = RNG.bitsRequired(range);
-    for (uint i = 0; i < howMany; i++) {
-      (i, s) =  RNG.efficientGetIndex(range, bits, bytes32(i));
+    for (uint j = 0; j < howMany; j++) {
+      (i, s) =  RNG.efficientGetIndex(range, bits, bytes32(j));
       sum += i;
     }
     return sum;

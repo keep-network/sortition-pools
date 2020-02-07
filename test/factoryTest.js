@@ -10,20 +10,20 @@ contract('SortitionPoolFactory', (accounts) => {
   const alice = accounts[0]
   const bob = accounts[1]
 
+
   before(async () => {
     staking = await StakingContractStub.new()
-    sortitionPoolFactory = await SortitionPoolFactory.deployed()
-    await sortitionPoolFactory.setParams(staking.address, minStake)
+    sortitionPoolFactory = await SortitionPoolFactory.new()
   })
 
   describe('createSortitionPool()', async () => {
     it('creates independent clones', async () => {
-      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call()
-      await sortitionPoolFactory.createSortitionPool()
+      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
+      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool1 = await SortitionPool.at(sortitionPool1Address)
 
-      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call()
-      await sortitionPoolFactory.createSortitionPool()
+      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
+      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
       await staking.setStake(alice, 22000)
@@ -32,13 +32,10 @@ contract('SortitionPoolFactory', (accounts) => {
       await sortitionPool1.joinPool(alice)
       await sortitionPool2.joinPool(bob)
 
-      await sortitionPool1.reseed(seed)
-      await sortitionPool2.reseed(seed)
-
-      const group1 = await sortitionPool1.selectGroup.call(2)
+      const group1 = await sortitionPool1.selectGroup.call(2, seed)
       assert.deepEqual(group1, [alice, alice])
 
-      const group2 = await sortitionPool2.selectGroup.call(2)
+      const group2 = await sortitionPool2.selectGroup.call(2, seed)
       assert.deepEqual(group2, [bob, bob])
     })
   })
