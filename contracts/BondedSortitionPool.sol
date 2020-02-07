@@ -1,69 +1,43 @@
 pragma solidity ^0.5.10;
 
-import "./IBondingContract.sol";
 import "./Sortition.sol";
 import "./RNG.sol";
+import "./api/IStaking.sol";
+import "./api/IBonding.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is Sortition {
-    function selectSetGroupB(
-        uint256 groupSize,
-        bytes32 seed,
-        uint256 bondSize,
-        IBondingContract bondingContract
-    ) public returns (address[] memory) {
-        uint256 operatorsRemaining = operatorsInPool();
+    IStaking stakingContract;
+    IBonding bondingContract;
+    uint256 minimumStake;
+    // The pool should specify a reasonable minimum bond
+    // for operators trying to join the pool,
+    // to prevent griefing by operators joining without enough bondable value.
+    // After we start selecting groups
+    // this value can be set to equal the most recent request's bondValue.
+    uint256 minimumBondableValue;
 
-        address[] memory selected = new address[](groupSize);
-        uint256 nSelected = 0;
+    // The contract (e.g. Keep factory) this specific pool serves.
+    // To prevent griefing,
+    // only the pool owner can request groups
+    // or modify the minimum bondable value.
+    address poolOwner;
 
-        uint256 idx;
-        bytes32 rngState = seed;
-
-        uint256 totalWeight = root.sumWeight();
-
-        uint256 leafOrWeight;
-        address op;
-        bool duplicate;
-
-        while (nSelected < groupSize) {
-            require(
-                operatorsRemaining >= groupSize,
-                "Not enough operators in pool"
-            );
-
-            (idx, rngState) = RNG.getIndex(totalWeight, rngState);
-            /* (idx, rngState) = RNG.getIndex(root.sumWeight(), rngState); */
-
-            leafOrWeight = leaves[pickWeightedLeaf(idx)];
-            op = leafOrWeight.operator();
-            // XXX: awful but saves a slot
-            leafOrWeight = leafOrWeight.weight();
-
-            duplicate = false;
-            for (uint256 i = 0; i < nSelected; i++) {
-                if (op == selected[i]) {
-                    duplicate = true;
-                    break;
-                }
-            }
-
-            if (!duplicate) {
-                if (bondingContract.isEligible(op, leafOrWeight, bondSize)) {
-                    selected[nSelected] = op;
-                    nSelected += 1;
-                } else {
-                    removeOperator(op);
-                    totalWeight -= leafOrWeight;
-                    operatorsRemaining -= 1;
-                }
-            }
-        }
-
-        return selected;
+    constructor(
+        IStaking _stakingContract,
+        IBonding _bondingContract,
+        uint256 _minimumStake,
+        uint256 _minimumBondableValue,
+        address _poolOwner
+    ) public {
+        stakingContract = _stakingContract;
+        bondingContract = _bondingContract;
+        minimumStake = _minimumStake;
+        minimumBondableValue = _minimumBondableValue;
+        poolOwner = _poolOwner;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -75,13 +49,11 @@ contract BondedSortitionPool is Sortition {
     /// requirements, the function fails.
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
-    /// @param bondSize Size of the requested bond per operator
-    /// @param bondingContract 3rd party contract checking bond requirements
+    /// @param bondValue Size of the requested bond per operator
     function selectSetGroup(
         uint256 groupSize,
         bytes32 seed,
-        uint256 bondSize,
-        IBondingContract bondingContract
+        uint256 bondValue
     ) public returns (address[] memory) {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
@@ -141,7 +113,7 @@ contract BondedSortitionPool is Sortition {
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             // FOO is the WEIGHT OF THE OPERATOR here
-            if (bondingContract.isEligible(op, foo, bondSize)) {
+            if (bondingContract.availableUnbondedValue(op, poolOwner, address(this)) >= foo * minimumBondableValue) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
@@ -193,5 +165,53 @@ contract BondedSortitionPool is Sortition {
         // we should have the correct size of group.
 
         return selected;
+    }
+
+    // Return whether the operator is eligible for the pool.
+    function isOperatorEligible(address operator) public view returns (bool) {
+        return true;
+    }
+
+    // Return whether the operator is present in the pool.
+    function isOperatorInPool(address operator) public view returns (bool) {
+        return isOperatorRegistered(operator);
+    }
+
+    // Return whether the operator's weight in the pool
+    // matches their eligible weight.
+    function isOperatorUpToDate(address operator) public view returns (bool) {
+        return true;
+    }
+
+    // Add an operator to the pool,
+    // reverting if the operator is already present.
+    function joinPool(address operator) public {
+        // TODO: Implement, this is just a stub.
+        uint256 eligibleWeight = bondingContract.availableUnbondedValue(
+            operator,
+            poolOwner,
+            address(this)
+        ) / minimumBondableValue;
+
+        insertOperator(operator, eligibleWeight);
+    }
+
+    // Update the operator's weight if present and eligible,
+    // or remove from the pool if present and ineligible.
+    function updateOperatorStatus(address operator) public {
+        assert(true);
+    }
+
+    // Return the eligible weight of the operator,
+    // which may differ from the weight in the pool.
+    // Return 0 if ineligible.
+    function getEligibleWeight(address operator) internal view returns (uint256) {
+        return 0;
+    }
+
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) internal view returns (uint256) {
+        return 0;
     }
 }

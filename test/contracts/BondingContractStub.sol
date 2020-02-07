@@ -1,17 +1,17 @@
 pragma solidity ^0.5.10;
 
 contract BondingContractStub {
-  mapping(address => uint) eligibleWeight;
+    mapping(address => uint) unbondedValue;
 
-    function isEligible(
-        address operator,
-        uint stakingWeight,
-        uint bondSize
-    ) external returns (bool) {
-        return eligibleWeight[operator] >= stakingWeight;
+    function setBondableValue(address operator, uint256 value) public {
+        unbondedValue[operator] = value;
     }
 
-    function setWeight(address operator, uint stakingWeight) public {
-      eligibleWeight[operator] = stakingWeight;
+    function availableUnbondedValue(
+        address operator,
+        address bondCreator,
+        address additionalAuthorizedContract
+    ) external returns (uint256) {
+        return unbondedValue[operator];
     }
 }

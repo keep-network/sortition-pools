@@ -78,6 +78,7 @@ library Branch {
 
     // Requires that the weight is lower than the sumWeight of the node.
     // This is not enforced for performance reasons.
+    // TODO: Add unit tests to cover different scenarios for this function.
     function pickWeightedSlot(uint256 node, uint256 weight)
         internal
         pure
