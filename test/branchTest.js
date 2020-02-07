@@ -38,7 +38,6 @@ contract('Branch', (accounts) => {
 
   describe('setSlot()', async () => {
     it('Changes the correct slot', async () => {
-
       node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
       newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
       w = 0x1234
