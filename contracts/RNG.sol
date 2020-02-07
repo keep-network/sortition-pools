@@ -156,7 +156,7 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
         // Map the truncated index to the available unique indices.
-        uniqueIndex = internalUniquifyIndex(
+        uniqueIndex = uniquifyIndex(
             truncatedIndex,
             previousLeaves,
             nPreviousLeaves
@@ -170,7 +170,7 @@ library RNG {
         uint256 weight;
     }
 
-    function internalUniquifyIndex(
+    function uniquifyIndex(
         uint256 truncatedIndex,
         IndexWeight[] memory previousLeaves,
         uint256 nPreviousLeaves
@@ -192,31 +192,6 @@ library RNG {
         }
 
         return mappedIndex;
-    }
-
-    /// @notice A more easily testable utility function
-    /// for turning a truncated index into a unique index.
-    function uniquifyIndex(
-        uint256 truncatedIndex,
-        uint256[] memory previousLeafStartingIndices,
-        uint256[] memory previousLeafWeights
-    )
-        internal
-        pure
-        returns (uint256 mappedIndex)
-    {
-        // Just a textual convenience
-        uint256 nPreviousLeaves = previousLeafStartingIndices.length;
-
-        IndexWeight[] memory previousLeaves = new IndexWeight[](nPreviousLeaves);
-
-        for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            uint256 index = previousLeafStartingIndices[i];
-            uint256 weight = previousLeafWeights[i];
-            previousLeaves[i] = IndexWeight(index, weight);
-        }
-
-        return internalUniquifyIndex(truncatedIndex, previousLeaves, nPreviousLeaves);
     }
 
     function remapIndices(
