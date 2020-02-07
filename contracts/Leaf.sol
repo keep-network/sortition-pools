@@ -1,11 +1,18 @@
 pragma solidity ^0.5.10;
 
-import "./Branch.sol";
 import "solidity-bytes-utils/contracts/BytesLib.sol";
 
 library Leaf {
-    using Branch for uint256;
     using BytesLib for bytes;
+
+    function toBytes(uint256 x) internal pure returns (bytes memory) {
+        bytes32 b = bytes32(x);
+        bytes memory c = new bytes(32);
+        for (uint i=0; i < 32; i++) {
+            c[i] = b[i];
+        }
+        return c;
+    }
 
     function make(address operator, uint256 weight)
         internal
@@ -28,10 +35,10 @@ library Leaf {
     }
 
     function operator(uint256 leaf) internal pure returns (address) {
-        return leaf.toBytes().toAddress(0);
+        return toBytes(leaf).toAddress(0);
     }
 
     function weight(uint256 leaf) internal pure returns (uint256) {
-        return uint256(leaf.toBytes().toUint16(20));
+        return uint256(toBytes(leaf).toUint16(20));
     }
 }

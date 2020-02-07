@@ -1,104 +1,127 @@
 pragma solidity ^0.5.10;
 
-import "solidity-bytes-utils/contracts/BytesLib.sol";
-
+/// @notice The implicit 16-ary trees of the sortition pool
+/// rely on packing 16 "slots" of 16-bit values into each uint256.
+/// The Branch library permits efficient calculations on these slots.
 library Branch {
-    using BytesLib for bytes;
 
-    function slotShift(uint256 position) internal pure returns (uint256) {
+    /// @notice Calculate the right shift required
+    /// to make the 16 least significant bits of an uint256
+    /// be the bits of the `position`th slot
+    /// when treating the uint256 as a uint16[16].
+    ///
+    /// @dev Not used for efficiency reasons,
+    /// but left to illustrate the meaning of a common pattern.
+    /// I wish solidity had macros, even C macros.
+    function slotShift(uint position) internal pure returns (uint) {
         return (15 - position) * 16;
     }
 
-    function toBytes(uint256 x) internal pure returns (bytes memory) {
-        bytes32 b = bytes32(x);
-        bytes memory c = new bytes(32);
-        for (uint256 i = 0; i < 32; i++) {
-            c[i] = b[i];
-        }
-        return c;
-    }
-
-    function slotsToUint(uint256[16] memory slots)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 u;
-
-        for (uint256 i = 0; i < 16; i++) {
-            u = (u << 16) | (slots[i] & 0xffff);
-        }
-        return u;
-    }
-
-    function getSlot(uint256 node, uint256 position)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 shiftBits = (15 - position) * 16;
+    /// @notice Return the `position`th slot of the `node`,
+    /// treating `node` as a uint16[16].
+    function getSlot(uint node, uint position) internal pure returns (uint) {
+        uint shiftBits = (15 - position) * 16;
+        // Doing a bitwise AND with `0xffff`
+        // clears all but the 16 least significant bits.
+        // Because of the right shift by `slotShift(position)` bits,
+        // those 16 bits contain the 16 bits in the `position`th slot of `node`.
         return (node >> shiftBits) & 0xffff;
     }
 
-    function clearSlot(uint256 node, uint256 position)
+    /// @notice Return `node` with the `position`th slot set to zero.
+    function clearSlot(uint node, uint position)
         internal
         pure
-        returns (uint256)
+        returns (uint)
     {
-        uint256 shiftBits = (15 - position) * 16;
+        uint shiftBits = (15 - position) * 16;
+        // Shifting `0xffff` left by `slotShift(position)` bits
+        // gives us a number where all bits of the `position`th slot are set,
+        // and all other bits are unset.
+        //
+        // Using a bitwise NOT on this number,
+        // we get a uint256 where all bits are set
+        // except for those of the `position`th slot.
+        //
+        // Bitwise ANDing the original `node` with this number
+        // sets the bits of `position`th slot to zero,
+        // leaving all other bits unchanged.
         return node & ~(0xffff << shiftBits);
     }
 
-    function setSlot(uint256 node, uint256 position, uint256 weight)
+    /// @notice Return `node` with the `position`th slot set to `weight`.
+    ///
+    /// @param weight The weight of of the node.
+    /// Safely truncated to a 16-bit number,
+    /// but this should never be called with an overflowing weight regardless.
+    function setSlot(uint node, uint position, uint weight)
         internal
         pure
-        returns (uint256)
+        returns (uint)
     {
-        uint256 shiftBits = (15 - position) * 16;
-        return (node & ~(0xffff << shiftBits)) | (weight << shiftBits);
+        uint shiftBits = (15 - position) * 16;
+        // Clear the `position`th slot like in `clearSlot()`.
+        //
+        // Bitwise AND `weight` with `0xffff`
+        // to clear all but the 16 least significant bits.
+        //
+        // Shift this left by `slotShift(position)` bits
+        // to obtain a uint256 with all bits unset
+        // except in the `position`th slot
+        // which contains the 16-bit value of `weight`.
+        //
+        // When we bitwise OR these together,
+        // all other slots except the `position`th one come from the left argument,
+        // and the `position`th gets filled with `weight` from the right argument.
+        return node & ~(0xffff << shiftBits) | ((weight & 0xffff) << shiftBits);
     }
 
-    function toSlots(uint256 node) internal pure returns (uint256[16] memory) {
-        uint256[16] memory slots;
+    /// @notice Calculate the summed weight of all slots in the `node`.
+    function sumWeight(uint node) internal pure returns (uint) {
+        uint sum;
 
-        for (uint256 i = 0; i < 16; i++) {
-            slots[i] = getSlot(node, i);
-        }
-        return slots;
-    }
-
-    function sumWeight(uint256 node) internal pure returns (uint256) {
-        uint256 sum;
-
-        for (uint256 i = 0; i < 16; i++) {
+        for (uint i = 0; i < 16; i++) {
+            // Iterate through each slot
+            // by shifting `node` right in increments of 16 bits,
+            // and adding the 16 least significant bits to the `sum`.
             sum += (node >> (i * 16)) & 0xffff;
         }
         return sum;
     }
 
-    // Requires that the weight is lower than the sumWeight of the node.
-    // This is not enforced for performance reasons.
-    // TODO: Add unit tests to cover different scenarios for this function.
-    function pickWeightedSlot(uint256 node, uint256 weight)
+    /// @notice Pick a slot in `node` that corresponds to `index`.
+    /// Treats the node like an array of virtual stakers,
+    /// the number of virtual stakers in each slot corresponding to its weight,
+    /// and picks which slot contains the `index`th virtual staker.
+    ///
+    /// @dev Requires that `index` be lower than `sumWeight(node)`.
+    /// However, this is not enforced for performance reasons.
+    /// If `index` exceeds the permitted range,
+    /// `pickWeightedSlot()` returns the rightmost slot
+    /// and an excessively high `newIndex`.
+    ///
+    /// @return slot The slot of `node` containing the `index`th virtual staker.
+    ///
+    /// @return newIndex The index of the `index`th virtual staker of `node`
+    /// within the returned slot.
+    function pickWeightedSlot(uint256 node, uint256 index)
         internal
         pure
-        returns (uint256, uint256)
+        returns (uint slot, uint newIndex)
     {
-        uint256 currentSlotWeight;
-        uint256 currentSlot;
-        uint256 pickedWeight = weight;
+        uint currentSlotWeight;
+        newIndex = index;
 
-        for (currentSlot = 0; currentSlot < 16; currentSlot++) {
-            /* uint shiftBits = ((15 - currentSlot) * 16); */
-            currentSlotWeight = (node >> ((15 - currentSlot) * 16)) & 0xffff;
+        for (slot = 0; slot < 16; slot++) {
+            currentSlotWeight = (node >> ((15 - slot) * 16)) & 0xffff;
 
-            if (pickedWeight < currentSlotWeight) {
+            if (newIndex < currentSlotWeight) {
                 break;
             } else {
-                pickedWeight -= currentSlotWeight;
+                newIndex -= currentSlotWeight;
             }
         }
 
-        return (currentSlot, pickedWeight);
+        return (slot, newIndex);
     }
 }

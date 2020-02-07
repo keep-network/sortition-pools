@@ -41,7 +41,6 @@ contract('Branch', (accounts) => {
       node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
       newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
       w = 0x1234
-      // w = new BN('0x1234', 16)
 
       const modified = await branchInstance.setSlot.call(node, 3, w)
       newSlot = await branchInstance.getSlot.call(modified, 3)
