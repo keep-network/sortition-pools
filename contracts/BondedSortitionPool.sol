@@ -68,8 +68,8 @@ contract BondedSortitionPool is Sortition {
         // XXX: These two variables do way too varied things,
         // but I need all variable slots I can free.
         // Arbitrary names to underline the absurdity.
-        uint256 foo;
-        uint256 bar;
+        uint256 registerA;
+        uint256 registerB;
 
         bytes32 rngState = seed;
 
@@ -82,9 +82,8 @@ contract BondedSortitionPool is Sortition {
                 "Not enough operators in pool"
             );
 
-            // uint256 bar;
-            // BAR is the UNIQUE INDEX
-            (bar, rngState) = RNG.getUniqueIndex(
+            // REGISTER_B is the UNIQUE INDEX
+            (registerB, rngState) = RNG.getUniqueIndex(
                 poolWeight,
                 rngState,
                 selectedLeaves,
@@ -92,30 +91,29 @@ contract BondedSortitionPool is Sortition {
                 nSelected
             );
 
-            // uint256 foo;
-            // BAR starts as the UNIQUE INDEX here
-            (foo, bar) = pickWeightedLeafWithIndex(bar);
-            // FOO is now the POSITION OF THE LEAF
-            // BAR is now the STARTING INDEX of the leaf
+            // REGISTER_B starts as the UNIQUE INDEX here
+            (registerA, registerB) = pickWeightedLeafWithIndex(registerB);
+            // REGISTER_A is now the POSITION OF THE LEAF
+            // REGISTER_B is now the STARTING INDEX of the leaf
 
-            // FOO starts as the POSITION OF THE LEAF here
-            foo = leaves[foo];
-            // FOO is now the LEAF itself
-            address operator = foo.operator();
-            foo = foo.weight();
-            // FOO is now the WEIGHT OF THE OPERATOR
+            // REGISTER_A starts as the POSITION OF THE LEAF here
+            registerA = leaves[registerA];
+            // REGISTER_A is now the LEAF itself
+            address operator = registerA.operator();
+            registerA = registerA.weight();
+            // REGISTER_A is now the WEIGHT OF THE OPERATOR
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            // FOO is the WEIGHT OF THE OPERATOR here
-            if (bondingContract.availableUnbondedValue(operator, poolOwner, address(this)) >= foo * minimumBondableValue) {
+            // REGISTER_A is the WEIGHT OF THE OPERATOR here
+            if (bondingContract.availableUnbondedValue(operator, poolOwner, address(this)) >= registerA * minimumBondableValue) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
-                // BAR is the STARTING INDEX of the leaf
-                // FOO is the WEIGHT of the operator
-                RNG.IndexWeight memory tempIW = RNG.IndexWeight(bar, foo);
+                // REGISTER_B is the STARTING INDEX of the leaf
+                // REGISTER_A is the WEIGHT of the operator
+                RNG.IndexWeight memory tempIW = RNG.IndexWeight(registerB, registerA);
 
                 for (uint256 i = 0; i < nSelected; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
@@ -133,18 +131,18 @@ contract BondedSortitionPool is Sortition {
                 selectedLeaves[nSelected] = tempIW;
 
                 // And increase the skipped weight,
-                // by FOO which is the WEIGHT of the operator
-                selectedTotalWeight += foo;
+                // by REGISTER_A which is the WEIGHT of the operator
+                selectedTotalWeight += registerA;
 
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
                 removeOperator(operator);
-                // subtract FOO which is the WEIGHT of the operator
+                // subtract REGISTER_A which is the WEIGHT of the operator
                 // from the pool weight
-                poolWeight -= foo;
+                poolWeight -= registerA;
 
-                selectedLeaves = RNG.remapIndices(bar, foo, selectedLeaves);
+                selectedLeaves = RNG.remapIndices(registerB, registerA, selectedLeaves);
             }
         }
         /* pool */
