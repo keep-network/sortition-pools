@@ -101,14 +101,14 @@ contract BondedSortitionPool is Sortition {
             // FOO starts as the POSITION OF THE LEAF here
             foo = leaves[foo];
             // FOO is now the LEAF itself
-            address op = foo.operator();
+            address operator = foo.operator();
             foo = foo.weight();
             // FOO is now the WEIGHT OF THE OPERATOR
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             // FOO is the WEIGHT OF THE OPERATOR here
-            if (bondingContract.availableUnbondedValue(op, poolOwner, address(this)) >= foo * minimumBondableValue) {
+            if (bondingContract.availableUnbondedValue(operator, poolOwner, address(this)) >= foo * minimumBondableValue) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
@@ -136,10 +136,10 @@ contract BondedSortitionPool is Sortition {
                 // by FOO which is the WEIGHT of the operator
                 selectedTotalWeight += foo;
 
-                selected[nSelected] = op;
+                selected[nSelected] = operator;
                 nSelected += 1;
             } else {
-                removeOperator(op);
+                removeOperator(operator);
                 // subtract FOO which is the WEIGHT of the operator
                 // from the pool weight
                 poolWeight -= foo;
