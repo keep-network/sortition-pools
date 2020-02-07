@@ -56,27 +56,27 @@ contract SortitionPool is Sortition {
         address[] memory selected = new address[](groupSize);
         uint256 nSelected = 0;
 
-        uint256 idx;
+        uint256 index;
         uint256 leaf;
-        address op;
-        uint256 wt;
+        address operator;
+        uint256 weight;
 
         bytes32 rngState = seed;
 
         while (nSelected < groupSize) {
             require(poolWeight > 0, "No eligible operators");
 
-            (idx, rngState) = RNG.getIndex(poolWeight, rngState);
-            leaf = leaves[pickWeightedLeaf(idx)];
-            op = leaf.operator();
-            wt = leaf.weight();
+            (index, rngState) = RNG.getIndex(poolWeight, rngState);
+            leaf = leaves[pickWeightedLeaf(index)];
+            operator = leaf.operator();
+            weight = leaf.weight();
 
-            if (getEligibleWeight(op) >= wt) {
-                selected[nSelected] = op;
+            if (getEligibleWeight(operator) >= weight) {
+                selected[nSelected] = operator;
                 nSelected += 1;
             } else {
-                removeOperator(op);
-                poolWeight -= wt;
+                removeOperator(operator);
+                poolWeight -= weight;
             }
         }
 
