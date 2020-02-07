@@ -153,27 +153,14 @@ library RNG {
         // but has to be mapped to the actual range of indices.
         uint256 truncatedRange = range - sumPreviousWeights;
         uint256 truncatedIndex;
-        /* (truncatedIndex, newState) = getIndex(truncatedRange, state); */
-
-        /* // Map the truncated index to the available unique indices. */
-        /* index = internalUniquifyIndex( */
-        /*   truncatedIndex, */
-        /*   previousLeaves, */
-        /*   nPreviousLeaves */
-        /* ); */
-
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
-        uniqueIndex = truncatedIndex;
 
-        for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            // If the index is greater than the starting index of the `i`th leaf,
-            // we need to skip that leaf.
-            if (uniqueIndex >= previousLeaves[i].index) {
-                // Add the weight of this previous leaf to the index,
-                // ensuring that we skip the leaf.
-                uniqueIndex += previousLeaves[i].weight;
-            }
-        }
+        // Map the truncated index to the available unique indices.
+        uniqueIndex = internalUniquifyIndex(
+            truncatedIndex,
+            previousLeaves,
+            nPreviousLeaves
+        );
 
         return (uniqueIndex, newState);
     }
@@ -220,20 +207,16 @@ library RNG {
     {
         // Just a textual convenience
         uint256 nPreviousLeaves = previousLeafStartingIndices.length;
-        // Start by setting the index at the truncated index
-        mappedIndex = truncatedIndex;
+
+        IndexWeight[] memory previousLeaves = new IndexWeight[](nPreviousLeaves);
 
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            // If the index is greater than the starting index of the `i`th leaf,
-            // we need to skip that leaf.
-            if (mappedIndex >= previousLeafStartingIndices[i]) {
-                // Add the weight of this previous leaf to the index,
-                // ensuring that we skip the leaf.
-                mappedIndex += previousLeafWeights[i];
-            }
+            uint256 index = previousLeafStartingIndices[i];
+            uint256 weight = previousLeafWeights[i];
+            previousLeaves[i] = IndexWeight(index, weight);
         }
 
-        return mappedIndex;
+        return internalUniquifyIndex(truncatedIndex, previousLeaves, nPreviousLeaves);
     }
 
     function remapIndices(

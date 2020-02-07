@@ -68,8 +68,8 @@ contract BondedSortitionPool is Sortition {
         // XXX: These two variables do way too varied things,
         // but I need all variable slots I can free.
         // Arbitrary names to underline the absurdity.
-        /* uint foo; */
-        /* uint bar; */
+        uint256 foo;
+        uint256 bar;
 
         bytes32 rngState = seed;
 
@@ -82,22 +82,17 @@ contract BondedSortitionPool is Sortition {
                 "Not enough operators in pool"
             );
 
-            // INLINE RNG.getUniqueIndex()
-
-            uint256 bar;
-            (bar, rngState) = RNG.getIndex(
-                poolWeight - selectedTotalWeight,
-                rngState
+            // uint256 bar;
+            // BAR is the UNIQUE INDEX
+            (bar, rngState) = RNG.getUniqueIndex(
+                poolWeight,
+                rngState,
+                selectedLeaves,
+                selectedTotalWeight,
+                nSelected
             );
-            // BAR is now the TRUNCATED INDEX
-            for (uint256 i = 0; i < nSelected; i++) {
-                if (bar >= selectedLeaves[i].index) {
-                    bar += selectedLeaves[i].weight;
-                    // BAR is now the UNIQUE INDEX
-                }
-            }
 
-            uint256 foo;
+            // uint256 foo;
             // BAR starts as the UNIQUE INDEX here
             (foo, bar) = pickWeightedLeafWithIndex(bar);
             // FOO is now the POSITION OF THE LEAF
@@ -149,14 +144,7 @@ contract BondedSortitionPool is Sortition {
                 // from the pool weight
                 poolWeight -= foo;
 
-                // INLINE RNG.remapIndices()
-                // BAR is the STARTING INDEX of the removed leaf
-                // FOO is the WEIGHT of the removed operator
-                for (uint256 i = 0; i < nSelected; i++) {
-                    if (selectedLeaves[i].index > bar) {
-                        selectedLeaves[i].index -= foo;
-                    }
-                }
+                selectedLeaves = RNG.remapIndices(bar, foo, selectedLeaves);
             }
         }
         /* pool */
