@@ -123,20 +123,22 @@ library RNG {
     ///
     /// @param state The RNG state.
     ///
-    /// @param previousLeaves List of indices
+    /// @param previousLeaves List of indices and weights
     /// corresponding to the _first_ index of each previously selected leaf.
     /// An index number `i` is a starting index of leaf `o`
     /// if querying for index `i` in the sortition pool returns `o`,
     /// but querying for `i-1` returns a different leaf.
     /// This list REALLY needs to be sorted from smallest to largest.
     ///
-    /// previousLeafWeights List of weights of previously selected leaves.
-    /// This list must be the same length as `previousLeafStartingIndices`
-    /// and in the same order.
-    ///
     /// @param sumPreviousWeights The sum of the weights of previous leaves.
     /// Could be calculated from `previousLeafWeights`
     /// but providing it explicitly makes the function a bit simpler.
+    ///
+    /// @param nPreviousLeaves The number of previousLeaves
+    ///
+    /// @returns uniqueIndex An index in [0, range) that does not overlap
+    /// any of the previousLeaves,
+    /// as determined by the range [index, index + weight).
     function getUniqueIndex(
         uint256 range,
         bytes32 state,
