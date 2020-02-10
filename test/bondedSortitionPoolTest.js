@@ -25,10 +25,13 @@ contract('BondedSortitionPool', (accounts) => {
     BondedSortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     bonding = await BondingContractStub.new()
+
     prepareOperator = async (address, weight) => {
       await pool.insertOperator(address, weight)
       await bonding.setBondableValue(address, weight * bond)
+      await staking.setStake(address, weight * minStake)
     }
+
     pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, bond, accounts[9])
   })
 
@@ -87,7 +90,7 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[2], 12)
       await prepareOperator(accounts[3], 5)
 
-      await bonding.setBondableValue(accounts[2], 1 * bond)
+      await staking.setStake(accounts[2], 1 * minStake)
 
       try {
         await pool.selectSetGroup(4, seed, bond)
@@ -110,7 +113,7 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[1], 11)
       await prepareOperator(accounts[2], 12)
 
-      await bonding.setBondableValue(accounts[2], 15 * bond)
+      await staking.setStake(accounts[2], 15 * minStake)
 
       group = await pool.selectSetGroup.call(3, seed, bond)
       assert.equal(group.length, 3)
@@ -129,13 +132,13 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[8], 3)
       await prepareOperator(accounts[9], 42)
 
-      await bonding.setBondableValue(accounts[0], 1 * bond)
-      await bonding.setBondableValue(accounts[1], 1 * bond)
-      await bonding.setBondableValue(accounts[2], 1 * bond)
-      await bonding.setBondableValue(accounts[4], 1 * bond)
-      await bonding.setBondableValue(accounts[6], 7 * bond)
-      await bonding.setBondableValue(accounts[7], 1 * bond)
-      await bonding.setBondableValue(accounts[9], 1 * bond)
+      await staking.setStake(accounts[0], 1 * minStake)
+      await staking.setStake(accounts[1], 1 * minStake)
+      await staking.setStake(accounts[2], 1 * minStake)
+      await staking.setStake(accounts[4], 1 * minStake)
+      await staking.setStake(accounts[6], 7 * minStake)
+      await staking.setStake(accounts[7], 1 * minStake)
+      await staking.setStake(accounts[9], 1 * minStake)
 
       group = await pool.selectSetGroup.call(3, seed, bond)
       await pool.selectSetGroup(3, seed, bond)

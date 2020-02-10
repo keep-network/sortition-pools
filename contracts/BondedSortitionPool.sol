@@ -33,6 +33,8 @@ contract BondedSortitionPool is Sortition {
         uint256 _minimumBondableValue,
         address _poolOwner
     ) public {
+        require(_minimumStake > 0, "Minimum stake cannot be zero");
+
         stakingContract = _stakingContract;
         bondingContract = _bondingContract;
         minimumStake = _minimumStake;
@@ -106,7 +108,7 @@ contract BondedSortitionPool is Sortition {
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             // REGISTER_A is the WEIGHT OF THE OPERATOR here
-            if (bondingContract.availableUnbondedValue(operator, poolOwner, address(this)) >= registerA * minimumBondableValue) {
+            if (getEligibleWeight(operator) >= registerA) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
@@ -155,7 +157,7 @@ contract BondedSortitionPool is Sortition {
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
-        return true;
+        return (getEligibleWeight(operator) > 0);
     }
 
     // Return whether the operator is present in the pool.
@@ -172,12 +174,9 @@ contract BondedSortitionPool is Sortition {
     // Add an operator to the pool,
     // reverting if the operator is already present.
     function joinPool(address operator) public {
-        // TODO: Implement, this is just a stub.
-        uint256 eligibleWeight = bondingContract.availableUnbondedValue(
-            operator,
-            poolOwner,
-            address(this)
-        ) / minimumBondableValue;
+        uint256 eligibleWeight = getEligibleWeight(operator);
+
+        require(eligibleWeight > 0, "Operator ineligible");
 
         insertOperator(operator, eligibleWeight);
     }
@@ -192,7 +191,29 @@ contract BondedSortitionPool is Sortition {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        return 0;
+        // Get the amount of bondable value available for this pool.
+        // We only care that this covers one single bond
+        // regardless of the weight of the operator in the pool.
+        uint256 bondableValue = bondingContract.availableUnbondedValue(
+            operator,
+            poolOwner,
+            address(this)
+        );
+
+        // Don't query stake if bond is insufficient.
+        if (bondableValue < minimumBondableValue) {
+            return 0;
+        }
+
+        uint256 eligibleStake = stakingContract.eligibleStake(
+            operator,
+            poolOwner
+        );
+
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        // If eligibleStake < minimumStake, return 0 = ineligible.
+        return eligibleStake / minimumStake;
     }
 
     // Return the weight of the operator in the pool,
