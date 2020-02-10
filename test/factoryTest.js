@@ -7,6 +7,9 @@ contract('SortitionPoolFactory', (accounts) => {
   const minStake = 2000
   let sortitionPoolFactory
   let staking
+  const alice = accounts[0]
+  const bob = accounts[1]
+
 
   before(async () => {
     staking = await StakingContractStub.new()
@@ -23,14 +26,17 @@ contract('SortitionPoolFactory', (accounts) => {
       await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
-      await sortitionPool1.insertOperator(accounts[1], 11)
-      await sortitionPool2.insertOperator(accounts[2], 12)
+      await staking.setStake(alice, 22000)
+      await staking.setStake(bob, 24000)
 
-      const group1 = await sortitionPool1.selectGroup(2, seed)
-      assert.deepEqual(group1, [accounts[1], accounts[1]])
+      await sortitionPool1.joinPool(alice)
+      await sortitionPool2.joinPool(bob)
 
-      const group2 = await sortitionPool2.selectGroup(2, seed)
-      assert.deepEqual(group2, [accounts[2], accounts[2]])
+      const group1 = await sortitionPool1.selectGroup.call(2, seed)
+      assert.deepEqual(group1, [alice, alice])
+
+      const group2 = await sortitionPool2.selectGroup.call(2, seed)
+      assert.deepEqual(group2, [bob, bob])
     })
   })
 })
