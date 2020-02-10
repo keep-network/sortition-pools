@@ -194,6 +194,16 @@ library RNG {
         return mappedIndex;
     }
 
+    /// @notice Recalculate the starting indices of the previousLeaves
+    /// when leaf is removed from the tree at the specified index.
+    /// @dev Subtracts deletedWeight from each starting index in previousLeaves
+    /// that exceeds deletedStartingIndex.
+    /// @param deletedStartingIndex The starting index of the deleted leaf.
+    /// @param deletedWeight The weight of the deleted leaf.
+    /// @param previousLeaves The starting indices and weights
+    /// of the previously selected leaves.
+    /// @returns The starting indices of the previous leaves
+    /// in a tree without the deleted leaf.
     function remapIndices(
         uint256 deletedStartingIndex,
         uint256 deletedWeight,
