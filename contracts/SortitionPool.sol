@@ -4,10 +4,6 @@ import "./Sortition.sol";
 import "./RNG.sol";
 import "./api/IStaking.sol";
 
-interface StakingContract {
-    function eligibleStake(address operator) external view returns (uint);
-}
-
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
