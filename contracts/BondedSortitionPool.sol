@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "./SortitionTree.sol";
+import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
 import "./api/IStaking.sol";
 import "./api/IBonding.sol";
@@ -9,22 +9,14 @@ import "./api/IBonding.sol";
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
-contract BondedSortitionPool is SortitionTree {
-    IStaking stakingContract;
+contract BondedSortitionPool is AbstractSortitionPool {
     IBonding bondingContract;
-    uint256 minimumStake;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
     // to prevent griefing by operators joining without enough bondable value.
     // After we start selecting groups
     // this value can be set to equal the most recent request's bondValue.
     uint256 minimumBondableValue;
-
-    // The contract (e.g. Keep factory) this specific pool serves.
-    // To prevent griefing,
-    // only the pool owner can request groups
-    // or modify the minimum bondable value.
-    address poolOwner;
 
     constructor(
         IStaking _stakingContract,
@@ -155,59 +147,6 @@ contract BondedSortitionPool is SortitionTree {
         // we should have the correct size of group.
 
         return selected;
-    }
-
-    // Return whether the operator is eligible for the pool.
-    function isOperatorEligible(address operator) public view returns (bool) {
-        return (getEligibleWeight(operator) > 0);
-    }
-
-    // Return whether the operator is present in the pool.
-    function isOperatorInPool(address operator) public view returns (bool) {
-        return isOperatorRegistered(operator);
-    }
-
-    // Return whether the operator's weight in the pool
-    // matches their eligible weight.
-    function isOperatorUpToDate(address operator) public view returns (bool) {
-        return getPoolWeight(operator) == getEligibleWeight(operator);
-    }
-
-    // Return the weight of the operator in the pool,
-    // which may or may not be out of date.
-    function getPoolWeight(address operator) public view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        // Not in pool -> has weight 0
-        if (flaggedLeaf == 0) {
-            return 0;
-        } else {
-            return leaves[flaggedLeaf.unsetFlag()].weight();
-        }
-    }
-
-    // Add an operator to the pool,
-    // reverting if the operator is already present.
-    function joinPool(address operator) public {
-        uint256 eligibleWeight = getEligibleWeight(operator);
-
-        require(eligibleWeight > 0, "Operator ineligible");
-
-        insertOperator(operator, eligibleWeight);
-    }
-
-    // Update the operator's weight if present and eligible,
-    // or remove from the pool if present and ineligible.
-    function updateOperatorStatus(address operator) public {
-        uint256 poolWeight = getPoolWeight(operator);
-        require(poolWeight > 0, "Operator not in pool");
-
-        uint256 eligibleWeight = getEligibleWeight(operator);
-
-        if (eligibleWeight > 0) {
-            updateOperator(operator, eligibleWeight);
-        } else {
-            removeOperator(operator);
-        }
     }
 
     // Return the eligible weight of the operator,
