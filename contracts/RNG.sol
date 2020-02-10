@@ -102,7 +102,6 @@ library RNG {
         bool found = false;
         uint256 index;
         bytes32 newState = state;
-
         while (!found) {
             index = truncate(bits, uint256(newState));
             newState = keccak256(abi.encode(newState));
@@ -124,27 +123,34 @@ library RNG {
     ///
     /// @param state The RNG state.
     ///
-    /// @param previousLeafStartingIndices List of indices
-    /// corresponding to the _first_ index of each previously selected leaf.
+    /// @param previousLeaves List of indices and weights
+    /// corresponding to the _first_ index of each previously selected leaf,
+    /// and the weight of the same leaf.
     /// An index number `i` is a starting index of leaf `o`
     /// if querying for index `i` in the sortition pool returns `o`,
     /// but querying for `i-1` returns a different leaf.
     /// This list REALLY needs to be sorted from smallest to largest.
     ///
-    /// @param previousLeafWeights List of weights of previously selected leaves.
-    /// This list must be the same length as `previousLeafStartingIndices`
-    /// and in the same order.
-    ///
     /// @param sumPreviousWeights The sum of the weights of previous leaves.
     /// Could be calculated from `previousLeafWeights`
     /// but providing it explicitly makes the function a bit simpler.
+    ///
+    /// @param nPreviousLeaves The number of previousLeaves
+    ///
+    /// @return uniqueIndex An index in [0, range) that does not overlap
+    /// any of the previousLeaves,
+    /// as determined by the range [index, index + weight).
     function getUniqueIndex(
         uint256 range,
         bytes32 state,
-        uint256[] memory previousLeafStartingIndices,
-        uint256[] memory previousLeafWeights,
-        uint256 sumPreviousWeights
-    ) internal pure returns (uint256 index, bytes32 newState) {
+        IndexWeight[] memory previousLeaves,
+        uint256 sumPreviousWeights,
+        uint256 nPreviousLeaves
+    )
+        internal
+        pure
+        returns (uint256 uniqueIndex, bytes32 newState)
+    {
         // Get an index in the truncated range.
         // The truncated range covers only new leaves,
         // but has to be mapped to the actual range of indices.
@@ -153,37 +159,73 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
         // Map the truncated index to the available unique indices.
-        index = uniquifyIndex(
+        uniqueIndex = uniquifyIndex(
             truncatedIndex,
-            previousLeafStartingIndices,
-            previousLeafWeights
+            previousLeaves,
+            nPreviousLeaves
         );
 
-        return (index, newState);
+        return (uniqueIndex, newState);
     }
 
-    /// @notice A more easily testable utility function
-    /// for turning a truncated index into a unique index.
+    struct IndexWeight {
+        uint256 index;
+        uint256 weight;
+    }
+
     function uniquifyIndex(
         uint256 truncatedIndex,
-        uint256[] memory previousLeafStartingIndices,
-        uint256[] memory previousLeafWeights
-    ) internal pure returns (uint256 mappedIndex) {
-        // Just a textual convenience
-        uint256 nPreviousLeaves = previousLeafStartingIndices.length;
-        // Start by setting the index at the truncated index
+        IndexWeight[] memory previousLeaves,
+        uint256 nPreviousLeaves
+    )
+        internal
+        pure
+        returns (uint256 mappedIndex)
+    {
         mappedIndex = truncatedIndex;
 
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
-            if (mappedIndex >= previousLeafStartingIndices[i]) {
+            if (mappedIndex >= previousLeaves[i].index) {
                 // Add the weight of this previous leaf to the index,
                 // ensuring that we skip the leaf.
-                mappedIndex += previousLeafWeights[i];
+                mappedIndex += previousLeaves[i].weight;
             }
         }
 
         return mappedIndex;
+    }
+
+    /// @notice Recalculate the starting indices of the previousLeaves
+    /// when leaf is removed from the tree at the specified index.
+    /// @dev Subtracts deletedWeight from each starting index in previousLeaves
+    /// that exceeds deletedStartingIndex.
+    /// @param deletedStartingIndex The starting index of the deleted leaf.
+    /// @param deletedWeight The weight of the deleted leaf.
+    /// @param previousLeaves The starting indices and weights
+    /// of the previously selected leaves.
+    /// @return The starting indices of the previous leaves
+    /// in a tree without the deleted leaf.
+    function remapIndices(
+        uint256 deletedStartingIndex,
+        uint256 deletedWeight,
+        IndexWeight[] memory previousLeaves
+    )
+        internal
+        pure
+        returns (IndexWeight[] memory)
+    {
+        uint256 nPreviousLeaves = previousLeaves.length;
+
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
+            // If index is greater than the index of the deleted leaf,
+            // reduce the starting index by the weight of the deleted leaf.
+            if (previousLeaves[i].index > deletedStartingIndex) {
+                previousLeaves[i].index -= deletedWeight;
+            }
+        }
+
+        return previousLeaves;
     }
 }

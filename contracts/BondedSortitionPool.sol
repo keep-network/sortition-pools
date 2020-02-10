@@ -33,6 +33,8 @@ contract BondedSortitionPool is Sortition {
         uint256 _minimumBondableValue,
         address _poolOwner
     ) public {
+        require(_minimumStake > 0, "Minimum stake cannot be zero");
+
         stakingContract = _stakingContract;
         bondingContract = _bondingContract;
         minimumStake = _minimumStake;
@@ -58,25 +60,104 @@ contract BondedSortitionPool is Sortition {
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
         address[] memory selected = new address[](groupSize);
-        uint selectedWeight = 0;
+        uint256 nSelected = 0;
 
-        //
-        // FIXME! THIS IS NOT A SECURE ALGORITHM AND IT HAS TO BE REPLACED!
-        // IT IS JUST A TEMPORARY SOLUTION ALLOWING US TO CODE AGAINST
-        // THIS INTERFACE.
-        //
-        for (uint i = 0; i < groupSize; i++) {
-            uint leaf = leaves[pickWeightedLeaf(selectedWeight)];
-            selected[i] = leaf.operator();
-            selectedWeight += leaf.weight();
+        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
+            groupSize
+        );
+        uint256 selectedTotalWeight = 0;
+
+        // XXX: These two variables do way too varied things,
+        // but I need all variable slots I can free.
+        // Arbitrary names to underline the absurdity.
+        uint256 registerA;
+        uint256 registerB;
+
+        bytes32 rngState = seed;
+
+        uint256 poolWeight = root.sumWeight();
+
+        /* loop */
+        while (nSelected < groupSize) {
+            require(
+                poolWeight > selectedTotalWeight,
+                "Not enough operators in pool"
+            );
+
+            // REGISTER_B is the UNIQUE INDEX
+            (registerB, rngState) = RNG.getUniqueIndex(
+                poolWeight,
+                rngState,
+                selectedLeaves,
+                selectedTotalWeight,
+                nSelected
+            );
+
+            // REGISTER_B starts as the UNIQUE INDEX here
+            (registerA, registerB) = pickWeightedLeafWithIndex(registerB);
+            // REGISTER_A is now the POSITION OF THE LEAF
+            // REGISTER_B is now the STARTING INDEX of the leaf
+
+            // REGISTER_A starts as the POSITION OF THE LEAF here
+            registerA = leaves[registerA];
+            // REGISTER_A is now the LEAF itself
+            address operator = registerA.operator();
+            registerA = registerA.weight();
+            // REGISTER_A is now the WEIGHT OF THE OPERATOR
+
+            // Good operators go into the group and the list to skip,
+            // naughty operators get deleted
+            // REGISTER_A is the WEIGHT OF THE OPERATOR here
+            if (getEligibleWeight(operator) >= registerA) {
+                // We insert the new index and weight into the lists,
+                // keeping them both ordered by the starting indices.
+                // To do this, we start by holding the new element outside the list.
+
+                // REGISTER_B is the STARTING INDEX of the leaf
+                // REGISTER_A is the WEIGHT of the operator
+                RNG.IndexWeight memory tempIW = RNG.IndexWeight(registerB, registerA);
+
+                for (uint256 i = 0; i < nSelected; i++) {
+                    RNG.IndexWeight memory thisIW = selectedLeaves[i];
+                    // With each element of the list,
+                    // we check if the outside element should go before it.
+                    // If true, we swap that element and the outside element.
+                    if (tempIW.index < thisIW.index) {
+                        selectedLeaves[i] = tempIW;
+                        tempIW = thisIW;
+                    }
+                }
+
+                // Now the outside element is the last one,
+                // so we push it to the end of the list.
+                selectedLeaves[nSelected] = tempIW;
+
+                // And increase the skipped weight,
+                // by REGISTER_A which is the WEIGHT of the operator
+                selectedTotalWeight += registerA;
+
+                selected[nSelected] = operator;
+                nSelected += 1;
+            } else {
+                removeOperator(operator);
+                // subtract REGISTER_A which is the WEIGHT of the operator
+                // from the pool weight
+                poolWeight -= registerA;
+
+                selectedLeaves = RNG.remapIndices(registerB, registerA, selectedLeaves);
+            }
         }
+        /* pool */
+
+        // If nothing has exploded by now,
+        // we should have the correct size of group.
 
         return selected;
     }
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
-        return true;
+        return (getEligibleWeight(operator) > 0);
     }
 
     // Return whether the operator is present in the pool.
@@ -87,14 +168,27 @@ contract BondedSortitionPool is Sortition {
     // Return whether the operator's weight in the pool
     // matches their eligible weight.
     function isOperatorUpToDate(address operator) public view returns (bool) {
-        return true;
+        return getPoolWeight(operator) == getEligibleWeight(operator);
+    }
+
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) public view returns (uint256) {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        // Not in pool -> has weight 0
+        if (flaggedLeaf == 0) {
+            return 0;
+        } else {
+            return leaves[flaggedLeaf.unsetFlag()].weight();
+        }
     }
 
     // Add an operator to the pool,
     // reverting if the operator is already present.
     function joinPool(address operator) public {
-        // TODO: Implement, this is just a stub.
-        uint256 eligibleWeight = 100;
+        uint256 eligibleWeight = getEligibleWeight(operator);
+
+        require(eligibleWeight > 0, "Operator ineligible");
 
         insertOperator(operator, eligibleWeight);
     }
@@ -102,19 +196,44 @@ contract BondedSortitionPool is Sortition {
     // Update the operator's weight if present and eligible,
     // or remove from the pool if present and ineligible.
     function updateOperatorStatus(address operator) public {
-        assert(true);
+        uint256 poolWeight = getPoolWeight(operator);
+        require(poolWeight > 0, "Operator not in pool");
+
+        uint256 eligibleWeight = getEligibleWeight(operator);
+
+        if (eligibleWeight > 0) {
+            updateOperator(operator, eligibleWeight);
+        } else {
+            removeOperator(operator);
+        }
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        return 0;
-    }
+        // Get the amount of bondable value available for this pool.
+        // We only care that this covers one single bond
+        // regardless of the weight of the operator in the pool.
+        uint256 bondableValue = bondingContract.availableUnbondedValue(
+            operator,
+            poolOwner,
+            address(this)
+        );
 
-    // Return the weight of the operator in the pool,
-    // which may or may not be out of date.
-    function getPoolWeight(address operator) internal view returns (uint256) {
-        return 0;
+        // Don't query stake if bond is insufficient.
+        if (bondableValue < minimumBondableValue) {
+            return 0;
+        }
+
+        uint256 eligibleStake = stakingContract.eligibleStake(
+            operator,
+            poolOwner
+        );
+
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        // If eligibleStake < minimumStake, return 0 = ineligible.
+        return eligibleStake / minimumStake;
     }
 }
