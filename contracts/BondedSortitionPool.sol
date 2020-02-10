@@ -168,7 +168,7 @@ contract BondedSortitionPool is Sortition {
     // Return whether the operator's weight in the pool
     // matches their eligible weight.
     function isOperatorUpToDate(address operator) public view returns (bool) {
-        return true;
+        return getPoolWeight(operator) == getEligibleWeight(operator);
     }
 
     // Add an operator to the pool,
@@ -184,7 +184,16 @@ contract BondedSortitionPool is Sortition {
     // Update the operator's weight if present and eligible,
     // or remove from the pool if present and ineligible.
     function updateOperatorStatus(address operator) public {
-        assert(true);
+        uint256 poolWeight = getPoolWeight(operator);
+        require(poolWeight > 0, "Operator not in pool");
+
+        uint256 eligibleWeight = getEligibleWeight(operator);
+
+        if (eligibleWeight > 0) {
+            updateOperator(operator, eligibleWeight);
+        } else {
+            removeOperator(operator);
+        }
     }
 
     // Return the eligible weight of the operator,
@@ -219,6 +228,12 @@ contract BondedSortitionPool is Sortition {
     // Return the weight of the operator in the pool,
     // which may or may not be out of date.
     function getPoolWeight(address operator) internal view returns (uint256) {
-        return 0;
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        // Not in pool -> has weight 0
+        if (flaggedLeaf == 0) {
+            return 0;
+        } else {
+            return leaves[flaggedLeaf.unsetFlag()].weight();
+        }
     }
 }
