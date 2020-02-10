@@ -99,6 +99,19 @@ contract SortitionPool is Sortition {
         return getEligibleWeight(operator) == getPoolWeight(operator);
     }
 
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) public view returns (uint256) {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        if (flaggedLeaf == 0) {
+            return 0;
+        } else {
+            uint256 leafPosition = flaggedLeaf.unsetFlag();
+            uint256 leafWeight = leaves[leafPosition].weight();
+            return leafWeight;
+        }
+    }
+
     // Add an operator to the pool,
     // reverting if the operator is already present.
     function joinPool(address operator) public {
@@ -137,18 +150,5 @@ contract SortitionPool is Sortition {
         uint256 operatorWeight = operatorStake / minimumStake;
 
         return operatorWeight;
-    }
-
-    // Return the weight of the operator in the pool,
-    // which may or may not be out of date.
-    function getPoolWeight(address operator) internal view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        if (flaggedLeaf == 0) {
-            return 0;
-        } else {
-            uint256 leafPosition = flaggedLeaf.unsetFlag();
-            uint256 leafWeight = leaves[leafPosition].weight();
-            return leafWeight;
-        }
     }
 }
