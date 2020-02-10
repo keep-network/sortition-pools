@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import '../../contracts/Sortition.sol';
+import '../../contracts/SortitionTree.sol';
 contract StackStub is Sortition {
     uint256[] stack;
 
