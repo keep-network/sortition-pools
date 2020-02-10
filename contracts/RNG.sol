@@ -124,7 +124,8 @@ library RNG {
     /// @param state The RNG state.
     ///
     /// @param previousLeaves List of indices and weights
-    /// corresponding to the _first_ index of each previously selected leaf.
+    /// corresponding to the _first_ index of each previously selected leaf,
+    /// and the weight of the same leaf.
     /// An index number `i` is a starting index of leaf `o`
     /// if querying for index `i` in the sortition pool returns `o`,
     /// but querying for `i-1` returns a different leaf.
