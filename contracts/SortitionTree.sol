@@ -129,10 +129,6 @@ contract SortitionTree is GasStation {
         return Leaf.make(operator, weight);
     }
 
-    function getLeaf(uint256 position) public view returns (uint256) {
-        return leaves[position];
-    }
-
     function removeLeaf(uint256 position) public {
         uint256 trunkN = position.trunk();
         uint256 rightmostSubOne = rightmostLeaf[trunkN] - 1;
@@ -148,7 +144,7 @@ contract SortitionTree is GasStation {
     }
 
     function updateLeaf(uint256 position, uint256 weight) public {
-        address leafOperator = getLeaf(position).operator();
+        address leafOperator = leaves[position].operator();
         uint256 newLeaf = Leaf.make(leafOperator, weight);
         setLeaf(position, newLeaf);
     }
@@ -176,10 +172,6 @@ contract SortitionTree is GasStation {
         // set level Root
         childSlot = parent.slot();
         root = root.setSlot(childSlot, nodeWeight);
-    }
-
-    function getRoot() public view returns (uint256) {
-        return root;
     }
 
     function pickWeightedLeafWithIndex(uint256 index)
@@ -222,10 +214,6 @@ contract SortitionTree is GasStation {
         uint256 _ignoredIndex;
         (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index);
         return leafPosition;
-    }
-
-    function leafAddress(uint256 leaf) public pure returns (address) {
-        return leaf.operator();
     }
 
     function leavesInStack(uint256 trunkN) internal view returns (bool) {

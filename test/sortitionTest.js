@@ -3,7 +3,7 @@ const Branch = artifacts.require('Branch')
 const Position = artifacts.require('Position')
 const Trunk = artifacts.require('Trunk')
 const Leaf = artifacts.require('Leaf')
-const SortitionTree = artifacts.require('SortitionTree')
+const SortitionTreeStub = artifacts.require('SortitionTreeStub.sol')
 
 const BN = web3.utils.BN
 const toHex = web3.utils.numberToHex
@@ -16,12 +16,12 @@ contract('SortitionTree', (accounts) => {
   const david = accounts[3]
 
   before(async () => {
-    SortitionTree.link(StackLib)
-    SortitionTree.link(Branch)
-    SortitionTree.link(Position)
-    SortitionTree.link(Trunk)
-    SortitionTree.link(Leaf)
-    sortition = await SortitionTree.new()
+    SortitionTreeStub.link(StackLib)
+    SortitionTreeStub.link(Branch)
+    SortitionTreeStub.link(Position)
+    SortitionTreeStub.link(Trunk)
+    SortitionTreeStub.link(Leaf)
+    sortition = await SortitionTreeStub.new()
   })
 
   describe('setLeaf()', async () => {
