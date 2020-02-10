@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-import "./Sortition.sol";
+import "./SortitionTree.sol";
 import "./RNG.sol";
 import "./api/IStaking.sol";
 
