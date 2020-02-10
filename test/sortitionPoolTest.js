@@ -11,6 +11,9 @@ contract('SortitionPool', (accounts) => {
   const minStake = 2000
   let staking
   let pool
+  const alice = accounts[0]
+  const bob = accounts[1]
+  const carol = accounts[2]
 
   beforeEach(async () => {
     SortitionPool.link(Branch)
@@ -24,17 +27,22 @@ contract('SortitionPool', (accounts) => {
 
   describe('selectGroup', async () => {
     it('returns group of expected size', async () => {
-      await pool.insertOperator(accounts[0], 10)
-      await pool.insertOperator(accounts[1], 11)
-      await pool.insertOperator(accounts[2], 12)
+      await staking.setStake(alice, 20000)
+      await staking.setStake(bob, 22000)
+      await staking.setStake(carol, 24000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+      await pool.joinPool(carol)
 
-      const group = await pool.selectGroup(3, seed)
+      const group = await pool.selectGroup.call(3, seed)
+      await pool.selectGroup(3, seed)
+
       assert.equal(group.length, 3)
     })
 
     it('reverts when there are no operators in pool', async () => {
       try {
-        await pool.selectGroup(3, seed)
+        await pool.selectGroup.call(3, seed)
       } catch (error) {
         assert.include(error.message, 'No operators in pool')
         return
@@ -44,10 +52,55 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('returns group of expected size if less operators are registered', async () => {
-      await pool.insertOperator(accounts[0], 1)
+      await staking.setStake(alice, 2000)
+      await pool.joinPool(alice)
 
-      const group = await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
       assert.equal(group.length, 5)
+    })
+
+    it('removes ineligible operators', async () => {
+      await staking.setStake(alice, 2000)
+      await staking.setStake(bob, 4000000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+
+      await staking.setStake(bob, 1000)
+
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
+      assert.deepEqual(group, [alice, alice, alice, alice, alice])
+    })
+
+    it('removes outdated but still operators', async () => {
+      await staking.setStake(alice, 2000)
+      await staking.setStake(bob, 4000000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+
+      await staking.setStake(bob, 390000)
+
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
+      assert.deepEqual(group, [alice, alice, alice, alice, alice])
+    })
+
+    it('lets outdated operators update their status', async () => {
+      await staking.setStake(alice, 2000)
+      await staking.setStake(bob, 4000000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+
+      await staking.setStake(bob, 390000)
+      await staking.setStake(alice, 1000)
+
+      await pool.updateOperatorStatus(bob)
+      await pool.updateOperatorStatus(alice)
+
+      const group = await pool.selectGroup.call(5, seed)
+      await pool.selectGroup(5, seed)
+      assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
   })
 })

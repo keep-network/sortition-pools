@@ -45,18 +45,35 @@ contract SortitionPool is Sortition {
     /// @return selected Members of the selected group
     function selectGroup(
         uint256 groupSize, bytes32 seed
-    ) public view returns (address[] memory)  {
-        uint totalWeight = totalWeight();
-        require(totalWeight > 0, "No operators in pool");
+    ) public returns (address[] memory)  {
+        uint poolWeight = totalWeight();
+        require(poolWeight > 0, "No operators in pool");
 
         address[] memory selected = new address[](groupSize);
+        uint256 nSelected = 0;
 
-        uint idx;
-        bytes32 state = seed;
+        uint256 index;
+        uint256 leaf;
+        address operator;
+        uint256 weight;
 
-        for (uint i = 0; i < groupSize; i++) {
-            (idx, state) = RNG.getIndex(totalWeight, bytes32(state));
-            selected[i] = leaves[pickWeightedLeaf(idx)].operator();
+        bytes32 rngState = seed;
+
+        while (nSelected < groupSize) {
+            require(poolWeight > 0, "No eligible operators");
+
+            (index, rngState) = RNG.getIndex(poolWeight, rngState);
+            leaf = leaves[pickWeightedLeaf(index)];
+            operator = leaf.operator();
+            weight = leaf.weight();
+
+            if (getEligibleWeight(operator) >= weight) {
+                selected[nSelected] = operator;
+                nSelected += 1;
+            } else {
+                removeOperator(operator);
+                poolWeight -= weight;
+            }
         }
 
         return selected;
@@ -64,18 +81,31 @@ contract SortitionPool is Sortition {
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
-        return true;
+        return getEligibleWeight(operator) > 0;
     }
 
     // Return whether the operator is present in the pool.
     function isOperatorInPool(address operator) public view returns (bool) {
-        return true;
+        return getFlaggedOperatorLeaf(operator) != 0;
     }
 
     // Return whether the operator's weight in the pool
     // matches their eligible weight.
     function isOperatorUpToDate(address operator) public view returns (bool) {
-        return true;
+        return getEligibleWeight(operator) == getPoolWeight(operator);
+    }
+
+    // Return the weight of the operator in the pool,
+    // which may or may not be out of date.
+    function getPoolWeight(address operator) public view returns (uint256) {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        if (flaggedLeaf == 0) {
+            return 0;
+        } else {
+            uint256 leafPosition = flaggedLeaf.unsetFlag();
+            uint256 leafWeight = leaves[leafPosition].weight();
+            return leafWeight;
+        }
     }
 
     // Add an operator to the pool,
@@ -112,22 +142,9 @@ contract SortitionPool is Sortition {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        uint256 operatorStake = stakingContract.eligibleStake(operator, address(this));
+        uint256 operatorStake = stakingContract.eligibleStake(operator, poolOwner);
         uint256 operatorWeight = operatorStake / minimumStake;
 
         return operatorWeight;
-    }
-
-    // Return the weight of the operator in the pool,
-    // which may or may not be out of date.
-    function getPoolWeight(address operator) internal view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        if (flaggedLeaf == 0) {
-            return 0;
-        } else {
-            uint256 leafPosition = flaggedLeaf.unsetFlag();
-            uint256 leafWeight = leaves[leafPosition].weight();
-            return leafWeight;
-        }
     }
 }
