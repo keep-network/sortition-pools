@@ -27,9 +27,9 @@ contract('BondedSortitionPool', (accounts) => {
     bonding = await BondingContractStub.new()
 
     prepareOperator = async (address, weight) => {
-      await pool.insertOperator(address, weight)
       await bonding.setBondableValue(address, weight * bond)
       await staking.setStake(address, weight * minStake)
+      await pool.joinPool(address)
     }
 
     pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, bond, accounts[9])
