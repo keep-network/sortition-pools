@@ -7,7 +7,7 @@ import "./Trunk.sol";
 import "./Leaf.sol";
 import "./GasStation.sol";
 
-contract Sortition is GasStation {
+contract SortitionTree is GasStation {
     using StackLib for uint256[];
     using Branch for uint256;
     using Position for uint256;
