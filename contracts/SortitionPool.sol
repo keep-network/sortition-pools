@@ -15,7 +15,7 @@ import "./api/IStaking.sol";
 /// checked and, if necessary, updated in the sortition pool. If the changes
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
-contract SortitionPool is Sortition {
+contract SortitionPool is SortitionTree {
     using Leaf for uint256;
     using Position for uint256;
 

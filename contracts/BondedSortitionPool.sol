@@ -9,7 +9,7 @@ import "./api/IBonding.sol";
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
-contract BondedSortitionPool is Sortition {
+contract BondedSortitionPool is SortitionTree {
     IStaking stakingContract;
     IBonding bondingContract;
     uint256 minimumStake;
