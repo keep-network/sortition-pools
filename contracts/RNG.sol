@@ -137,7 +137,7 @@ library RNG {
     ///
     /// @param nPreviousLeaves The number of previousLeaves
     ///
-    /// @returns uniqueIndex An index in [0, range) that does not overlap
+    /// @return uniqueIndex An index in [0, range) that does not overlap
     /// any of the previousLeaves,
     /// as determined by the range [index, index + weight).
     function getUniqueIndex(
@@ -205,7 +205,7 @@ library RNG {
     /// @param deletedWeight The weight of the deleted leaf.
     /// @param previousLeaves The starting indices and weights
     /// of the previously selected leaves.
-    /// @returns The starting indices of the previous leaves
+    /// @return The starting indices of the previous leaves
     /// in a tree without the deleted leaf.
     function remapIndices(
         uint256 deletedStartingIndex,
