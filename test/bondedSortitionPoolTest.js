@@ -172,5 +172,30 @@ contract('BondedSortitionPool', (accounts) => {
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
     })
+
+    it('updates the bond value', async () => {
+      await prepareOperator(accounts[0], 10)
+      await prepareOperator(accounts[1], 21)
+      await prepareOperator(accounts[2], 32)
+
+      group = await pool.selectSetGroup.call(3, seed, bond * 10)
+      await pool.selectSetGroup(3, seed, bond * 10)
+      assert.equal(group.length, 3)
+      assert.isFalse(hasDuplicates(group))
+
+      group = await pool.selectSetGroup.call(2, seed, bond * 20)
+      await pool.selectSetGroup(2, seed, bond * 20)
+      assert.equal(group.length, 2)
+      assert.isFalse(hasDuplicates(group))
+
+      try {
+        await pool.selectSetGroup(3, seed, bond * 20)
+      } catch (error) {
+        assert.include(error.message, 'Not enough operators in pool')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
   })
 })

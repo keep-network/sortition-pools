@@ -57,6 +57,8 @@ contract BondedSortitionPool is Sortition {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
+        minimumBondableValue = bondValue;
+
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
         address[] memory selected = new address[](groupSize);
