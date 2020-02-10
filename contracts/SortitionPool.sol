@@ -21,8 +21,7 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 _minimumStake,
         address _poolOwner
     ) public {
-        stakingContract = _stakingContract;
-        minimumStake = _minimumStake;
+        staking = StakingParams(_stakingContract, _minimumStake);
         poolOwner = _poolOwner;
     }
 
@@ -73,8 +72,11 @@ contract SortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        uint256 operatorStake = stakingContract.eligibleStake(operator, poolOwner);
-        uint256 operatorWeight = operatorStake / minimumStake;
+        uint256 operatorStake = staking._contract.eligibleStake(
+            operator,
+            poolOwner
+        );
+        uint256 operatorWeight = operatorStake / staking._minimum;
 
         return operatorWeight;
     }

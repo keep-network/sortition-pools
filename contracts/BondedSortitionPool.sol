@@ -10,13 +10,17 @@ import "./api/IBonding.sol";
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
 contract BondedSortitionPool is AbstractSortitionPool {
-    IBonding bondingContract;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
     // to prevent griefing by operators joining without enough bondable value.
     // After we start selecting groups
     // this value can be set to equal the most recent request's bondValue.
-    uint256 minimumBondableValue;
+    struct BondingParams {
+        IBonding _contract;
+        uint256 _minimumAvailableValue;
+    }
+
+    BondingParams bonding;
 
     constructor(
         IStaking _stakingContract,
@@ -27,10 +31,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) public {
         require(_minimumStake > 0, "Minimum stake cannot be zero");
 
-        stakingContract = _stakingContract;
-        bondingContract = _bondingContract;
-        minimumStake = _minimumStake;
-        minimumBondableValue = _minimumBondableValue;
+        staking = StakingParams(_stakingContract, _minimumStake);
+        bonding = BondingParams(_bondingContract, _minimumBondableValue);
         poolOwner = _poolOwner;
     }
 
@@ -49,7 +51,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        minimumBondableValue = bondValue;
+        bonding._minimumAvailableValue = bondValue;
 
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
@@ -156,18 +158,18 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond
         // regardless of the weight of the operator in the pool.
-        uint256 bondableValue = bondingContract.availableUnbondedValue(
+        uint256 bondableValue = bonding._contract.availableUnbondedValue(
             operator,
             poolOwner,
             address(this)
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < minimumBondableValue) {
+        if (bondableValue < bonding._minimumAvailableValue) {
             return 0;
         }
 
-        uint256 eligibleStake = stakingContract.eligibleStake(
+        uint256 eligibleStake = staking._contract.eligibleStake(
             operator,
             poolOwner
         );
@@ -175,6 +177,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return eligibleStake / minimumStake;
+        return eligibleStake / staking._minimum;
     }
 }

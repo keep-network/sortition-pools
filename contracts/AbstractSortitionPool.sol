@@ -19,8 +19,12 @@ contract AbstractSortitionPool is SortitionTree {
     using Leaf for uint256;
     using Position for uint256;
 
-    IStaking stakingContract;
-    uint256 minimumStake;
+    struct StakingParams {
+        IStaking _contract;
+        uint256 _minimum;
+    }
+
+    StakingParams staking;
 
     // The contract (e.g. Keep factory) this specific pool serves.
     // Only the pool owner can request groups.
