@@ -42,7 +42,16 @@ contract SortitionTree is GasStation {
         return getFlaggedOperatorLeaf(operator) != 0;
     }
 
-    function insertOperator(address operator, uint256 weight) public {
+    // Sum the number of operators in each trunk
+    function operatorsInPool() public view returns (uint256) {
+        uint256 sum;
+        for (uint256 i = 0; i < 16; i++) {
+            sum += operatorsInTrunk(i);
+        }
+        return sum;
+    }
+
+    function insertOperator(address operator, uint256 weight) internal {
         require(
             !isOperatorRegistered(operator),
             "Operator is already registered in the pool"
@@ -62,7 +71,7 @@ contract SortitionTree is GasStation {
         operatorLeaves[operator] = position.setFlag();
     }
 
-    function removeOperator(address operator) public {
+    function removeOperator(address operator) internal {
         require(
             isOperatorRegistered(operator),
             "Operator is not registered in the pool"
@@ -75,7 +84,7 @@ contract SortitionTree is GasStation {
         removeOperatorLeaf(operator);
     }
 
-    function updateOperator(address operator, uint256 weight) public {
+    function updateOperator(address operator, uint256 weight) internal {
         require(
             isOperatorRegistered(operator),
             "Operator is not registered in the pool"
@@ -86,7 +95,7 @@ contract SortitionTree is GasStation {
         updateLeaf(unflaggedLeaf, weight);
     }
 
-    function operatorsInTrunk(uint256 trunkN) public view returns (uint256) {
+    function operatorsInTrunk(uint256 trunkN) internal view returns (uint256) {
         // Get the number of leaves that might be occupied;
         // if `rightmostLeaf` equals `firstLeaf()` the trunk must be empty,
         // otherwise the difference between these numbers
@@ -100,36 +109,19 @@ contract SortitionTree is GasStation {
         return (nPossiblyUsedLeaves - nEmptyLeaves);
     }
 
-    // Sum the number of operators in each trunk
-    function operatorsInPool() public view returns (uint256) {
-        uint256 sum;
-        for (uint256 i = 0; i < 16; i++) {
-            sum += operatorsInTrunk(i);
-        }
-        return sum;
-    }
-
-    function removeOperatorLeaf(address operator) public {
+    function removeOperatorLeaf(address operator) internal {
         operatorLeaves[operator] = 0;
     }
 
     function getFlaggedOperatorLeaf(address operator)
-        public
+        internal
         view
         returns (uint256)
     {
         return operatorLeaves[operator];
     }
 
-    function toLeaf(address operator, uint256 weight)
-        public
-        pure
-        returns (uint256)
-    {
-        return Leaf.make(operator, weight);
-    }
-
-    function removeLeaf(uint256 position) public {
+    function removeLeaf(uint256 position) internal {
         uint256 trunkN = position.trunk();
         uint256 rightmostSubOne = rightmostLeaf[trunkN] - 1;
         bool isRightmost = position == rightmostSubOne;
@@ -143,13 +135,13 @@ contract SortitionTree is GasStation {
         }
     }
 
-    function updateLeaf(uint256 position, uint256 weight) public {
+    function updateLeaf(uint256 position, uint256 weight) internal {
         address leafOperator = leaves[position].operator();
         uint256 newLeaf = Leaf.make(leafOperator, weight);
         setLeaf(position, newLeaf);
     }
 
-    function setLeaf(uint256 position, uint256 theLeaf) public {
+    function setLeaf(uint256 position, uint256 theLeaf) internal {
         uint256 childSlot;
         uint256 treeNode;
         uint256 newNode;
@@ -175,7 +167,7 @@ contract SortitionTree is GasStation {
     }
 
     function pickWeightedLeafWithIndex(uint256 index)
-        public
+        internal
         view
         returns (uint256, uint256)
     {
@@ -209,7 +201,7 @@ contract SortitionTree is GasStation {
         return (leafPosition, leafFirstIndex);
     }
 
-    function pickWeightedLeaf(uint256 index) public view returns (uint256) {
+    function pickWeightedLeaf(uint256 index) internal view returns (uint256) {
         uint256 leafPosition;
         uint256 _ignoredIndex;
         (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index);
