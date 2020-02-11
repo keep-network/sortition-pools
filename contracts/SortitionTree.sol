@@ -5,9 +5,8 @@ import "./Branch.sol";
 import "./Position.sol";
 import "./Trunk.sol";
 import "./Leaf.sol";
-import "./GasStation.sol";
 
-contract Sortition is GasStation {
+contract SortitionTree {
     using StackLib for uint256[];
     using Branch for uint256;
     using Position for uint256;
@@ -42,18 +41,23 @@ contract Sortition is GasStation {
         return getFlaggedOperatorLeaf(operator) != 0;
     }
 
-    function insertOperator(address operator, uint256 weight) public {
+    // Sum the number of operators in each trunk
+    function operatorsInPool() public view returns (uint256) {
+        uint256 sum;
+        for (uint256 i = 0; i < 16; i++) {
+            sum += operatorsInTrunk(i);
+        }
+        return sum;
+    }
+
+    function insertOperator(address operator, uint256 weight) internal {
         require(
             !isOperatorRegistered(operator),
             "Operator is already registered in the pool"
         );
 
-        uint256 theTrunk = suitableTrunk(weight);
-        uint256 position = getEmptyLeaf(theTrunk);
-        uint256 theLeaf = Leaf.make(operator, weight);
-
-        // Set superfluous storage so we can later unset them for a refund
-        depositGas(operator);
+        uint256 position = getSuitableEmptyLeaf(weight);
+        uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
         setLeaf(position, theLeaf);
 
@@ -62,20 +66,18 @@ contract Sortition is GasStation {
         operatorLeaves[operator] = position.setFlag();
     }
 
-    function removeOperator(address operator) public {
+    function removeOperator(address operator) internal {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         require(
-            isOperatorRegistered(operator),
+            flaggedLeaf != 0,
             "Operator is not registered in the pool"
         );
-
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        releaseGas(operator);
         removeLeaf(unflaggedLeaf);
         removeOperatorLeaf(operator);
     }
 
-    function updateOperator(address operator, uint256 weight) public {
+    function updateOperator(address operator, uint256 weight) internal {
         require(
             isOperatorRegistered(operator),
             "Operator is not registered in the pool"
@@ -86,7 +88,7 @@ contract Sortition is GasStation {
         updateLeaf(unflaggedLeaf, weight);
     }
 
-    function operatorsInTrunk(uint256 trunkN) public view returns (uint256) {
+    function operatorsInTrunk(uint256 trunkN) internal view returns (uint256) {
         // Get the number of leaves that might be occupied;
         // if `rightmostLeaf` equals `firstLeaf()` the trunk must be empty,
         // otherwise the difference between these numbers
@@ -100,40 +102,19 @@ contract Sortition is GasStation {
         return (nPossiblyUsedLeaves - nEmptyLeaves);
     }
 
-    // Sum the number of operators in each trunk
-    function operatorsInPool() public view returns (uint256) {
-        uint256 sum;
-        for (uint256 i = 0; i < 16; i++) {
-            sum += operatorsInTrunk(i);
-        }
-        return sum;
-    }
-
-    function removeOperatorLeaf(address operator) public {
+    function removeOperatorLeaf(address operator) internal {
         operatorLeaves[operator] = 0;
     }
 
     function getFlaggedOperatorLeaf(address operator)
-        public
+        internal
         view
         returns (uint256)
     {
         return operatorLeaves[operator];
     }
 
-    function toLeaf(address operator, uint256 weight)
-        public
-        pure
-        returns (uint256)
-    {
-        return Leaf.make(operator, weight);
-    }
-
-    function getLeaf(uint256 position) public view returns (uint256) {
-        return leaves[position];
-    }
-
-    function removeLeaf(uint256 position) public {
+    function removeLeaf(uint256 position) internal {
         uint256 trunkN = position.trunk();
         uint256 rightmostSubOne = rightmostLeaf[trunkN] - 1;
         bool isRightmost = position == rightmostSubOne;
@@ -147,13 +128,15 @@ contract Sortition is GasStation {
         }
     }
 
-    function updateLeaf(uint256 position, uint256 weight) public {
-        address leafOperator = getLeaf(position).operator();
-        uint256 newLeaf = Leaf.make(leafOperator, weight);
-        setLeaf(position, newLeaf);
+    function updateLeaf(uint256 position, uint256 weight) internal {
+        uint256 oldLeaf = leaves[position];
+        if (oldLeaf.weight() != weight) {
+            uint256 newLeaf = oldLeaf.setWeight(weight);
+            setLeaf(position, newLeaf);
+        }
     }
 
-    function setLeaf(uint256 position, uint256 theLeaf) public {
+    function setLeaf(uint256 position, uint256 theLeaf) internal {
         uint256 childSlot;
         uint256 treeNode;
         uint256 newNode;
@@ -178,12 +161,8 @@ contract Sortition is GasStation {
         root = root.setSlot(childSlot, nodeWeight);
     }
 
-    function getRoot() public view returns (uint256) {
-        return root;
-    }
-
     function pickWeightedLeafWithIndex(uint256 index)
-        public
+        internal
         view
         returns (uint256, uint256)
     {
@@ -217,65 +196,57 @@ contract Sortition is GasStation {
         return (leafPosition, leafFirstIndex);
     }
 
-    function pickWeightedLeaf(uint256 index) public view returns (uint256) {
+    function pickWeightedLeaf(uint256 index) internal view returns (uint256) {
         uint256 leafPosition;
         uint256 _ignoredIndex;
         (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index);
         return leafPosition;
     }
 
-    function leafAddress(uint256 leaf) public pure returns (address) {
-        return leaf.operator();
+    function getSuitableEmptyLeaf(uint256 addedWeight)
+        internal returns (uint256)
+    {
+        // cache root
+        uint256 _root = root;
+        for (uint256 trunkN = 0; trunkN < 16; trunkN++) {
+            // overflow -> skip to next trunk
+            bool weightOkay = fitsUnderCap(addedWeight, trunkN, _root);
+            if (!weightOkay) {
+                continue;
+            }
+
+            bool emptyLeavesInStack = leavesInStack(trunkN);
+            if (emptyLeavesInStack) {
+                return emptyLeaves[trunkN].stackPop();
+            }
+
+            uint256 rLeaf = rightmostLeaf[trunkN];
+            bool emptyLeavesToRight = leavesToRight(trunkN, rLeaf);
+            if (emptyLeavesToRight) {
+                rightmostLeaf[trunkN] = rLeaf + 1;
+                return rLeaf;
+            }
+        }
+    }
+
+    function fitsUnderCap(uint256 addedWeight, uint256 trunkN, uint256 _root)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 currentWeight = _root.getSlot(trunkN);
+        uint256 sumWeight = currentWeight + addedWeight;
+        return sumWeight < TRUNK_MAX;
     }
 
     function leavesInStack(uint256 trunkN) internal view returns (bool) {
         return emptyLeaves[trunkN].getSize() > 0;
     }
 
-    function leavesToRight(uint256 trunkN) internal view returns (bool) {
-        return rightmostLeaf[trunkN] <= trunkN.lastLeaf();
-    }
-
-    function hasSpace(uint256 trunkN) internal view returns (bool) {
-        return leavesInStack(trunkN) || leavesToRight(trunkN);
-    }
-
-    function getEmptyLeaf(uint256 trunkN) internal returns (uint256) {
-        require(hasSpace(trunkN), "Trunk is full");
-        if (leavesInStack(trunkN)) {
-            return emptyLeaves[trunkN].stackPop();
-        } else {
-            uint256 newLeafPosition = rightmostLeaf[trunkN];
-            rightmostLeaf[trunkN] = newLeafPosition + 1;
-            return newLeafPosition;
-        }
-    }
-
-    function fitsUnderCap(uint256 addedWeight, uint256 trunkN)
-        internal
-        view
-        returns (bool)
+    function leavesToRight(uint256 trunkN, uint256 rLeaf)
+        internal pure returns (bool)
     {
-        uint256 currentWeight = root.getSlot(trunkN);
-        uint256 sumWeight = uint256(currentWeight) + uint256(addedWeight);
-        return sumWeight < TRUNK_MAX;
-    }
-
-    function suitableTrunk(uint256 addedWeight)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 theTrunk;
-
-        for (theTrunk = 0; theTrunk < 16; theTrunk++) {
-            bool weightOkay = fitsUnderCap(addedWeight, theTrunk);
-            bool spaceOkay = hasSpace(theTrunk);
-            if (weightOkay && spaceOkay) {
-                break;
-            }
-        }
-        return theTrunk;
+        return rLeaf <= trunkN.lastLeaf();
     }
 
     function totalWeight() internal view returns (uint256) {
