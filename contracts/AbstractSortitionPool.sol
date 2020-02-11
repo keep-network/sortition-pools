@@ -25,11 +25,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 _minimum;
     }
 
-    struct SelectedMembers {
-        address[] addresses;
-        uint256 number;
-    }
-
     uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
