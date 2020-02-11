@@ -166,29 +166,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        // Get the amount of bondable value available for this pool.
-        // We only care that this covers one single bond
-        // regardless of the weight of the operator in the pool.
-        uint256 bondableValue = bonding._contract.availableUnbondedValue(
-            operator,
+        PoolParams memory params = PoolParams(
+            staking,
+            bonding,
             poolOwner,
-            address(this)
+            0 // the pool weight doesn't matter here
         );
-
-        // Don't query stake if bond is insufficient.
-        if (bondableValue < bonding._minimumAvailableValue) {
-            return 0;
-        }
-
-        uint256 eligibleStake = staking._contract.eligibleStake(
-            operator,
-            poolOwner
-        );
-
-        // Weight = floor(eligibleStake / mimimumStake)
-        // Ethereum uint256 division performs implicit floor
-        // If eligibleStake < minimumStake, return 0 = ineligible.
-        return eligibleStake / staking._minimum;
+        return queryEligibleWeight(operator, params);
     }
 
     function queryEligibleWeight(
@@ -197,12 +181,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) internal view returns (uint256) {
         address ownerAddress = params._poolOwner;
 
+        // Get the amount of bondable value available for this pool.
+        // We only care that this covers one single bond
+        // regardless of the weight of the operator in the pool.
         uint256 bondableValue = params._bonding._contract.availableUnbondedValue(
             operator,
             ownerAddress,
             address(this)
         );
 
+        // Don't query stake if bond is insufficient.
         if (bondableValue < params._bonding._minimumAvailableValue) {
             return 0;
         }
@@ -212,6 +200,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             ownerAddress
         );
 
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        // If eligibleStake < minimumStake, return 0 = ineligible.
         return (eligibleStake / params._staking._minimum);
     }
 }
