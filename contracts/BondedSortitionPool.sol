@@ -58,21 +58,22 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        bonding._minimumAvailableValue = bondValue;
-
-        require(operatorsInPool() >= groupSize, "Not enough operators in pool");
-
-        address[] memory selected = new address[](groupSize);
-
-        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
-            groupSize
-        );
-
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
             root.sumWeight()
+        );
+
+        if (params._bonding._minimumAvailableValue != bondValue) {
+            params._bonding._minimumAvailableValue = bondValue;
+            bonding._minimumAvailableValue = bondValue;
+        }
+
+        address[] memory selected = new address[](groupSize);
+
+        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
+            groupSize
         );
 
         uint256 selectedTotalWeight = 0;
