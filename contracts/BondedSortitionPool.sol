@@ -20,6 +20,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumAvailableValue;
     }
 
+    struct PoolParams {
+        StakingParams _staking;
+        BondingParams _bonding;
+        address _poolOwner;
+        uint256 _poolWeight;
+    }
+
     BondingParams bonding;
 
     constructor(
@@ -64,8 +71,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
             groupSize
         );
 
-        StakingParams memory _staking = staking;
-        BondingParams memory _bonding = bonding;
+        PoolParams memory params = PoolParams(
+            staking,
+            bonding,
+            poolOwner,
+            root.sumWeight()
+        );
 
         uint256 selectedTotalWeight = 0;
 
@@ -74,17 +85,17 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         bytes32 rngState = seed;
 
-        uint256 poolWeight = root.sumWeight();
+        // uint256 poolWeight = root.sumWeight();
 
         /* loop */
         while (selected.number < groupSize) {
             require(
-                poolWeight > selectedTotalWeight,
+                params._poolWeight > selectedTotalWeight,
                 "Not enough operators in pool"
             );
 
             (uniqueIndex, rngState) = RNG.getUniqueIndex(
-                poolWeight,
+                params._poolWeight,
                 rngState,
                 selectedLeaves,
                 selectedTotalWeight,
@@ -105,8 +116,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            if (queryEligibleWeight(operator, _staking, _bonding, poolOwner)
-                >= selectedIW.weight) {
+            if (queryEligibleWeight(operator, params) >= selectedIW.weight) {
             // if (getEligibleWeight(operator) >= selectedIW.weight) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
@@ -137,7 +147,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             } else {
                 removeOperator(operator);
                 // subtract the weight of the operator from the pool weight
-                poolWeight -= selectedIW.weight;
+                params._poolWeight -= selectedIW.weight;
 
                 selectedLeaves = RNG.remapIndices(
                     selectedIW.index,
@@ -185,25 +195,25 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     function queryEligibleWeight(
         address operator,
-        StakingParams memory _staking,
-        BondingParams memory _bonding,
-        address poolOwner
+        PoolParams memory params
     ) internal view returns (uint256) {
-        uint256 bondableValue = _bonding._contract.availableUnbondedValue(
+        address ownerAddress = params._poolOwner;
+
+        uint256 bondableValue = params._bonding._contract.availableUnbondedValue(
             operator,
-            poolOwner,
+            ownerAddress,
             address(this)
         );
 
-        if (bondableValue < _bonding._minimumAvailableValue) {
+        if (bondableValue < params._bonding._minimumAvailableValue) {
             return 0;
         }
 
-        uint256 eligibleStake = _staking._contract.eligibleStake(
+        uint256 eligibleStake = params._staking._contract.eligibleStake(
             operator,
-            poolOwner
+            ownerAddress
         );
 
-        return (eligibleStake / _staking._minimum);
+        return (eligibleStake / params._staking._minimum);
     }
 }
