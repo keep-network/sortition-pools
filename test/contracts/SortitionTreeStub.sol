@@ -47,8 +47,8 @@ contract SortitionTreeStub is SortitionTree {
         return pickWeightedLeaf(index);
     }
 
-    function toLeaf(address op, uint256 wt) public pure returns (uint256) {
-        return Leaf.make(op, wt);
+    function toLeaf(address op, uint256 wt) public view returns (uint256) {
+        return Leaf.make(op, block.number, wt);
     }
 
     function leafAddress(uint256 leaf) public pure returns (address) {

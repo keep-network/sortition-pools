@@ -59,7 +59,7 @@ contract SortitionTree is GasStation {
 
         uint256 theTrunk = suitableTrunk(weight);
         uint256 position = getEmptyLeaf(theTrunk);
-        uint256 theLeaf = Leaf.make(operator, weight);
+        uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
         // Set superfluous storage so we can later unset them for a refund
         depositGas(operator);
@@ -136,9 +136,11 @@ contract SortitionTree is GasStation {
     }
 
     function updateLeaf(uint256 position, uint256 weight) internal {
-        address leafOperator = leaves[position].operator();
-        uint256 newLeaf = Leaf.make(leafOperator, weight);
-        setLeaf(position, newLeaf);
+        uint256 oldLeaf = leaves[position];
+        if (oldLeaf.weight() != weight) {
+            uint256 newLeaf = oldLeaf.setWeight(weight);
+            setLeaf(position, newLeaf);
+        }
     }
 
     function setLeaf(uint256 position, uint256 theLeaf) internal {
