@@ -62,10 +62,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
-        SelectedMembers memory selected = SelectedMembers(
-            new address[](groupSize),
-            0
-        );
+        address[] memory selected = new address[](groupSize);
 
         RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
             groupSize
@@ -79,6 +76,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
 
         uint256 selectedTotalWeight = 0;
+        uint256 nSelected = 0;
 
         uint256 leafPosition;
         uint256 uniqueIndex;
@@ -88,7 +86,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // uint256 poolWeight = root.sumWeight();
 
         /* loop */
-        while (selected.number < groupSize) {
+        while (nSelected < groupSize) {
             require(
                 params._poolWeight > selectedTotalWeight,
                 "Not enough operators in pool"
@@ -99,7 +97,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 rngState,
                 selectedLeaves,
                 selectedTotalWeight,
-                selected.number
+                nSelected
             );
 
             uint256 startingIndex;
@@ -108,23 +106,22 @@ contract BondedSortitionPool is AbstractSortitionPool {
             uint256 theLeaf;
             theLeaf = leaves[leafPosition];
             address operator = theLeaf.operator();
-
-            RNG.IndexWeight memory selectedIW = RNG.IndexWeight(
-                startingIndex,
-                theLeaf.weight()
-            );
+            uint256 leafWeight = theLeaf.weight();
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            if (queryEligibleWeight(operator, params) >= selectedIW.weight) {
+            if (queryEligibleWeight(operator, params) >= leafWeight) {
             // if (getEligibleWeight(operator) >= selectedIW.weight) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
-                RNG.IndexWeight memory tempIW = selectedIW;
+                RNG.IndexWeight memory tempIW = RNG.IndexWeight(
+                    startingIndex,
+                    leafWeight
+                );
 
-                for (uint256 i = 0; i < selected.number; i++) {
+                for (uint256 i = 0; i < nSelected; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
                     // With each element of the list,
                     // we check if the outside element should go before it.
@@ -137,21 +134,21 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                selectedLeaves[selected.number] = tempIW;
+                selectedLeaves[nSelected] = tempIW;
 
                 // And increase the skipped weight,
-                selectedTotalWeight += selectedIW.weight;
+                selectedTotalWeight += leafWeight;
 
-                selected.addresses[selected.number] = operator;
-                selected.number += 1;
+                selected[nSelected] = operator;
+                nSelected += 1;
             } else {
                 removeOperator(operator);
                 // subtract the weight of the operator from the pool weight
-                params._poolWeight -= selectedIW.weight;
+                params._poolWeight -= leafWeight;
 
                 selectedLeaves = RNG.remapIndices(
-                    selectedIW.index,
-                    selectedIW.weight,
+                    startingIndex,
+                    leafWeight,
                     selectedLeaves
                 );
             }
@@ -161,7 +158,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // If nothing has exploded by now,
         // we should have the correct size of group.
 
-        return selected.addresses;
+        return selected;
     }
 
     // Return the eligible weight of the operator,
