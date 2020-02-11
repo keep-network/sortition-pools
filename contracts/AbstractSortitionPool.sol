@@ -24,6 +24,11 @@ contract AbstractSortitionPool is SortitionTree {
         uint256 _minimum;
     }
 
+    struct SelectedMembers {
+        address[] addresses;
+        uint256 number;
+    }
+
     StakingParams staking;
 
     // The contract (e.g. Keep factory) this specific pool serves.

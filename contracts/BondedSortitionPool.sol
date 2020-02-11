@@ -55,12 +55,15 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         require(operatorsInPool() >= groupSize, "Not enough operators in pool");
 
-        address[] memory selected = new address[](groupSize);
-        uint256 nSelected = 0;
+        SelectedMembers memory selected = SelectedMembers(
+            new address[](groupSize),
+            0
+        );
 
         RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
             groupSize
         );
+
         uint256 selectedTotalWeight = 0;
 
         // XXX: These two variables do way too varied things,
@@ -74,7 +77,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 poolWeight = root.sumWeight();
 
         /* loop */
-        while (nSelected < groupSize) {
+        while (selected.number < groupSize) {
             require(
                 poolWeight > selectedTotalWeight,
                 "Not enough operators in pool"
@@ -86,7 +89,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 rngState,
                 selectedLeaves,
                 selectedTotalWeight,
-                nSelected
+                selected.number
             );
 
             // REGISTER_B starts as the UNIQUE INDEX here
@@ -113,7 +116,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // REGISTER_A is the WEIGHT of the operator
                 RNG.IndexWeight memory tempIW = RNG.IndexWeight(registerB, registerA);
 
-                for (uint256 i = 0; i < nSelected; i++) {
+                for (uint256 i = 0; i < selected.number; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
                     // With each element of the list,
                     // we check if the outside element should go before it.
@@ -126,14 +129,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                selectedLeaves[nSelected] = tempIW;
+                selectedLeaves[selected.number] = tempIW;
 
                 // And increase the skipped weight,
                 // by REGISTER_A which is the WEIGHT of the operator
                 selectedTotalWeight += registerA;
 
-                selected[nSelected] = operator;
-                nSelected += 1;
+                selected.addresses[selected.number] = operator;
+                selected.number += 1;
             } else {
                 removeOperator(operator);
                 // subtract REGISTER_A which is the WEIGHT of the operator
@@ -148,7 +151,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // If nothing has exploded by now,
         // we should have the correct size of group.
 
-        return selected;
+        return selected.addresses;
     }
 
     // Return the eligible weight of the operator,
