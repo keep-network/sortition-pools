@@ -97,15 +97,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // REGISTER_A is now the POSITION OF THE LEAF
             // REGISTER_B is now the STARTING INDEX of the leaf
 
+            uint256 theLeaf;
             // REGISTER_A starts as the POSITION OF THE LEAF here
-            registerA = leaves[registerA];
+            theLeaf = leaves[registerA];
             // REGISTER_A is now the LEAF itself
-            address operator = registerA.operator();
+            address operator = theLeaf.operator();
             // REGISTER_A is now the WEIGHT OF THE OPERATOR
 
             RNG.IndexWeight memory selectedIW = RNG.IndexWeight(
                 registerB,
-                registerA.weight()
+                theLeaf.weight()
             );
 
             // Good operators go into the group and the list to skip,
