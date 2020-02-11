@@ -66,11 +66,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         uint256 selectedTotalWeight = 0;
 
-        // XXX: These two variables do way too varied things,
-        // but I need all variable slots I can free.
-        // Arbitrary names to underline the absurdity.
         uint256 leafPosition;
-        uint256 registerB;
+        uint256 uniqueIndex;
 
         bytes32 rngState = seed;
 
@@ -83,8 +80,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 "Not enough operators in pool"
             );
 
-            // REGISTER_B is the UNIQUE INDEX
-            (registerB, rngState) = RNG.getUniqueIndex(
+            (uniqueIndex, rngState) = RNG.getUniqueIndex(
                 poolWeight,
                 rngState,
                 selectedLeaves,
@@ -93,9 +89,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             );
 
             uint256 startingIndex;
-            // REGISTER_B starts as the UNIQUE INDEX here
-            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(registerB);
-            // REGISTER_B is now the STARTING INDEX of the leaf
+            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex);
 
             uint256 theLeaf;
             theLeaf = leaves[leafPosition];
@@ -113,7 +107,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
-                // REGISTER_B is the STARTING INDEX of the leaf
                 RNG.IndexWeight memory tempIW = selectedIW;
 
                 for (uint256 i = 0; i < selected.number; i++) {
