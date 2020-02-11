@@ -102,5 +102,16 @@ contract('SortitionPool', (accounts) => {
       await pool.selectGroup(5, seed)
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
+
+    it('can select really large groups efficiently', async () => {
+      for (i = 0; i < 9; i++) {
+        await staking.setStake(accounts[i], minStake * (i + 10))
+        await pool.joinPool(accounts[i])
+      }
+
+      const group = await pool.selectGroup.call(100, seed)
+      await pool.selectGroup(100, seed)
+      assert.equal(group.length, 100)
+    })
   })
 })
