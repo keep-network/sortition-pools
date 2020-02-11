@@ -77,7 +77,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
 
         uint256 selectedTotalWeight = 0;
-        uint256 nSelected = 0;
+        uint256 selectedCount = 0;
 
         uint256 leafPosition;
         uint256 uniqueIndex;
@@ -85,7 +85,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 rngState = seed;
 
         /* loop */
-        while (nSelected < groupSize) {
+        while (selectedCount < groupSize) {
             require(
                 params._poolWeight > selectedTotalWeight,
                 "Not enough operators in pool"
@@ -96,14 +96,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 rngState,
                 selectedLeaves,
                 selectedTotalWeight,
-                nSelected
+                selectedCount
             );
 
             uint256 startingIndex;
             (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex);
 
-            uint256 theLeaf;
-            theLeaf = leaves[leafPosition];
+            uint256 theLeaf = leaves[leafPosition];
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
 
@@ -119,7 +118,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                     leafWeight
                 );
 
-                for (uint256 i = 0; i < nSelected; i++) {
+                for (uint256 i = 0; i < selectedCount; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
                     // With each element of the list,
                     // we check if the outside element should go before it.
@@ -132,13 +131,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                selectedLeaves[nSelected] = tempIW;
+                selectedLeaves[selectedCount] = tempIW;
 
                 // And increase the skipped weight,
                 selectedTotalWeight += leafWeight;
 
-                selected[nSelected] = operator;
-                nSelected += 1;
+                selected[selectedCount] = operator;
+                selectedCount += 1;
             } else {
                 removeFromPool(operator);
                 // subtract the weight of the operator from the pool weight
