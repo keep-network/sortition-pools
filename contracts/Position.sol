@@ -1,10 +1,14 @@
 pragma solidity ^0.5.10;
 
 library Position {
+    uint256 constant UINT20_MAX = 2**20 - 1;
+    uint256 constant UINT4_MAX = 2**4 - 1;
+    uint256 constant LEAF_FLAG = 1 << 20;
+
     // Return the last 4 bits of a position number,
     // corresponding to its slot in its parent
     function slot(uint256 a) internal pure returns (uint256) {
-        return a & 0xf;
+        return a & UINT4_MAX;
     }
 
     // Return the parent of a position number
@@ -27,7 +31,7 @@ library Position {
     // and the 21th bit is set as a flag
     // to distinguish the position 0x00000 from an empty field.
     function setFlag(uint256 p) internal pure returns (uint256) {
-        return (p & 0xfffff) | 0x100000;
+        return (p & UINT20_MAX) | LEAF_FLAG;
     }
 
     // Turn a flagged position into an unflagged position
@@ -37,6 +41,6 @@ library Position {
     // as all position-manipulating code should ignore non-position bits anyway
     // but it's cheap to call so might as well do it.
     function unsetFlag(uint256 p) internal pure returns (uint256) {
-        return p & 0xfffff;
+        return p & UINT20_MAX;
     }
 }
