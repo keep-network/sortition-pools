@@ -56,8 +56,7 @@ contract SortitionTree {
             "Operator is already registered in the pool"
         );
 
-        uint256 theTrunk = suitableTrunk(weight);
-        uint256 position = getEmptyLeaf(theTrunk);
+        uint256 position = getSuitableEmptyLeaf(weight);
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
         setLeaf(position, theLeaf);
@@ -205,54 +204,50 @@ contract SortitionTree {
         return leafPosition;
     }
 
-    function leavesInStack(uint256 trunkN) internal view returns (bool) {
-        return emptyLeaves[trunkN].getSize() > 0;
-    }
+    function getSuitableEmptyLeaf(uint256 addedWeight)
+        internal returns (uint256)
+    {
+        // cache root
+        uint256 _root = root;
+        for (uint256 trunkN = 0; trunkN < 16; trunkN++) {
+            // overflow -> skip to next trunk
+            bool weightOkay = fitsUnderCap(addedWeight, trunkN, _root);
+            if (!weightOkay) {
+                continue;
+            }
 
-    function leavesToRight(uint256 trunkN) internal view returns (bool) {
-        return rightmostLeaf[trunkN] <= trunkN.lastLeaf();
-    }
+            bool emptyLeavesInStack = leavesInStack(trunkN);
+            if (emptyLeavesInStack) {
+                return emptyLeaves[trunkN].stackPop();
+            }
 
-    function hasSpace(uint256 trunkN) internal view returns (bool) {
-        return leavesInStack(trunkN) || leavesToRight(trunkN);
-    }
-
-    function getEmptyLeaf(uint256 trunkN) internal returns (uint256) {
-        require(hasSpace(trunkN), "Trunk is full");
-        if (leavesInStack(trunkN)) {
-            return emptyLeaves[trunkN].stackPop();
-        } else {
-            uint256 newLeafPosition = rightmostLeaf[trunkN];
-            rightmostLeaf[trunkN] = newLeafPosition + 1;
-            return newLeafPosition;
+            uint256 rLeaf = rightmostLeaf[trunkN];
+            bool emptyLeavesToRight = leavesToRight(trunkN, rLeaf);
+            if (emptyLeavesToRight) {
+                rightmostLeaf[trunkN] = rLeaf + 1;
+                return rLeaf;
+            }
         }
     }
 
-    function fitsUnderCap(uint256 addedWeight, uint256 trunkN)
+    function fitsUnderCap(uint256 addedWeight, uint256 trunkN, uint256 _root)
         internal
         view
         returns (bool)
     {
-        uint256 currentWeight = root.getSlot(trunkN);
-        uint256 sumWeight = uint256(currentWeight) + uint256(addedWeight);
+        uint256 currentWeight = _root.getSlot(trunkN);
+        uint256 sumWeight = currentWeight + addedWeight;
         return sumWeight < TRUNK_MAX;
     }
 
-    function suitableTrunk(uint256 addedWeight)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 theTrunk;
+    function leavesInStack(uint256 trunkN) internal view returns (bool) {
+        return emptyLeaves[trunkN].getSize() > 0;
+    }
 
-        for (theTrunk = 0; theTrunk < 16; theTrunk++) {
-            bool weightOkay = fitsUnderCap(addedWeight, theTrunk);
-            bool spaceOkay = hasSpace(theTrunk);
-            if (weightOkay && spaceOkay) {
-                break;
-            }
-        }
-        return theTrunk;
+    function leavesToRight(uint256 trunkN, uint256 rLeaf)
+        internal pure returns (bool)
+    {
+        return rLeaf <= trunkN.lastLeaf();
     }
 
     function totalWeight() internal view returns (uint256) {
