@@ -5,9 +5,8 @@ import "./Branch.sol";
 import "./Position.sol";
 import "./Trunk.sol";
 import "./Leaf.sol";
-import "./GasStation.sol";
 
-contract SortitionTree is GasStation {
+contract SortitionTree {
     using StackLib for uint256[];
     using Branch for uint256;
     using Position for uint256;
@@ -61,9 +60,6 @@ contract SortitionTree is GasStation {
         uint256 position = getEmptyLeaf(theTrunk);
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
-        // Set superfluous storage so we can later unset them for a refund
-        depositGas(operator);
-
         setLeaf(position, theLeaf);
 
         // Without position flags,
@@ -79,7 +75,6 @@ contract SortitionTree is GasStation {
 
         uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        releaseGas(operator);
         removeLeaf(unflaggedLeaf);
         removeOperatorLeaf(operator);
     }
