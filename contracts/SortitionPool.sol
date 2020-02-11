@@ -38,6 +38,9 @@ contract SortitionPool is AbstractSortitionPool {
         uint poolWeight = totalWeight();
         require(poolWeight > 0, "No operators in pool");
 
+        StakingParams memory _staking = staking;
+        address _poolOwner = poolOwner;
+
         address[] memory selected = new address[](groupSize);
         uint256 nSelected = 0;
 
@@ -56,7 +59,7 @@ contract SortitionPool is AbstractSortitionPool {
             operator = leaf.operator();
             weight = leaf.weight();
 
-            if (getEligibleWeight(operator) >= weight) {
+            if (queryEligibleWeight(operator, _staking, _poolOwner) >= weight) {
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
@@ -72,11 +75,19 @@ contract SortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        uint256 operatorStake = staking._contract.eligibleStake(
+        return queryEligibleWeight(operator, staking, poolOwner);
+    }
+
+    function queryEligibleWeight(
+        address operator,
+        StakingParams memory _staking,
+        address _poolOwner
+    ) internal view returns (uint256) {
+        uint256 operatorStake = _staking._contract.eligibleStake(
             operator,
-            poolOwner
+            _poolOwner
         );
-        uint256 operatorWeight = operatorStake / staking._minimum;
+        uint256 operatorWeight = operatorStake / _staking._minimum;
 
         return operatorWeight;
     }
