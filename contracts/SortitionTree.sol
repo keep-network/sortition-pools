@@ -67,12 +67,11 @@ contract SortitionTree {
     }
 
     function removeOperator(address operator) internal {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         require(
-            isOperatorRegistered(operator),
+            flaggedLeaf != 0,
             "Operator is not registered in the pool"
         );
-
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
         removeLeaf(unflaggedLeaf);
         removeOperatorLeaf(operator);
