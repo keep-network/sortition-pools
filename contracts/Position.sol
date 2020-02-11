@@ -18,12 +18,12 @@ library Position {
 
     // Return the location of the child of a at the given slot
     function child(uint256 a, uint256 s) internal pure returns (uint256) {
-        return (a << 4) | slot(s);
+        return (a << 4) | (s & UINT4_MAX); // slot(s)
     }
 
     // Return the trunk a leaf's position belongs to
     function trunk(uint256 a) internal pure returns (uint256) {
-        return slot(a >> 16);
+        return (a >> 16) & UINT4_MAX; // slot(a >> 16)
     }
 
     // Return the uint p as a flagged position uint:
