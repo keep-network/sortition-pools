@@ -101,20 +101,24 @@ contract BondedSortitionPool is AbstractSortitionPool {
             registerA = leaves[registerA];
             // REGISTER_A is now the LEAF itself
             address operator = registerA.operator();
-            registerA = registerA.weight();
             // REGISTER_A is now the WEIGHT OF THE OPERATOR
+
+            RNG.IndexWeight memory selectedIW = RNG.IndexWeight(
+                registerB,
+                registerA.weight()
+            );
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             // REGISTER_A is the WEIGHT OF THE OPERATOR here
-            if (getEligibleWeight(operator) >= registerA) {
+            if (getEligibleWeight(operator) >= selectedIW.weight) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
                 // REGISTER_B is the STARTING INDEX of the leaf
                 // REGISTER_A is the WEIGHT of the operator
-                RNG.IndexWeight memory tempIW = RNG.IndexWeight(registerB, registerA);
+                RNG.IndexWeight memory tempIW = selectedIW;
 
                 for (uint256 i = 0; i < selected.number; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
@@ -133,7 +137,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // And increase the skipped weight,
                 // by REGISTER_A which is the WEIGHT of the operator
-                selectedTotalWeight += registerA;
+                selectedTotalWeight += selectedIW.weight;
 
                 selected.addresses[selected.number] = operator;
                 selected.number += 1;
@@ -141,9 +145,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 removeOperator(operator);
                 // subtract REGISTER_A which is the WEIGHT of the operator
                 // from the pool weight
-                poolWeight -= registerA;
+                poolWeight -= selectedIW.weight;
 
-                selectedLeaves = RNG.remapIndices(registerB, registerA, selectedLeaves);
+                selectedLeaves = RNG.remapIndices(
+                    selectedIW.index,
+                    selectedIW.weight,
+                    selectedLeaves
+                );
             }
         }
         /* pool */
