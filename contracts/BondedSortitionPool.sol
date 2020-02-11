@@ -84,8 +84,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         bytes32 rngState = seed;
 
-        // uint256 poolWeight = root.sumWeight();
-
         /* loop */
         while (nSelected < groupSize) {
             require(
@@ -112,7 +110,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             if (queryEligibleWeight(operator, params) >= leafWeight) {
-            // if (getEligibleWeight(operator) >= selectedIW.weight) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
