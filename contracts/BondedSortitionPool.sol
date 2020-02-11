@@ -92,8 +92,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 selected.number
             );
 
+            uint256 startingIndex;
             // REGISTER_B starts as the UNIQUE INDEX here
-            (leafPosition, registerB) = pickWeightedLeafWithIndex(registerB);
+            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(registerB);
             // REGISTER_B is now the STARTING INDEX of the leaf
 
             uint256 theLeaf;
@@ -101,7 +102,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             address operator = theLeaf.operator();
 
             RNG.IndexWeight memory selectedIW = RNG.IndexWeight(
-                registerB,
+                startingIndex,
                 theLeaf.weight()
             );
 
