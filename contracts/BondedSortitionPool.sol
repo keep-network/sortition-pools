@@ -17,7 +17,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // this value can be set to equal the most recent request's bondValue.
     struct BondingParams {
         IBonding _contract;
-        uint256 _minimumAvailableValue;
+        uint256 _minimumBondableValue;
     }
 
     struct PoolParams {
@@ -65,9 +65,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             root.sumWeight()
         );
 
-        if (params._bonding._minimumAvailableValue != bondValue) {
-            params._bonding._minimumAvailableValue = bondValue;
-            bonding._minimumAvailableValue = bondValue;
+        if (params._bonding._minimumBondableValue != bondValue) {
+            params._bonding._minimumBondableValue = bondValue;
+            bonding._minimumBondableValue = bondValue;
         }
 
         address[] memory selected = new address[](groupSize);
@@ -187,7 +187,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < params._bonding._minimumAvailableValue) {
+        if (bondableValue < params._bonding._minimumBondableValue) {
             return 0;
         }
 
