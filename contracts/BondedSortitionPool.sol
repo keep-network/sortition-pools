@@ -143,7 +143,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
-                removeOperator(operator);
+                removeFromPool(operator);
                 // subtract the weight of the operator from the pool weight
                 params._poolWeight -= leafWeight;
 

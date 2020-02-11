@@ -63,7 +63,7 @@ contract SortitionPool is AbstractSortitionPool {
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
-                removeOperator(operator);
+                removeFromPool(operator);
                 poolWeight -= weight;
             }
         }

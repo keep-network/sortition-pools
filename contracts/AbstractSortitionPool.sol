@@ -1,7 +1,8 @@
 pragma solidity ^0.5.10;
 
-import "./SortitionTree.sol";
+import "./GasStation.sol";
 import "./RNG.sol";
+import "./SortitionTree.sol";
 import "./api/IStaking.sol";
 
 /// @title Sortition Pool
@@ -15,7 +16,7 @@ import "./api/IStaking.sol";
 /// checked and, if necessary, updated in the sortition pool. If the changes
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
-contract AbstractSortitionPool is SortitionTree {
+contract AbstractSortitionPool is SortitionTree, GasStation {
     using Leaf for uint256;
     using Position for uint256;
 
@@ -28,6 +29,8 @@ contract AbstractSortitionPool is SortitionTree {
         address[] addresses;
         uint256 number;
     }
+
+    uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
 
@@ -73,6 +76,7 @@ contract AbstractSortitionPool is SortitionTree {
             "Operator not eligible"
         );
 
+        depositGas(operator);
         insertOperator(operator, eligibleWeight);
     }
 
@@ -88,14 +92,23 @@ contract AbstractSortitionPool is SortitionTree {
         );
 
         if (eligibleWeight == 0) {
-            removeOperator(operator);
+            removeFromPool(operator);
         } else {
             updateOperator(operator, eligibleWeight);
         }
+    }
+
+    function removeFromPool(address operator) internal {
+        removeOperator(operator);
+        releaseGas(operator);
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256);
+
+    function gasDepositSize() internal pure returns (uint256) {
+        return GAS_DEPOSIT_SIZE;
+    }
 }
