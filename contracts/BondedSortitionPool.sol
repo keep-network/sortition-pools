@@ -64,6 +64,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             groupSize
         );
 
+        StakingParams memory _staking = staking;
+        BondingParams memory _bonding = bonding;
+
         uint256 selectedTotalWeight = 0;
 
         uint256 leafPosition;
@@ -102,7 +105,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            if (getEligibleWeight(operator) >= selectedIW.weight) {
+            if (queryEligibleWeight(operator, _staking, _bonding, poolOwner)
+                >= selectedIW.weight) {
+            // if (getEligibleWeight(operator) >= selectedIW.weight) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
@@ -176,5 +181,29 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
         return eligibleStake / staking._minimum;
+    }
+
+    function queryEligibleWeight(
+        address operator,
+        StakingParams memory _staking,
+        BondingParams memory _bonding,
+        address poolOwner
+    ) internal view returns (uint256) {
+        uint256 bondableValue = _bonding._contract.availableUnbondedValue(
+            operator,
+            poolOwner,
+            address(this)
+        );
+
+        if (bondableValue < _bonding._minimumAvailableValue) {
+            return 0;
+        }
+
+        uint256 eligibleStake = _staking._contract.eligibleStake(
+            operator,
+            poolOwner
+        );
+
+        return (eligibleStake / _staking._minimum);
     }
 }
