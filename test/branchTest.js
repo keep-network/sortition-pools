@@ -19,17 +19,17 @@ contract('Branch', (accounts) => {
 
   describe('getSlot()', async () => {
     it('Returns the uint16 in the correct position', async () => {
-      node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
+      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
 
       const result = await branchInstance.getSlot.call(node, 3)
-      assert.equal(result, 0x3333)
+      assert.equal(result, 0x33333333)
     })
   })
 
   describe('clearSlot()', async () => {
     it('Clears the correct slot', async () => {
-      node = new BN('0x0000111122220000444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
-      newNode = '0x111122220000444455556666777788889999aaaabbbbccccddddeeeeffff'
+      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
+      newNode ='0x11111111222222220000000044444444555555556666666677777777'
 
       const result = await branchInstance.clearSlot.call(node, 3)
       assert.equal(toHex(result), newNode)
@@ -38,9 +38,9 @@ contract('Branch', (accounts) => {
 
   describe('setSlot()', async () => {
     it('Changes the correct slot', async () => {
-      node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
-      newNode = '0x111122221234444455556666777788889999aaaabbbbccccddddeeeeffff'
-      w = 0x1234
+      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
+      newNode ='0x11111111222222221234567844444444555555556666666677777777'
+      w = 0x12345678
 
       const modified = await branchInstance.setSlot.call(node, 3, w)
       newSlot = await branchInstance.getSlot.call(modified, 3)
@@ -50,9 +50,9 @@ contract('Branch', (accounts) => {
 
   describe('sumWeight()', async () => {
     it('Returns the correct weight', async () => {
-      node = new BN('0x0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff', 16)
+      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
       const weight = await branchInstance.sumWeight.call(node)
-      expected = 0xffff * 8
+      expected = 0x77777777 * 4
       assert.equal(weight, expected)
     })
   })
