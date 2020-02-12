@@ -19,7 +19,7 @@ library Position {
     uint256 constant LEAF_FLAG = 1 << POSITION_BITS;
     ////////////////////////////////////////////////////////////////////////////
 
-    // Return the last 4 bits of a position number,
+    // Return the last 3 bits of a position number,
     // corresponding to its slot in its parent
     function slot(uint256 a) internal pure returns (uint256) {
         return a & SLOT_POINTER_MAX;
@@ -36,15 +36,15 @@ library Position {
     }
 
     // Return the uint p as a flagged position uint:
-    // the least significant 20 bits contain the position
-    // and the 21th bit is set as a flag
-    // to distinguish the position 0x00000 from an empty field.
+    // the least significant 21 bits contain the position
+    // and the 22nd bit is set as a flag
+    // to distinguish the position 0x000000 from an empty field.
     function setFlag(uint256 p) internal pure returns (uint256) {
         return (p & POSITION_MAX) | LEAF_FLAG;
     }
 
     // Turn a flagged position into an unflagged position
-    // by removing the flag at the 21th least significant bit.
+    // by removing the flag at the 22nd least significant bit.
     //
     // We shouldn't _actually_ need this
     // as all position-manipulating code should ignore non-position bits anyway

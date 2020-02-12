@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
-/// @notice The implicit 32-ary trees of the sortition pool
-/// rely on packing 32 "slots" of 32-bit values into each uint256.
+/// @notice The implicit 8-ary trees of the sortition pool
+/// rely on packing 8 "slots" of 32-bit values into each uint256.
 /// The Branch library permits efficient calculations on these slots.
 library Branch {
     ////////////////////////////////////////////////////////////////////////////
@@ -39,9 +39,9 @@ library Branch {
     {
         uint256 shiftBits = (LAST_SLOT - position) * SLOT_WIDTH;
         // Doing a bitwise AND with `SLOT_MAX`
-        // clears all but the 16 least significant bits.
+        // clears all but the 32 least significant bits.
         // Because of the right shift by `slotShift(position)` bits,
-        // those 16 bits contain the 16 bits in the `position`th slot of `node`.
+        // those 32 bits contain the 32 bits in the `position`th slot of `node`.
         return (node >> shiftBits) & SLOT_MAX;
     }
 
@@ -80,12 +80,12 @@ library Branch {
         // Clear the `position`th slot like in `clearSlot()`.
         uint256 clearedNode = node & ~(SLOT_MAX << shiftBits);
         // Bitwise AND `weight` with `SLOT_MAX`
-        // to clear all but the 16 least significant bits.
+        // to clear all but the 32 least significant bits.
         //
         // Shift this left by `slotShift(position)` bits
         // to obtain a uint256 with all bits unset
         // except in the `position`th slot
-        // which contains the 16-bit value of `weight`.
+        // which contains the 32-bit value of `weight`.
         uint256 shiftedWeight = (weight & SLOT_MAX) << shiftBits;
         // When we bitwise OR these together,
         // all other slots except the `position`th one come from the left argument,
@@ -99,8 +99,8 @@ library Branch {
 
         for (uint256 i = 0; i < SLOT_COUNT; i++) {
             // Iterate through each slot
-            // by shifting `node` right in increments of 16 bits,
-            // and adding the 16 least significant bits to the `sum`.
+            // by shifting `node` right in increments of 32 bits,
+            // and adding the 32 least significant bits to the `sum`.
             sum += (node >> (i * SLOT_WIDTH)) & SLOT_MAX;
         }
         return sum;

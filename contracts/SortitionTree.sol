@@ -85,7 +85,7 @@ contract SortitionTree {
         setLeaf(position, theLeaf);
 
         // Without position flags,
-        // the position 0x00000 would be treated as empty
+        // the position 0x000000 would be treated as empty
         operatorLeaves[operator] = position.setFlag();
     }
 

@@ -18,8 +18,8 @@ library RNG {
     /// @notice Calculate how many bits are required
     /// for an index in the range `[0 .. range-1]`.
     ///
-    /// @dev Our sortition pool can support up to 2^19 virtual stakers,
-    /// therefore we calculate how many bits we need from 1 to 19.
+    /// @dev Our sortition pool can support up to 2^21 virtual stakers,
+    /// therefore we calculate how many bits we need from 1 to 21.
     ///
     /// @param range The upper bound of the desired range, exclusive.
     ///
