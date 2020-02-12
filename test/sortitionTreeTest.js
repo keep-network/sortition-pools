@@ -5,12 +5,12 @@ const Leaf = artifacts.require('Leaf')
 const SortitionTreeStub = artifacts.require('SortitionTreeStub.sol')
 
 // const BN = web3.utils.BN
-// const toHex = web3.utils.numberToHex
+const toHex = web3.utils.numberToHex
 
 contract('SortitionTree', (accounts) => {
   let sortition
   const alice = accounts[0]
-  // const bob = accounts[1]
+  const bob = accounts[1]
   // const carol = accounts[2]
   // const david = accounts[3]
 
@@ -19,25 +19,30 @@ contract('SortitionTree', (accounts) => {
     SortitionTreeStub.link(Branch)
     SortitionTreeStub.link(Position)
     SortitionTreeStub.link(Leaf)
+  })
+
+  beforeEach(async () => {
     sortition = await SortitionTreeStub.new()
   })
 
-  // describe('setLeaf()', async () => {
-  //   it('Sets the leaf correctly', async () => {
-  //     const weight1 = new BN('1234', 16)
-  //     const weight2 = new BN('11', 16)
+  describe('setLeaf()', async () => {
+    it('Sets the leaf correctly', async () => {
+      const weight1 = 0x1234
+      const position1 = parseInt('07654321', 8)
+      const weight2 = 0x11
+      const position2 = parseInt('06000000', 8)
 
-  //     const leaf1 = await sortition.toLeaf.call(alice, weight1)
-  //     await sortition.publicSetLeaf(0xecdef, leaf1)
-  //     const res1 = await sortition.getRoot.call()
-  //     assert.equal(toHex(res1), '0x12340000')
+      const leaf1 = await sortition.toLeaf.call(alice, weight1)
+      await sortition.publicSetLeaf(position1, leaf1)
+      const res1 = await sortition.getRoot.call()
+      assert.equal(toHex(res1), '0x1234')
 
-  //     const leaf2 = await sortition.toLeaf.call(bob, weight2)
-  //     await sortition.publicSetLeaf(0xfad00, leaf2)
-  //     const res2 = await sortition.getRoot.call()
-  //     assert.equal(toHex(res2), '0x12340011')
-  //   })
-  // })
+      const leaf2 = await sortition.toLeaf.call(bob, weight2)
+      await sortition.publicSetLeaf(position2, leaf2)
+      const res2 = await sortition.getRoot.call()
+      assert.equal(toHex(res2), '0x1100001234')
+    })
+  })
 
   // describe('removeLeaf()', async () => {
   //   it('uses setLeaf(), which removes a leaf correctly', async () => {
