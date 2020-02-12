@@ -6,8 +6,8 @@ library RNG {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
-    uint256 constant LEVELS = 5;
+    uint256 constant SLOT_BITS = 3;
+    uint256 constant LEVELS = 7;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////

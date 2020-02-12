@@ -2,8 +2,8 @@
 
 // How many bits a position uses per level of the tree;
 // each branch of the tree contains 2**SLOTBITS slots.
-const slotBits = 4
-const levels = 5
+const slotBits = 3
+const levels = 7
 
 const slotCount = 2 ** slotBits
 const slotWidth = 2 ** (8 - slotBits)

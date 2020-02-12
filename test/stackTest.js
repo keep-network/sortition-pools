@@ -2,7 +2,6 @@ const StackStub = artifacts.require('StackStub.sol')
 const StackLib = artifacts.require('StackLib.sol')
 const Branch = artifacts.require('Branch.sol')
 const Position = artifacts.require('Position.sol')
-const Trunk = artifacts.require('Trunk.sol')
 const Leaf = artifacts.require('Leaf.sol')
 const BN = web3.utils.BN
 const utils = require('./utils')
@@ -11,7 +10,6 @@ const DEPLOY = [
   { name: 'StackLib', contract: StackLib },
   { name: 'Branch', contract: Branch },
   { name: 'Position', contract: Position },
-  { name: 'Trunk', contract: Trunk },
   { name: 'Leaf', contract: Leaf },
   { name: 'StackStub', contract: StackStub }]
 

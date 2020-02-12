@@ -3,14 +3,12 @@ pragma solidity ^0.5.10;
 import "./StackLib.sol";
 import "./Branch.sol";
 import "./Position.sol";
-import "./Trunk.sol";
 import "./Leaf.sol";
 
 contract SortitionTree {
     using StackLib for uint256[];
     using Branch for uint256;
     using Position for uint256;
-    using Trunk for uint256;
     using Leaf for uint256;
 
     ////////////////////////////////////////////////////////////////////////////
@@ -18,8 +16,8 @@ contract SortitionTree {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
-    uint256 constant LEVELS = 5;
+    uint256 constant SLOT_BITS = 3;
+    uint256 constant LEVELS = 7;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -27,14 +25,16 @@ contract SortitionTree {
     uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
     uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
     uint256 constant SLOT_MAX = (2 ** SLOT_WIDTH) - 1;
-
-    // The number of operators a single trunk can hold.
-    uint256 constant TRUNK_SIZE = 2 ** (SLOT_BITS * (LEVELS - 1));
-    uint256 constant TRUNK_COUNT = SLOT_COUNT;
-    uint256 constant TRUNK_MAX = SLOT_MAX;
     ////////////////////////////////////////////////////////////////////////////
 
     // implicit tree
+    // root 8
+    // level2 64
+    // level3 512
+    // level4 4k
+    // level5 32k
+    // level6 256k
+    // level7 2M
     uint256 root;
     mapping(uint256 => mapping(uint256 => uint256)) branches;
     mapping(uint256 => uint256) leaves;
@@ -44,15 +44,14 @@ contract SortitionTree {
     mapping(address => uint256) operatorLeaves;
 
     // the leaf after the rightmost occupied leaf of each stack
-    uint256[TRUNK_COUNT] rightmostLeaf;
+    uint256 rightmostLeaf;
     // the empty leaves in each stack
     // between 0 and the rightmost occupied leaf
-    uint256[][TRUNK_COUNT] emptyLeaves;
+    uint256[] emptyLeaves;
 
     constructor() public {
-        for (uint256 i = 0; i < TRUNK_COUNT; i++) {
-            rightmostLeaf[i] = i.firstLeaf();
-        }
+        root = 0;
+        rightmostLeaf = 0;
     }
 
     // checks if operator is already registered in the pool
@@ -62,11 +61,16 @@ contract SortitionTree {
 
     // Sum the number of operators in each trunk
     function operatorsInPool() public view returns (uint256) {
-        uint256 sum;
-        for (uint256 i = 0; i < TRUNK_COUNT; i++) {
-            sum += operatorsInTrunk(i);
-        }
-        return sum;
+        // Get the number of leaves that might be occupied;
+        // if `rightmostLeaf` equals `firstLeaf()` the tree must be empty,
+        // otherwise the difference between these numbers
+        // gives the number of leaves that may be occupied.
+        uint256 nPossiblyUsedLeaves = rightmostLeaf;
+        // Get the number of empty leaves
+        // not accounted for by the `rightmostLeaf`
+        uint256 nEmptyLeaves = emptyLeaves.getSize();
+
+        return (nPossiblyUsedLeaves - nEmptyLeaves);
     }
 
     function insertOperator(address operator, uint256 weight) internal {
@@ -107,20 +111,6 @@ contract SortitionTree {
         updateLeaf(unflaggedLeaf, weight);
     }
 
-    function operatorsInTrunk(uint256 trunkN) internal view returns (uint256) {
-        // Get the number of leaves that might be occupied;
-        // if `rightmostLeaf` equals `firstLeaf()` the trunk must be empty,
-        // otherwise the difference between these numbers
-        // gives the number of leaves that may be occupied.
-        uint256 nPossiblyUsedLeaves = rightmostLeaf[trunkN] -
-            trunkN.firstLeaf();
-        // Get the number of empty leaves
-        // not accounted for by the `rightmostLeaf`
-        uint256 nEmptyLeaves = emptyLeaves[trunkN].getSize();
-
-        return (nPossiblyUsedLeaves - nEmptyLeaves);
-    }
-
     function removeOperatorLeaf(address operator) internal {
         operatorLeaves[operator] = 0;
     }
@@ -134,16 +124,15 @@ contract SortitionTree {
     }
 
     function removeLeaf(uint256 position) internal {
-        uint256 trunkN = position.trunk();
-        uint256 rightmostSubOne = rightmostLeaf[trunkN] - 1;
+        uint256 rightmostSubOne = rightmostLeaf - 1;
         bool isRightmost = position == rightmostSubOne;
 
         setLeaf(position, 0);
 
         if (isRightmost) {
-            rightmostLeaf[trunkN] = rightmostSubOne;
+            rightmostLeaf = rightmostSubOne;
         } else {
-            emptyLeaves[trunkN].stackPush(position);
+            emptyLeaves.stackPush(position);
         }
     }
 
@@ -225,47 +214,18 @@ contract SortitionTree {
     function getSuitableEmptyLeaf(uint256 addedWeight)
         internal returns (uint256)
     {
-        // cache root
-        uint256 _root = root;
-        for (uint256 trunkN = 0; trunkN < TRUNK_COUNT; trunkN++) {
-            // overflow -> skip to next trunk
-            bool weightOkay = fitsUnderCap(addedWeight, trunkN, _root);
-            if (!weightOkay) {
-                continue;
-            }
-
-            bool emptyLeavesInStack = leavesInStack(trunkN);
-            if (emptyLeavesInStack) {
-                return emptyLeaves[trunkN].stackPop();
-            }
-
-            uint256 rLeaf = rightmostLeaf[trunkN];
-            bool emptyLeavesToRight = leavesToRight(trunkN, rLeaf);
-            if (emptyLeavesToRight) {
-                rightmostLeaf[trunkN] = rLeaf + 1;
-                return rLeaf;
-            }
+        bool emptyLeavesInStack = leavesInStack();
+        if (emptyLeavesInStack) {
+            return emptyLeaves.stackPop();
+        } else {
+            uint256 rLeaf = rightmostLeaf;
+            rightmostLeaf = rLeaf + 1;
+            return rLeaf;
         }
     }
 
-    function fitsUnderCap(uint256 addedWeight, uint256 trunkN, uint256 _root)
-        internal
-        view
-        returns (bool)
-    {
-        uint256 currentWeight = _root.getSlot(trunkN);
-        uint256 sumWeight = currentWeight + addedWeight;
-        return sumWeight <= TRUNK_MAX;
-    }
-
-    function leavesInStack(uint256 trunkN) internal view returns (bool) {
-        return emptyLeaves[trunkN].getSize() > 0;
-    }
-
-    function leavesToRight(uint256 trunkN, uint256 rLeaf)
-        internal pure returns (bool)
-    {
-        return rLeaf <= trunkN.lastLeaf();
+    function leavesInStack() internal view returns (bool) {
+        return emptyLeaves.getSize() > 0;
     }
 
     function totalWeight() internal view returns (uint256) {

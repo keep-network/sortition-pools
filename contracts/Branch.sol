@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
-/// @notice The implicit 16-ary trees of the sortition pool
-/// rely on packing 16 "slots" of 16-bit values into each uint256.
+/// @notice The implicit 32-ary trees of the sortition pool
+/// rely on packing 32 "slots" of 32-bit values into each uint256.
 /// The Branch library permits efficient calculations on these slots.
 library Branch {
     ////////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@ library Branch {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
+    uint256 constant SLOT_BITS = 3;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -21,9 +21,9 @@ library Branch {
     ////////////////////////////////////////////////////////////////////////////
 
     /// @notice Calculate the right shift required
-    /// to make the 16 least significant bits of an uint256
+    /// to make the 32 least significant bits of an uint256
     /// be the bits of the `position`th slot
-    /// when treating the uint256 as a uint16[16].
+    /// when treating the uint256 as a uint32[8].
     ///
     /// @dev Not used for efficiency reasons,
     /// but left to illustrate the meaning of a common pattern.
@@ -33,7 +33,7 @@ library Branch {
     }
 
     /// @notice Return the `position`th slot of the `node`,
-    /// treating `node` as a uint16[16].
+    /// treating `node` as a uint32[32].
     function getSlot(uint256 node, uint256 position)
         internal pure returns (uint256)
     {
@@ -69,7 +69,7 @@ library Branch {
     /// @notice Return `node` with the `position`th slot set to `weight`.
     ///
     /// @param weight The weight of of the node.
-    /// Safely truncated to a 16-bit number,
+    /// Safely truncated to a 32-bit number,
     /// but this should never be called with an overflowing weight regardless.
     function setSlot(uint256 node, uint256 position, uint256 weight)
         internal

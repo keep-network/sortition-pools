@@ -6,9 +6,9 @@ library Position {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
+    uint256 constant SLOT_BITS = 3;
     // How many levels the tree uses, including root.
-    uint256 constant LEVELS = 5;
+    uint256 constant LEVELS = 7;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -33,11 +33,6 @@ library Position {
     // Return the location of the child of a at the given slot
     function child(uint256 a, uint256 s) internal pure returns (uint256) {
         return (a << SLOT_BITS) | (s & SLOT_POINTER_MAX); // slot(s)
-    }
-
-    // Return the trunk a leaf's position belongs to
-    function trunk(uint256 a) internal pure returns (uint256) {
-        return (a >> (POSITION_BITS - SLOT_BITS)) & SLOT_POINTER_MAX; // slot(a >> 16)
     }
 
     // Return the uint p as a flagged position uint:
