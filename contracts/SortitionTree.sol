@@ -82,7 +82,7 @@ contract SortitionTree {
         uint256 position = getEmptyLeaf();
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
-        setLeaf(position, theLeaf);
+        root = setLeaf(position, theLeaf, root);
 
         // Without position flags,
         // the position 0x000000 would be treated as empty
@@ -96,7 +96,7 @@ contract SortitionTree {
             "Operator is not registered in the pool"
         );
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        removeLeaf(unflaggedLeaf);
+        root = removeLeaf(unflaggedLeaf, root);
         removeOperatorLeaf(operator);
     }
 
@@ -123,28 +123,33 @@ contract SortitionTree {
         return operatorLeaves[operator];
     }
 
-    function removeLeaf(uint256 position) internal {
+    function removeLeaf(uint256 position, uint256 _root)
+        internal returns (uint256)
+    {
         uint256 rightmostSubOne = rightmostLeaf - 1;
         bool isRightmost = position == rightmostSubOne;
 
-        setLeaf(position, 0);
+        uint256 newRoot = setLeaf(position, 0, _root);
 
         if (isRightmost) {
             rightmostLeaf = rightmostSubOne;
         } else {
             emptyLeaves.stackPush(position);
         }
+        return newRoot;
     }
 
     function updateLeaf(uint256 position, uint256 weight) internal {
         uint256 oldLeaf = leaves[position];
         if (oldLeaf.weight() != weight) {
             uint256 newLeaf = oldLeaf.setWeight(weight);
-            setLeaf(position, newLeaf);
+            root = setLeaf(position, newLeaf, root);
         }
     }
 
-    function setLeaf(uint256 position, uint256 theLeaf) internal {
+    function setLeaf(uint256 position, uint256 theLeaf, uint256 _root)
+        internal returns (uint256)
+    {
         uint256 childSlot;
         uint256 treeNode;
         uint256 newNode;
@@ -166,7 +171,7 @@ contract SortitionTree {
 
         // set level Root
         childSlot = parent.slot();
-        root = root.setSlot(childSlot, nodeWeight);
+        return _root.setSlot(childSlot, nodeWeight);
     }
 
     function pickWeightedLeafWithIndex(uint256 index, uint256 _root)

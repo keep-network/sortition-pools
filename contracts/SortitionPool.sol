@@ -36,6 +36,7 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 groupSize, bytes32 seed
     ) public returns (address[] memory)  {
         uint256 _root = root;
+        bool _rootChanged = false;
         uint256 poolWeight = _root.sumWeight();
         require(poolWeight > 0, "No operators in pool");
 
@@ -56,7 +57,8 @@ contract SortitionPool is AbstractSortitionPool {
             require(poolWeight > 0, "No eligible operators");
 
             (index, rngState) = RNG.getIndex(poolWeight, rngState);
-            leaf = leaves[pickWeightedLeaf(index, _root)];
+            uint256 leafPosition = pickWeightedLeaf(index, _root);
+            leaf = leaves[leafPosition];
             operator = leaf.operator();
             weight = leaf.weight();
 
@@ -64,10 +66,16 @@ contract SortitionPool is AbstractSortitionPool {
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
-                removeFromPool(operator);
+                _root = removeLeaf(leafPosition, _root);
+                removeOperatorLeaf(operator);
+                releaseGas(operator);
                 poolWeight -= weight;
-                _root = root;
+                _rootChanged = true;
             }
+        }
+
+        if (_rootChanged) {
+            root = _root;
         }
 
         return selected;

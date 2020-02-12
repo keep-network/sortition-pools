@@ -33,6 +33,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         address _poolOwner;
         uint256 _root;
         uint256 _poolWeight;
+        bool _rootChanged;
     }
 
     BondingParams bonding;
@@ -72,7 +73,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bonding,
             poolOwner,
             selectedTotalWeight,
-            selectedTotalWeight.sumWeight()
+            selectedTotalWeight.sumWeight(),
+            false
         );
 
         if (params._bonding._minimumBondableValue != bondValue) {
@@ -149,10 +151,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 selected[selectedCount] = operator;
                 selectedCount += 1;
             } else {
-                removeFromPool(operator);
-                params._root = root;
+                params._root = removeLeaf(leafPosition, params._root);
+                removeOperatorLeaf(operator);
+                releaseGas(operator);
                 // subtract the weight of the operator from the pool weight
                 params._poolWeight -= leafWeight;
+                params._rootChanged = true;
 
                 selectedLeaves = RNG.remapIndices(
                     startingIndex,
@@ -162,6 +166,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
             }
         }
         /* pool */
+
+        if (params._rootChanged) {
+            root = params._root;
+        }
 
         // If nothing has exploded by now,
         // we should have the correct size of group.
@@ -178,7 +186,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bonding,
             poolOwner,
             0,
-            0 // the pool weight doesn't matter here
+            0, // the pool weight doesn't matter here
+            false
         );
         return queryEligibleWeight(operator, params);
     }
