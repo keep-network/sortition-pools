@@ -44,16 +44,25 @@ contract('SortitionTree', (accounts) => {
     })
   })
 
-  // describe('removeLeaf()', async () => {
-  //   it('uses setLeaf(), which removes a leaf correctly', async () => {
-  //     await sortition.publicSetLeaf(0xecdef, 0)
-  //     await sortition.publicSetLeaf(0xfad00, 0)
+  describe('removeLeaf()', async () => {
+    it('removes a leaf correctly', async () => {
+      const weight1 = 0x1234
+      const position1 = parseInt('07654321', 8)
+      const weight2 = 0x11
+      const position2 = parseInt('06000000', 8)
 
-  //     const root = await sortition.getRoot.call()
+      const leaf1 = await sortition.toLeaf.call(alice, weight1)
+      await sortition.publicSetLeaf(position1, leaf1)
 
-  //     assert.equal(toHex(root), '0x0')
-  //   })
-  // })
+      const leaf2 = await sortition.toLeaf.call(bob, weight2)
+      await sortition.publicSetLeaf(position2, leaf2)
+      await sortition.publicRemoveLeaf(position1)
+
+      const root = await sortition.getRoot.call()
+
+      assert.equal(toHex(root), '0x1100000000')
+    })
+  })
 
   describe('insertOperator()', async () => {
     const weightA = 0xfff0
