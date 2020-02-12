@@ -117,19 +117,21 @@ contract('SortitionTree', (accounts) => {
     })
   })
 
-  // describe('isOperatorRegistered()', async () => {
-  //   it('returns true if operator is registered', async () => {
-  //     const result = await sortition.publicIsOperatorRegistered(alice)
+  describe('isOperatorRegistered()', async () => {
+    it('returns true if operator is registered', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      const result = await sortition.publicIsOperatorRegistered(alice)
 
-  //     assert.isTrue(result)
-  //   })
+      assert.isTrue(result)
+    })
 
-  //   it('returns false if operator is not registered', async () => {
-  //     const result = await sortition.publicIsOperatorRegistered('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+    it('returns false if operator is not registered', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      const result = await sortition.publicIsOperatorRegistered(bob)
 
-  //     assert.isFalse(result)
-  //   })
-  // })
+      assert.isFalse(result)
+    })
+  })
 
   // describe('updateLeaf()', async () => {
   //   it('updates a leaf correctly', async () => {
