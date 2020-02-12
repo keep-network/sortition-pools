@@ -90,30 +90,32 @@ contract('SortitionTree', (accounts) => {
     })
   })
 
-  // describe('removeOperator()', async () => {
-  //   it('removes an operator correctly', async () => {
-  //     await sortition.publicRemoveOperator(david)
+  describe('removeOperator()', async () => {
+    it('removes an operator correctly', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      await sortition.publicRemoveOperator(alice)
 
-  //     const root = await sortition.getRoot.call()
+      const root = await sortition.getRoot.call()
 
-  //     assert.equal(toHex(root), '0xffffaaaa00000000000000000000000000000000000000000000000000000000')
+      assert.equal(toHex(root), '0x0')
 
-  //     const davidLeaf = await sortition.publicGetFlaggedOperatorLeaf.call(david)
+      const aliceLeaf = await sortition.publicGetFlaggedOperatorLeaf.call(alice)
 
-  //     assert.equal(davidLeaf, 0)
-  //   })
+      assert.equal(aliceLeaf, 0)
+    })
 
-  //   it('reverts if operator is not registered', async () => {
-  //     try {
-  //       await sortition.publicRemoveOperator('0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
-  //     } catch (error) {
-  //       assert.include(error.message, 'Operator is not registered in the pool')
-  //       return
-  //     }
+    it('reverts if operator is not registered', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      try {
+        await sortition.publicRemoveOperator(bob)
+      } catch (error) {
+        assert.include(error.message, 'Operator is not registered in the pool')
+        return
+      }
 
-  //     assert.fail('Expected throw not received')
-  //   })
-  // })
+      assert.fail('Expected throw not received')
+    })
+  })
 
   // describe('isOperatorRegistered()', async () => {
   //   it('returns true if operator is registered', async () => {
