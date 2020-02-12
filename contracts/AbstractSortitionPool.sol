@@ -18,6 +18,8 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 _minimum;
     }
 
+    uint256 constant UINT16_MAX = 2**16 - 1;
+
     uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
@@ -63,6 +65,10 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
             eligibleWeight > 0,
             "Operator not eligible"
         );
+        require(
+            eligibleWeight <= UINT16_MAX,
+            "Operator weights above 65535 are not supported"
+        );
 
         depositGas(operator);
         insertOperator(operator, eligibleWeight);
@@ -75,8 +81,16 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 inPoolWeight = getPoolWeight(operator);
 
         require(
+            inPoolWeight > 0,
+            "Operator is not registered in the pool"
+        );
+        require(
             eligibleWeight != inPoolWeight,
             "Operator already up to date"
+        );
+        require(
+            eligibleWeight <= UINT16_MAX,
+            "Operator weights above 65535 are not supported"
         );
 
         if (eligibleWeight == 0) {

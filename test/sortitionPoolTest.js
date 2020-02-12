@@ -25,6 +25,44 @@ contract('SortitionPool', (accounts) => {
     pool = await SortitionPool.new(staking.address, minStake, accounts[9])
   })
 
+  describe('joinPool', async () => {
+    it('accepts eligible operators', async () => {
+      await staking.setStake(alice, 4000)
+      await pool.joinPool(alice)
+
+      const aliceInPool = await pool.isOperatorInPool(alice)
+      assert.isTrue(aliceInPool)
+    })
+
+    it('rejects ineligible operators', async () => {
+      await staking.setStake(bob, 1000)
+
+      try {
+        await pool.joinPool(bob)
+      } catch (error) {
+        assert.include(error.message, 'Operator not eligible')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
+
+    it('rejects operators with overflowing weight', async () => {
+      await staking.setStake(carol, minStake * (2**16))
+
+      try {
+        await pool.joinPool(carol)
+      } catch (error) {
+        assert.include(
+          error.message,
+          'Operator weights above 65535 are not supported')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
+  })
+
   describe('selectGroup', async () => {
     it('returns group of expected size', async () => {
       await staking.setStake(alice, 20000)
