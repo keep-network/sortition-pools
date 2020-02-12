@@ -16,14 +16,15 @@ import "./api/IStaking.sol";
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
 contract SortitionPool is AbstractSortitionPool {
-    constructor(
+    constructor (
         IStaking _stakingContract,
         uint256 _minimumStake,
         address _poolOwner
-    ) public {
-        staking = StakingParams(_stakingContract, _minimumStake);
-        poolOwner = _poolOwner;
-    }
+    ) AbstractSortitionPool (
+        _stakingContract,
+        _minimumStake,
+        _poolOwner
+    ) public {}
 
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be

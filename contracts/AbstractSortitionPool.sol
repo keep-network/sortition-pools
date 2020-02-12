@@ -20,6 +20,26 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     uint256 constant UINT16_MAX = 2**16 - 1;
 
+    // The maximum number of KEEP tokens in existence.
+    // This is used to enforce invariants of the pool,
+    // specifically that the minimum stake is high enough
+    // that the pool can never "clog"
+    // and become unable to accept eligible stakers
+    // under any possible circumstances.
+    uint256 constant TOKEN_SUPPLY = 10**27;
+    // In the worst-case scenario,
+    // each trunk can hold one operator with 2^15 weight,
+    // after which no operator with 2^15 weight or more can be inserted.
+    // However, an operator with 2^15 - 1 weight still fits.
+    // This means that the absolute maximum capacity of the pool
+    // is 2^15 * 17 - 1.
+    uint256 constant POOL_CAPACITY = 2**15 * 17 - 1;
+    // The pool capacity doesn't divide the token supply cleanly,
+    // leaving a nonzero remainder.
+    // However, the minimum stake is vastly greater than the pool capacity,
+    // so the remainder cannot exceed the minimum stake.
+    uint256 constant REQUIRED_MINIMUM_STAKE = TOKEN_SUPPLY / POOL_CAPACITY;
+
     uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
@@ -27,6 +47,19 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // The contract (e.g. Keep factory) this specific pool serves.
     // Only the pool owner can request groups.
     address poolOwner;
+
+    constructor (
+        IStaking _stakingContract,
+        uint256 _minimumStake,
+        address _poolOwner
+    ) internal {
+        require(
+            isSufficientMinimumStake(_minimumStake),
+            "Insufficient minimum stake"
+        );
+        staking = StakingParams(_stakingContract, _minimumStake);
+        poolOwner = _poolOwner;
+    }
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
@@ -112,5 +145,9 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     function gasDepositSize() internal pure returns (uint256) {
         return GAS_DEPOSIT_SIZE;
+    }
+
+    function isSufficientMinimumStake(uint256 amount) internal pure returns (bool) {
+        return amount > REQUIRED_MINIMUM_STAKE;
     }
 }

@@ -8,10 +8,12 @@ const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.s
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 const BondingContractStub = artifacts.require('BondingContractStub.sol')
 
+const { tokens } = require('./token')
+
 contract('BondedSortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
   const bond = 100000000
-  const minStake = 2000
+  const minStake = tokens(2000)
   let pool
   let bonding
   let staking
@@ -28,11 +30,30 @@ contract('BondedSortitionPool', (accounts) => {
 
     prepareOperator = async (address, weight) => {
       await bonding.setBondableValue(address, weight * bond)
-      await staking.setStake(address, weight * minStake)
+      await staking.setStake(address, minStake.muln(weight))
       await pool.joinPool(address)
     }
 
     pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, bond, accounts[9])
+  })
+
+  describe('constructor', async () => {
+    it('enforces adequate minimum stake', async () => {
+      try {
+        await BondedSortitionPool.new(
+          staking.address,
+          bonding.address,
+          tokens(1795),
+          bond,
+          accounts[9],
+        )
+      } catch (error) {
+        assert.include(error.message, 'Insufficient minimum stake')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
   })
 
   describe('selectSetGroup', async () => {
@@ -90,7 +111,7 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[2], 12)
       await prepareOperator(accounts[3], 5)
 
-      await staking.setStake(accounts[2], 1 * minStake)
+      await staking.setStake(accounts[2], tokens(1000))
 
       try {
         await pool.selectSetGroup(4, seed, bond)
@@ -113,7 +134,7 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[1], 11)
       await prepareOperator(accounts[2], 12)
 
-      await staking.setStake(accounts[2], 15 * minStake)
+      await staking.setStake(accounts[2], minStake.muln(15))
 
       group = await pool.selectSetGroup.call(3, seed, bond)
       assert.equal(group.length, 3)
@@ -132,13 +153,13 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[8], 3)
       await prepareOperator(accounts[9], 42)
 
-      await staking.setStake(accounts[0], 1 * minStake)
-      await staking.setStake(accounts[1], 1 * minStake)
-      await staking.setStake(accounts[2], 1 * minStake)
-      await staking.setStake(accounts[4], 1 * minStake)
-      await staking.setStake(accounts[6], 7 * minStake)
-      await staking.setStake(accounts[7], 1 * minStake)
-      await staking.setStake(accounts[9], 1 * minStake)
+      await staking.setStake(accounts[0], minStake.muln(1))
+      await staking.setStake(accounts[1], minStake.muln(1))
+      await staking.setStake(accounts[2], minStake.muln(1))
+      await staking.setStake(accounts[4], minStake.muln(1))
+      await staking.setStake(accounts[6], minStake.muln(7))
+      await staking.setStake(accounts[7], minStake.muln(1))
+      await staking.setStake(accounts[9], minStake.muln(1))
 
       group = await pool.selectSetGroup.call(3, seed, bond)
       await pool.selectSetGroup(3, seed, bond)

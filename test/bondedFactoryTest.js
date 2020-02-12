@@ -3,11 +3,13 @@ const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.s
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 const BondingContractStub = artifacts.require('BondingContractStub.sol')
 
+const { tokens } = require('./token')
+
 contract('BondedSortitionPoolFactory', (accounts) => {
   let bondedSortitionPoolFactory
   let stakingContract
   let bondingContract
-  const minimumStake = 1
+  const minimumStake = tokens(2000)
   const initialMinimumBond = 1
 
   before(async () => {
@@ -48,8 +50,8 @@ contract('BondedSortitionPoolFactory', (accounts) => {
 
       assert.notEqual(pool1Address, pool2Address)
 
-      stakingContract.setStake(accounts[1], 11)
-      stakingContract.setStake(accounts[2], 12)
+      stakingContract.setStake(accounts[1], minimumStake.muln(11))
+      stakingContract.setStake(accounts[2], minimumStake.muln(12))
       bondingContract.setBondableValue(accounts[1], 11)
       bondingContract.setBondableValue(accounts[2], 12)
 

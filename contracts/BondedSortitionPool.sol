@@ -42,10 +42,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumStake,
         uint256 _minimumBondableValue,
         address _poolOwner
+    ) AbstractSortitionPool (
+        _stakingContract,
+        _minimumStake,
+        _poolOwner
     ) public {
-        require(_minimumStake > 0, "Minimum stake cannot be zero");
-
-        staking = StakingParams(_stakingContract, _minimumStake);
         bonding = BondingParams(_bondingContract, _minimumBondableValue);
         poolOwner = _poolOwner;
     }

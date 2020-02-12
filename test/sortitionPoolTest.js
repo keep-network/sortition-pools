@@ -27,6 +27,19 @@ contract('SortitionPool', (accounts) => {
     pool = await SortitionPool.new(staking.address, minStake, accounts[9])
   })
 
+  describe('constructor', async () => {
+    it('enforces adequate minimum stake', async () => {
+      try {
+        await SortitionPool.new(staking.address, tokens(1795), accounts[9])
+      } catch (error) {
+        assert.include(error.message, 'Insufficient minimum stake')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
+  })
+
   describe('joinPool', async () => {
     it('accepts eligible operators', async () => {
       await staking.setStake(alice, tokens(4000))
