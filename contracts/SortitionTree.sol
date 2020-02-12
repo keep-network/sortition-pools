@@ -169,13 +169,13 @@ contract SortitionTree {
         root = root.setSlot(childSlot, nodeWeight);
     }
 
-    function pickWeightedLeafWithIndex(uint256 index)
+    function pickWeightedLeafWithIndex(uint256 index, uint256 _root)
         internal
         view
         returns (uint256, uint256)
     {
         uint256 currentIndex = index;
-        uint256 currentNode = root;
+        uint256 currentNode = _root;
         uint256 currentPosition = 0;
         uint256 currentSlot;
 
@@ -204,10 +204,10 @@ contract SortitionTree {
         return (leafPosition, leafFirstIndex);
     }
 
-    function pickWeightedLeaf(uint256 index) internal view returns (uint256) {
+    function pickWeightedLeaf(uint256 index, uint256 _root) internal view returns (uint256) {
         uint256 leafPosition;
         uint256 _ignoredIndex;
-        (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index);
+        (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index, _root);
         return leafPosition;
     }
 
