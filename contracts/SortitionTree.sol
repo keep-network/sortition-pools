@@ -154,7 +154,7 @@ contract SortitionTree {
         leaves[position] = theLeaf;
 
         uint256 parent = position;
-        // set levels 5 to 2
+        // set levels 7 to 2
         for (uint256 level = LEVELS; level >= 2; level--) {
             childSlot = parent.slot();
             parent = parent.parent();
@@ -186,7 +186,7 @@ contract SortitionTree {
             currentIndex
         );
 
-        // get slots from levels 2 to 5
+        // get slots from levels 2 to 7
         for (uint256 level = 2; level <= LEVELS; level++) {
             currentPosition = currentPosition.child(currentSlot);
             currentNode = branches[level][currentPosition];
