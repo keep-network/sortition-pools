@@ -4,17 +4,21 @@ pragma solidity ^0.5.10;
 /// rely on packing 16 "slots" of 16-bit values into each uint256.
 /// The Branch library permits efficient calculations on these slots.
 library Branch {
+    ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
     uint256 constant SLOT_BITS = 4;
+    ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
     // Derived constants, do not touch
     uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
     uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
     uint256 constant LAST_SLOT = SLOT_COUNT - 1;
     uint256 constant SLOT_MAX = (2 ** SLOT_WIDTH) - 1;
+    ////////////////////////////////////////////////////////////////////////////
 
     /// @notice Calculate the right shift required
     /// to make the 16 least significant bits of an uint256

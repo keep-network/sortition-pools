@@ -1,6 +1,7 @@
 pragma solidity ^0.5.10;
 
 library Position {
+    ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
     // How many bits a position uses per level of the tree;
@@ -8,17 +9,20 @@ library Position {
     uint256 constant SLOT_BITS = 4;
     // How many levels the tree uses, including root.
     uint256 constant LEVELS = 5;
+    ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
     // Derived constants, do not touch
-    uint256 constant SLOT_MAX = (2 ** SLOT_BITS) - 1;
+    uint256 constant SLOT_POINTER_MAX = (2 ** SLOT_BITS) - 1;
     uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
     uint256 constant POSITION_MAX = (2 ** POSITION_BITS) - 1;
     uint256 constant LEAF_FLAG = 1 << POSITION_BITS;
+    ////////////////////////////////////////////////////////////////////////////
 
     // Return the last 4 bits of a position number,
     // corresponding to its slot in its parent
     function slot(uint256 a) internal pure returns (uint256) {
-        return a & SLOT_MAX;
+        return a & SLOT_POINTER_MAX;
     }
 
     // Return the parent of a position number
@@ -28,12 +32,12 @@ library Position {
 
     // Return the location of the child of a at the given slot
     function child(uint256 a, uint256 s) internal pure returns (uint256) {
-        return (a << SLOT_BITS) | (s & SLOT_MAX); // slot(s)
+        return (a << SLOT_BITS) | (s & SLOT_POINTER_MAX); // slot(s)
     }
 
     // Return the trunk a leaf's position belongs to
     function trunk(uint256 a) internal pure returns (uint256) {
-        return (a >> (POSITION_BITS - SLOT_BITS)) & SLOT_MAX; // slot(a >> 16)
+        return (a >> (POSITION_BITS - SLOT_BITS)) & SLOT_POINTER_MAX; // slot(a >> 16)
     }
 
     // Return the uint p as a flagged position uint:

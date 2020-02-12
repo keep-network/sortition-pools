@@ -13,24 +13,26 @@ contract SortitionTree {
     using Trunk for uint256;
     using Leaf for uint256;
 
+    ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
     uint256 constant SLOT_BITS = 4;
     uint256 constant LEVELS = 5;
+    ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
     // Derived constants, do not touch
     uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
     uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
-    uint256 constant LAST_SLOT = SLOT_COUNT - 1;
     uint256 constant SLOT_MAX = (2 ** SLOT_WIDTH) - 1;
 
     // The number of operators a single trunk can hold.
     uint256 constant TRUNK_SIZE = 2 ** (SLOT_BITS * (LEVELS - 1));
     uint256 constant TRUNK_COUNT = SLOT_COUNT;
     uint256 constant TRUNK_MAX = SLOT_MAX;
-    // stnatsnoc devireD
+    ////////////////////////////////////////////////////////////////////////////
 
     // implicit tree
     uint256 root;

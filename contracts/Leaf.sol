@@ -3,12 +3,15 @@ pragma solidity ^0.5.10;
 import "solidity-bytes-utils/contracts/BytesLib.sol";
 
 library Leaf {
+    ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
     uint256 constant SLOT_BITS = 4;
+    ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
     // Derived constants, do not touch
     uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
     uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
@@ -19,7 +22,7 @@ library Leaf {
 
     uint256 constant BLOCKHEIGHT_WIDTH = 96 - WEIGHT_WIDTH;
     uint256 constant BLOCKHEIGHT_MAX = (2 ** BLOCKHEIGHT_WIDTH) - 1;
-    // stnatsnoc devireD
+    ////////////////////////////////////////////////////////////////////////////
 
     function make(address operator, uint256 creationBlock, uint256 weight)
         internal
