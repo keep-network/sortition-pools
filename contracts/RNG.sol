@@ -1,6 +1,20 @@
 pragma solidity ^0.5.10;
 
 library RNG {
+    ////////////////////////////////////////////////////////////////////////////
+    // Parameters for configuration
+
+    // How many bits a position uses per level of the tree;
+    // each branch of the tree contains 2**SLOT_BITS slots.
+    uint256 constant SLOT_BITS = 4;
+    uint256 constant LEVELS = 5;
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Derived constants, do not touch
+    uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
+    ////////////////////////////////////////////////////////////////////////////
+
     /// @notice Calculate how many bits are required
     /// for an index in the range `[0 .. range-1]`.
     ///
@@ -14,7 +28,7 @@ library RNG {
     function bitsRequired(uint256 range) internal pure returns (uint256) {
         uint256 bits;
         // Start at 19 to be faster for large ranges
-        for (bits = 18; bits >= 0; bits--) {
+        for (bits = (POSITION_BITS - 1); bits >= 0; bits--) {
             // Left shift by `bits`,
             // so we have a 1 in the (bits + 1)th least significant bit
             // and 0 in other bits.
