@@ -8,6 +8,7 @@ const utils = require('./utils')
 const DEPLOY = [
   { name: 'Branch', contract: Branch },
   { name: 'BranchStub', contract: BranchStub }]
+const node = new BN('0x7777777766666666555555554444444433333333222222221111111100000000', 16)
 
 contract('Branch', (accounts) => {
   let branchInstance
@@ -19,8 +20,6 @@ contract('Branch', (accounts) => {
 
   describe('getSlot()', async () => {
     it('Returns the uint16 in the correct position', async () => {
-      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
-
       const result = await branchInstance.getSlot.call(node, 3)
       assert.equal(result, 0x33333333)
     })
@@ -28,8 +27,7 @@ contract('Branch', (accounts) => {
 
   describe('clearSlot()', async () => {
     it('Clears the correct slot', async () => {
-      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
-      newNode ='0x11111111222222220000000044444444555555556666666677777777'
+      newNode ='0x7777777766666666555555554444444400000000222222221111111100000000'
 
       const result = await branchInstance.clearSlot.call(node, 3)
       assert.equal(toHex(result), newNode)
@@ -38,8 +36,7 @@ contract('Branch', (accounts) => {
 
   describe('setSlot()', async () => {
     it('Changes the correct slot', async () => {
-      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
-      newNode ='0x11111111222222221234567844444444555555556666666677777777'
+      newNode ='0x7777777766666666555555554444444412345678222222221111111100000000'
       w = 0x12345678
 
       const modified = await branchInstance.setSlot.call(node, 3, w)
@@ -50,7 +47,6 @@ contract('Branch', (accounts) => {
 
   describe('sumWeight()', async () => {
     it('Returns the correct weight', async () => {
-      node = new BN('0x0000000011111111222222223333333344444444555555556666666677777777', 16)
       const weight = await branchInstance.sumWeight.call(node)
       expected = 0x77777777 * 4
       assert.equal(weight, expected)
