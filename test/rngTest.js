@@ -71,20 +71,6 @@ contract('RNG', (accounts) => {
     })
   })
 
-  describe('getManyIndices()', async () => {
-    it('Has reasonable gas costs (less than 600 per call)', async () => {
-      r = 0x12345
-
-      times = 1000
-
-      tx = await rngInstance.getManyIndices(r, times)
-
-      gasCost = (tx.receipt.gasUsed - 21000) / times
-
-      assert.isBelow(gasCost, 600)
-    })
-  })
-
   // alice 451
   // bob 1997
   // phyllis 497
