@@ -161,26 +161,28 @@ contract('SortitionTree', (accounts) => {
   //   })
   // })
 
-  // describe('leaf selection', async () => {
-  //   it('works as expected', async () => {
-  //     const index1 = 0xccd0
-  //     const index2 = 0xccc1
+  describe('leaf selection', async () => {
+    it('works as expected', async () => {
+      await sortition.publicInsertOperator(alice, 451)
+      await sortition.publicInsertOperator(bob, 1984)
+      const index1 = 450
+      const index2 = 451
 
-  //     const position1 = await sortition.publicPickWeightedLeaf.call(index1)
-  //     assert.equal(position1, 0x10000)
+      const position1 = await sortition.publicPickWeightedLeaf.call(index1)
+      assert.equal(position1, 0)
 
-  //     const leaf1 = await sortition.getLeaf.call(position1)
-  //     const address1 = await sortition.leafAddress.call(leaf1)
-  //     assert.equal(address1, bob)
+      const leaf1 = await sortition.getLeaf.call(position1)
+      const address1 = await sortition.leafAddress.call(leaf1)
+      assert.equal(address1, alice)
 
-  //     const position2 = await sortition.publicPickWeightedLeaf.call(index2)
-  //     assert.equal(position2, 0x00001)
+      const position2 = await sortition.publicPickWeightedLeaf.call(index2)
+      assert.equal(position2, 1)
 
-  //     const leaf2 = await sortition.getLeaf.call(position2)
-  //     const address2 = await sortition.leafAddress.call(leaf2)
-  //     assert.equal(address2, carol)
-  //   })
-  // })
+      const leaf2 = await sortition.getLeaf.call(position2)
+      const address2 = await sortition.leafAddress.call(leaf2)
+      assert.equal(address2, bob)
+    })
+  })
 
   describe('operatorsInPool()', async () => {
     it('works as expected', async () => {
