@@ -35,6 +35,7 @@
   },
   "homepage": "https://github.com/keep-network/sortition-pools#readme",
   "dependencies": {
+    "@keep-network/keep-core": "^0.1.1",
     "@openzeppelin/contracts": "^2.4.0",
     "solidity-bytes-utils": "0.0.7"
   },
