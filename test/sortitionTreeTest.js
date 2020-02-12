@@ -55,34 +55,31 @@ contract('SortitionTree', (accounts) => {
   //   })
   // })
 
-  // describe('insertOperator()', async () => {
-  //   const weightA = new BN('fff0', 16)
-  //   const weightB = new BN('aaaa', 16)
-  //   const weightC = new BN('f', 16)
-  //   const weightD = new BN('1', 16)
+  describe('insertOperator()', async () => {
+    const weightA = 0xfff0
+    const weightB = 0x10000001
 
-  //   it('Inserts an operator correctly', async () => {
-  //     await sortition.publicInsertOperator(alice, weightA)
-  //     await sortition.publicInsertOperator(bob, weightB)
-  //     await sortition.publicInsertOperator(carol, weightC)
-  //     await sortition.publicInsertOperator(david, weightD)
+    it('Inserts an operator correctly', async () => {
+      await sortition.publicInsertOperator(alice, weightA)
+      await sortition.publicInsertOperator(bob, weightB)
 
-  //     const root = await sortition.getRoot.call()
+      const root = await sortition.getRoot.call()
 
-  //     assert.equal(toHex(root), '0xffffaaab00000000000000000000000000000000000000000000000000000000')
-  //   })
+      assert.equal(toHex(root), '0x1000fff100000000000000000000000000000000000000000000000000000000')
+    })
 
-  //   it('reverts if operator is already registered', async () => {
-  //     try {
-  //       await sortition.publicInsertOperator(alice, weightB)
-  //     } catch (error) {
-  //       assert.include(error.message, 'Operator is already registered in the pool')
-  //       return
-  //     }
+    it('reverts if operator is already registered', async () => {
+      await sortition.publicInsertOperator(alice, weightA)
+      try {
+        await sortition.publicInsertOperator(alice, weightB)
+      } catch (error) {
+        assert.include(error.message, 'Operator is already registered in the pool')
+        return
+      }
 
-  //     assert.fail('Expected throw not received')
-  //   })
-  // })
+      assert.fail('Expected throw not received')
+    })
+  })
 
   // describe('removeOperator()', async () => {
   //   it('removes an operator correctly', async () => {
