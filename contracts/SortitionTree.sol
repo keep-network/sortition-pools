@@ -78,14 +78,34 @@ contract SortitionTree {
     }
 
     function updateOperator(address operator, uint256 weight) internal {
+        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         require(
-            isOperatorRegistered(operator),
+            flaggedLeaf != 0,
             "Operator is not registered in the pool"
         );
-
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        updateLeaf(unflaggedLeaf, weight);
+        uint256 oldLeaf = leaves[unflaggedLeaf];
+        uint256 currentWeight = oldLeaf.weight();
+        bool canBeUpdatedInPlace;
+        if (weight <= currentWeight) {
+            canBeUpdatedInPlace = true;
+        } else {
+            canBeUpdatedInPlace = fitsUnderCap(
+                weight - currentWeight,
+                unflaggedLeaf.trunk(),
+                root
+            );
+        }
+
+        if (canBeUpdatedInPlace) {
+            updateLeaf(unflaggedLeaf, weight);
+        } else {
+            removeLeaf(unflaggedLeaf);
+            uint256 newPosition = getSuitableEmptyLeaf(weight);
+            uint256 newLeaf = oldLeaf.setWeight(weight);
+            setLeaf(newPosition, newLeaf);
+            operatorLeaves[operator] = newPosition.setFlag();
+        }
     }
 
     function operatorsInTrunk(uint256 trunkN) internal view returns (uint256) {
