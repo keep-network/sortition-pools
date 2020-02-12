@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
-import "./api/IStaking.sol";
+import "@keep-network/keep-core/contracts/ITokenStaking.sol";
 import "./api/IBonding.sol";
 
 /// @title Bonded Sortition Pool
@@ -37,7 +37,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     BondingParams bonding;
 
     constructor(
-        IStaking _stakingContract,
+        ITokenStaking _stakingContract,
         IBonding _bondingContract,
         uint256 _minimumStake,
         uint256 _minimumBondableValue,

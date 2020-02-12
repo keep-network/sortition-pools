@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import "./GasStation.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
-import "./api/IStaking.sol";
+import "@keep-network/keep-core/contracts/ITokenStaking.sol";
 
 /// @title Abstract Sortition Pool
 /// @notice Abstract contract encapsulating common logic of all sortition pools.
@@ -14,7 +14,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     using Position for uint256;
 
     struct StakingParams {
-        IStaking _contract;
+        ITokenStaking _contract;
         uint256 _minimum;
     }
 

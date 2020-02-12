@@ -2,7 +2,7 @@ pragma solidity ^0.5.10;
 
 import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
-import "./api/IStaking.sol";
+import "@keep-network/keep-core/contracts/ITokenStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -17,7 +17,7 @@ import "./api/IStaking.sol";
 /// again with the updated input to ensure correctness.
 contract SortitionPool is AbstractSortitionPool {
     constructor(
-        IStaking _stakingContract,
+        ITokenStaking _stakingContract,
         uint256 _minimumStake,
         address _poolOwner
     ) public {
