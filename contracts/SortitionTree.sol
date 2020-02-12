@@ -13,6 +13,27 @@ contract SortitionTree {
     using Trunk for uint256;
     using Leaf for uint256;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Parameters for configuration
+
+    // How many bits a position uses per level of the tree;
+    // each branch of the tree contains 2**SLOT_BITS slots.
+    uint256 constant SLOT_BITS = 4;
+    uint256 constant LEVELS = 5;
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Derived constants, do not touch
+    uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
+    uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
+    uint256 constant SLOT_MAX = (2 ** SLOT_WIDTH) - 1;
+
+    // The number of operators a single trunk can hold.
+    uint256 constant TRUNK_SIZE = 2 ** (SLOT_BITS * (LEVELS - 1));
+    uint256 constant TRUNK_COUNT = SLOT_COUNT;
+    uint256 constant TRUNK_MAX = SLOT_MAX;
+    ////////////////////////////////////////////////////////////////////////////
+
     // implicit tree
     uint256 root;
     mapping(uint256 => mapping(uint256 => uint256)) branches;
@@ -23,15 +44,13 @@ contract SortitionTree {
     mapping(address => uint256) operatorLeaves;
 
     // the leaf after the rightmost occupied leaf of each stack
-    uint256[16] rightmostLeaf;
+    uint256[TRUNK_COUNT] rightmostLeaf;
     // the empty leaves in each stack
     // between 0 and the rightmost occupied leaf
-    uint256[][16] emptyLeaves;
-
-    uint256 constant TRUNK_MAX = 2**16;
+    uint256[][TRUNK_COUNT] emptyLeaves;
 
     constructor() public {
-        for (uint256 i = 0; i < 16; i++) {
+        for (uint256 i = 0; i < TRUNK_COUNT; i++) {
             rightmostLeaf[i] = i.firstLeaf();
         }
     }
@@ -44,7 +63,7 @@ contract SortitionTree {
     // Sum the number of operators in each trunk
     function operatorsInPool() public view returns (uint256) {
         uint256 sum;
-        for (uint256 i = 0; i < 16; i++) {
+        for (uint256 i = 0; i < TRUNK_COUNT; i++) {
             sum += operatorsInTrunk(i);
         }
         return sum;
@@ -147,7 +166,7 @@ contract SortitionTree {
 
         uint256 parent = position;
         // set levels 5 to 2
-        for (uint256 level = 5; level >= 2; level--) {
+        for (uint256 level = LEVELS; level >= 2; level--) {
             childSlot = parent.slot();
             parent = parent.parent();
             treeNode = branches[level][parent];
@@ -179,7 +198,7 @@ contract SortitionTree {
         );
 
         // get slots from levels 2 to 5
-        for (uint256 level = 2; level <= 5; level++) {
+        for (uint256 level = 2; level <= LEVELS; level++) {
             currentPosition = currentPosition.child(currentSlot);
             currentNode = branches[level][currentPosition];
             (currentSlot, currentIndex) = currentNode.pickWeightedSlot(
@@ -208,7 +227,7 @@ contract SortitionTree {
     {
         // cache root
         uint256 _root = root;
-        for (uint256 trunkN = 0; trunkN < 16; trunkN++) {
+        for (uint256 trunkN = 0; trunkN < TRUNK_COUNT; trunkN++) {
             // overflow -> skip to next trunk
             bool weightOkay = fitsUnderCap(addedWeight, trunkN, _root);
             if (!weightOkay) {
@@ -236,7 +255,7 @@ contract SortitionTree {
     {
         uint256 currentWeight = _root.getSlot(trunkN);
         uint256 sumWeight = currentWeight + addedWeight;
-        return sumWeight < TRUNK_MAX;
+        return sumWeight <= TRUNK_MAX;
     }
 
     function leavesInStack(uint256 trunkN) internal view returns (bool) {
