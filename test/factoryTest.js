@@ -2,9 +2,11 @@ const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
+const { tokens } = require('./token')
+
 contract('SortitionPoolFactory', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
-  const minStake = 2000
+  const minStake = tokens(2000)
   let sortitionPoolFactory
   let staking
   const alice = accounts[0]
@@ -26,8 +28,8 @@ contract('SortitionPoolFactory', (accounts) => {
       await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
-      await staking.setStake(alice, 22000)
-      await staking.setStake(bob, 24000)
+      await staking.setStake(alice, tokens(22000))
+      await staking.setStake(bob, tokens(24000))
 
       await sortitionPool1.joinPool(alice)
       await sortitionPool2.joinPool(bob)

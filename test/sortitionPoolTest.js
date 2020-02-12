@@ -6,9 +6,11 @@ const Leaf = artifacts.require('Leaf')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
+const { tokens } = require('./token')
+
 contract('SortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
-  const minStake = 2000
+  const minStake = tokens(2000)
   let staking
   let pool
   const alice = accounts[0]
@@ -27,7 +29,7 @@ contract('SortitionPool', (accounts) => {
 
   describe('joinPool', async () => {
     it('accepts eligible operators', async () => {
-      await staking.setStake(alice, 4000)
+      await staking.setStake(alice, tokens(4000))
       await pool.joinPool(alice)
 
       const aliceInPool = await pool.isOperatorInPool(alice)
@@ -35,7 +37,7 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('rejects ineligible operators', async () => {
-      await staking.setStake(bob, 1000)
+      await staking.setStake(bob, tokens(1000))
 
       try {
         await pool.joinPool(bob)
@@ -48,7 +50,7 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('rejects operators with overflowing weight', async () => {
-      await staking.setStake(carol, minStake * (2**16))
+      await staking.setStake(carol, minStake.muln(2**16))
 
       try {
         await pool.joinPool(carol)
@@ -65,9 +67,9 @@ contract('SortitionPool', (accounts) => {
 
   describe('selectGroup', async () => {
     it('returns group of expected size', async () => {
-      await staking.setStake(alice, 20000)
-      await staking.setStake(bob, 22000)
-      await staking.setStake(carol, 24000)
+      await staking.setStake(alice, tokens(20000))
+      await staking.setStake(bob, tokens(22000))
+      await staking.setStake(carol, tokens(24000))
       await pool.joinPool(alice)
       await pool.joinPool(bob)
       await pool.joinPool(carol)
@@ -90,7 +92,7 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('returns group of expected size if less operators are registered', async () => {
-      await staking.setStake(alice, 2000)
+      await staking.setStake(alice, tokens(2000))
       await pool.joinPool(alice)
 
       const group = await pool.selectGroup.call(5, seed)
@@ -99,12 +101,12 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('removes ineligible operators', async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
+      await staking.setStake(alice, tokens(2000))
+      await staking.setStake(bob, tokens(4000000))
       await pool.joinPool(alice)
       await pool.joinPool(bob)
 
-      await staking.setStake(bob, 1000)
+      await staking.setStake(bob, tokens(1000))
 
       const group = await pool.selectGroup.call(5, seed)
       await pool.selectGroup(5, seed)
@@ -112,12 +114,12 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('removes outdated but still operators', async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
+      await staking.setStake(alice, tokens(2000))
+      await staking.setStake(bob, tokens(4000000))
       await pool.joinPool(alice)
       await pool.joinPool(bob)
 
-      await staking.setStake(bob, 390000)
+      await staking.setStake(bob, tokens(390000))
 
       const group = await pool.selectGroup.call(5, seed)
       await pool.selectGroup(5, seed)
@@ -125,13 +127,13 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('lets outdated operators update their status', async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
+      await staking.setStake(alice, tokens(2000))
+      await staking.setStake(bob, tokens(4000000))
       await pool.joinPool(alice)
       await pool.joinPool(bob)
 
-      await staking.setStake(bob, 390000)
-      await staking.setStake(alice, 1000)
+      await staking.setStake(bob, tokens(390000))
+      await staking.setStake(alice, tokens(1000))
 
       await pool.updateOperatorStatus(bob)
       await pool.updateOperatorStatus(alice)
@@ -143,7 +145,7 @@ contract('SortitionPool', (accounts) => {
 
     it('can select really large groups efficiently', async () => {
       for (i = 0; i < 9; i++) {
-        await staking.setStake(accounts[i], minStake * (i + 10))
+        await staking.setStake(accounts[i], minStake.muln(i + 10))
         await pool.joinPool(accounts[i])
       }
 
