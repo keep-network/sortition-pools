@@ -94,23 +94,23 @@ library Branch {
     }
 
     /// @notice Calculate the summed weight of all slots in the `node`.
+    // solium-disable-next-line security/no-assign-params
     function sumWeight(uint256 node) internal pure returns (uint256 sum) {
         // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            sum := and(node, 0xffffffff)
-            for { node := shr(32, node) } gt(node, 0) { node := shr(32, node) } {
-                sum := add(sum, and(0xffffffff, node))
-            }
-        }
-
-        // sum = node & SLOT_MAX;
-        // for (uint256 i = SLOT_WIDTH; i < 256; i += SLOT_WIDTH) {
-        //     // Iterate through each slot
-        //     // by shifting `node` right in increments of 32 bits,
-        //     // and adding the 32 least significant bits to the `sum`.
-        //     sum += (node >> i) & SLOT_MAX;
+        // assembly {
+        //     sum := and(node, 0xffffffff)
+        //     for { node := shr(32, node) } gt(node, 0) { node := shr(32, node) } {
+        //         sum := add(sum, and(0xffffffff, node))
+        //     }
         // }
-        // return sum;
+
+        sum = node & SLOT_MAX;
+        node = node >> SLOT_WIDTH;
+        while (node > 0) {
+            sum += (node & SLOT_MAX);
+            node = node >> SLOT_WIDTH;
+        }
+        return sum;
     }
 
     /// @notice Pick a slot in `node` that corresponds to `index`.
