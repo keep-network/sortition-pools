@@ -34,6 +34,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _root;
         uint256 _poolWeight;
         bool _rootChanged;
+        uint256 _selectedTotalWeight;
+        uint256 _selectedCount;
+        bytes32 _rngState;
     }
 
     // Require 10 blocks after joining
@@ -71,14 +74,17 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        uint256 selectedTotalWeight = root;
+        uint256 leafPosition = root;
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
-            selectedTotalWeight,
-            selectedTotalWeight.sumWeight(),
-            false
+            leafPosition,
+            leafPosition.sumWeight(),
+            false,
+            0,
+            0,
+            seed
         );
 
         if (params._bonding._minimumBondableValue != bondValue) {
@@ -92,27 +98,26 @@ contract BondedSortitionPool is AbstractSortitionPool {
             groupSize
         );
 
-        selectedTotalWeight = 0;
-        uint256 selectedCount = 0;
+        // selectedTotalWeight = 0;
+        // uint256 selectedCount = 0;
 
-        uint256 leafPosition;
+        // uint256 leafPosition;
+        leafPosition = 0;
         uint256 uniqueIndex;
 
-        bytes32 rngState = seed;
-
         /* loop */
-        while (selectedCount < groupSize) {
+        while (params._selectedCount < groupSize) {
             require(
-                params._poolWeight > selectedTotalWeight,
+                params._poolWeight > params._selectedTotalWeight,
                 "Not enough operators in pool"
             );
 
-            (uniqueIndex, rngState) = RNG.getUniqueIndex(
+            (uniqueIndex, params._rngState) = RNG.getUniqueIndex(
                 params._poolWeight,
-                rngState,
+                params._rngState,
                 selectedLeaves,
-                selectedTotalWeight,
-                selectedCount
+                params._selectedTotalWeight,
+                params._selectedCount
             );
 
             uint256 startingIndex;
@@ -139,7 +144,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                     leafWeight
                 );
 
-                for (uint256 i = 0; i < selectedCount; i++) {
+                for (uint256 i = 0; i < params._selectedCount; i++) {
                     RNG.IndexWeight memory thisIW = selectedLeaves[i];
                     // With each element of the list,
                     // we check if the outside element should go before it.
@@ -152,13 +157,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                selectedLeaves[selectedCount] = tempIW;
+                selectedLeaves[params._selectedCount] = tempIW;
 
                 // And increase the skipped weight,
-                selectedTotalWeight += leafWeight;
+                params._selectedTotalWeight += leafWeight;
 
-                selected[selectedCount] = operator;
-                selectedCount += 1;
+                selected[params._selectedCount] = operator;
+                params._selectedCount += 1;
             } else {
                 params._root = removeLeaf(leafPosition, params._root);
                 removeOperatorLeaf(operator);
@@ -196,7 +201,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
             poolOwner,
             0,
             0, // the pool weight doesn't matter here
-            false
+            false,
+            0,
+            0,
+            bytes32(0)
         );
         return queryEligibleWeight(operator, params);
     }
