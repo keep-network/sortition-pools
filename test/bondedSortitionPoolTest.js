@@ -1,3 +1,10 @@
+require('@openzeppelin/test-helpers/configure')({
+  singletons: {
+    defaultGas: 6e6,
+  },
+})
+const { time } = require('@openzeppelin/test-helpers')
+
 const Branch = artifacts.require('Branch')
 const Position = artifacts.require('Position')
 const StackLib = artifacts.require('StackLib')
@@ -6,6 +13,12 @@ const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.s
 
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 const BondingContractStub = artifacts.require('BondingContractStub.sol')
+
+async function mine(blocks) {
+  for (i = 0; i < blocks; i++) {
+    await time.advanceBlock()
+  }
+}
 
 contract('BondedSortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
@@ -41,6 +54,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[2], 12)
       await prepareOperator(accounts[3], 5)
       await prepareOperator(accounts[4], 1)
+
+      await mine(11)
 
       let group
 
@@ -90,6 +105,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[0], 10)
       await prepareOperator(accounts[1], 11)
 
+      await mine(11)
+
       try {
         await pool.selectSetGroup(3, seed, bond, { from: owner })
       } catch (error) {
@@ -105,6 +122,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[1], 11)
       await prepareOperator(accounts[2], 12)
       await prepareOperator(accounts[3], 5)
+
+      await mine(11)
 
       await staking.setStake(accounts[2], 1 * minStake)
 
@@ -129,6 +148,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[1], 11)
       await prepareOperator(accounts[2], 12)
 
+      await mine(11)
+
       await staking.setStake(accounts[2], 15 * minStake)
 
       group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
@@ -147,6 +168,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[7], 50)
       await prepareOperator(accounts[8], 3)
       await prepareOperator(accounts[9], 42)
+
+      await mine(11)
 
       await staking.setStake(accounts[0], 1 * minStake)
       await staking.setStake(accounts[1], 1 * minStake)
@@ -183,6 +206,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[8], 1)
       await prepareOperator(accounts[9], 1)
 
+      await mine(11)
+
       group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
       await pool.selectSetGroup(3, seed, bond, { from: owner })
       assert.equal(group.length, 3)
@@ -193,6 +218,8 @@ contract('BondedSortitionPool', (accounts) => {
       await prepareOperator(accounts[0], 10)
       await prepareOperator(accounts[1], 21)
       await prepareOperator(accounts[2], 32)
+
+      await mine(11)
 
       group = await pool.selectSetGroup.call(3, seed, bond * 10, { from: owner })
       await pool.selectSetGroup(3, seed, bond * 10, { from: owner })

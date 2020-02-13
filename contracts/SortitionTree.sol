@@ -80,6 +80,7 @@ contract SortitionTree {
         );
 
         uint256 position = getEmptyLeaf();
+        // Record the block the operator was inserted in
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
         root = setLeaf(position, theLeaf, root);

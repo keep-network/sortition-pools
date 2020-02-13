@@ -25,6 +25,10 @@ contract SortitionPool is AbstractSortitionPool {
         poolOwner = _poolOwner;
     }
 
+    // Require 10 blocks after joining
+    // before the operator can be selected for a group.
+    uint256 constant INIT_BLOCKS = 10;
+
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
     /// registered in the pool, otherwise the function fails reverting the
@@ -61,6 +65,13 @@ contract SortitionPool is AbstractSortitionPool {
             (index, rngState) = RNG.getIndex(poolWeight, rngState);
             uint256 leafPosition = pickWeightedLeaf(index, _root);
             leaf = leaves[leafPosition];
+
+            // Check that the leaf is old enough
+            // FIXME: inefficient, can lead to an infinite loop.
+            if (leaf.creationBlock() + INIT_BLOCKS >= block.number) {
+                continue;
+            }
+
             operator = leaf.operator();
             weight = leaf.weight();
 
