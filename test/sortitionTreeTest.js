@@ -130,33 +130,36 @@ contract('SortitionTree', (accounts) => {
     })
   })
 
-   describe('updateLeaf()', async () => {
-     it('updates a leaf correctly', async () => {
-       await sortition.publicUpdateLeaf(0x00000, 0xeee0)
+  describe('updateLeaf()', async () => {
+    it('updates a leaf correctly', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      await sortition.publicUpdateLeaf(0x00000, 0x9876)
 
-       const root = await sortition.getRoot.call()
+      const root = await sortition.getRoot.call()
 
-       assert.equal(toHex(root), '0xeeefaaaa00000000000000000000000000000000000000000000000000000000')
-     })
-   })
+      assert.equal(toHex(root), '0x9876')
+    })
+  })
 
-   describe('trunk stacks', async () => {
-     it('works as expected', async () => {
-       await sortition.publicRemoveOperator(alice)
+  describe('trunk stacks', async () => {
+    it('works as expected', async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      await sortition.publicInsertOperator(bob, 0x9876)
 
-       const deletedLeaf = await sortition.getLeaf.call(0x00000)
-       assert.equal(deletedLeaf, 0)
+      await sortition.publicRemoveOperator(alice)
+      const deletedLeaf = await sortition.getLeaf.call(0x00000)
+      assert.equal(deletedLeaf, 0)
 
-       await sortition.publicInsertOperator(alice, 0xccc0)
+      await sortition.publicInsertOperator(alice, 0xdead)
 
-       const undeletedLeaf = await sortition.getLeaf.call(0x00000)
-       assert.notEqual(undeletedLeaf, 0)
+      const undeletedLeaf = await sortition.getLeaf.call(0x00000)
+      assert.notEqual(undeletedLeaf, 0)
 
-       const root = await sortition.getRoot.call()
+      const root = await sortition.getRoot.call()
 
-       assert.equal(toHex(root), '0xcccfaaaa00000000000000000000000000000000000000000000000000000000')
-     })
-   })
+      assert.equal(toHex(root), '0x17723')
+    })
+  })
 
   describe('leaf selection', async () => {
     it('works as expected', async () => {
