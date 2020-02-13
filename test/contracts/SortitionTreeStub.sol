@@ -4,7 +4,7 @@ import '../../contracts/SortitionTree.sol';
 
 contract SortitionTreeStub is SortitionTree {
     function publicSetLeaf(uint256 position, uint256 leaf) public {
-        setLeaf(position, leaf);
+        root = setLeaf(position, leaf, root);
     }
 
     function publicUpdateLeaf(uint256 position, uint256 weight) public {
@@ -12,7 +12,7 @@ contract SortitionTreeStub is SortitionTree {
     }
 
     function publicRemoveLeaf(uint256 position) public {
-        removeLeaf(position);
+        root = removeLeaf(position, root);
     }
 
     function publicInsertOperator(address op, uint256 wt) public {
@@ -44,7 +44,7 @@ contract SortitionTreeStub is SortitionTree {
     }
 
     function publicPickWeightedLeaf(uint256 index) public view returns (uint256) {
-        return pickWeightedLeaf(index);
+        return pickWeightedLeaf(index, root);
     }
 
     function toLeaf(address op, uint256 wt) public view returns (uint256) {

@@ -9,9 +9,9 @@ contract BondingContractStub {
 
     function availableUnbondedValue(
         address operator,
-        address bondCreator,
-        address additionalAuthorizedContract
-    ) external returns (uint256) {
+        address, // bondCreator,
+        address // additionalAuthorizedContract
+    ) external view returns (uint256) {
         return unbondedValue[operator];
     }
 }

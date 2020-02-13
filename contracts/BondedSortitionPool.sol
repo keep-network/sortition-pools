@@ -31,7 +31,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
         StakingParams _staking;
         BondingParams _bonding;
         address _poolOwner;
+        uint256 _root;
         uint256 _poolWeight;
+        bool _rootChanged;
     }
 
     BondingParams bonding;
@@ -65,11 +67,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
+        uint256 selectedTotalWeight = root;
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
-            root.sumWeight()
+            selectedTotalWeight,
+            selectedTotalWeight.sumWeight(),
+            false
         );
 
         if (params._bonding._minimumBondableValue != bondValue) {
@@ -83,7 +88,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             groupSize
         );
 
-        uint256 selectedTotalWeight = 0;
+        selectedTotalWeight = 0;
         uint256 selectedCount = 0;
 
         uint256 leafPosition;
@@ -107,7 +112,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             );
 
             uint256 startingIndex;
-            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex);
+            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex, params._root);
 
             uint256 theLeaf = leaves[leafPosition];
             address operator = theLeaf.operator();
@@ -146,9 +151,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 selected[selectedCount] = operator;
                 selectedCount += 1;
             } else {
-                removeFromPool(operator);
+                params._root = removeLeaf(leafPosition, params._root);
+                removeOperatorLeaf(operator);
+                releaseGas(operator);
                 // subtract the weight of the operator from the pool weight
                 params._poolWeight -= leafWeight;
+                params._rootChanged = true;
 
                 selectedLeaves = RNG.remapIndices(
                     startingIndex,
@@ -158,6 +166,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
             }
         }
         /* pool */
+
+        if (params._rootChanged) {
+            root = params._root;
+        }
 
         // If nothing has exploded by now,
         // we should have the correct size of group.
@@ -173,7 +185,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             staking,
             bonding,
             poolOwner,
-            0 // the pool weight doesn't matter here
+            0,
+            0, // the pool weight doesn't matter here
+            false
         );
         return queryEligibleWeight(operator, params);
     }
