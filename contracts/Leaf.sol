@@ -8,7 +8,7 @@ library Leaf {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
+    uint256 constant SLOT_BITS = 3;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -33,13 +33,13 @@ library Leaf {
         // adds zero bytes on the right.
         uint256 op = uint256(bytes32(bytes20(operator)));
         // Bitwise AND the weight to erase
-        // all but the 16 least significant bits
+        // all but the 32 least significant bits
         uint256 wt = weight & WEIGHT_MAX;
-        // Erase all but the 80 least significant bits,
-        // then shift left by 16 bits to make room for the weight
+        // Erase all but the 64 least significant bits,
+        // then shift left by 32 bits to make room for the weight
         uint256 cb = (creationBlock & BLOCKHEIGHT_MAX) << WEIGHT_WIDTH;
         // Bitwise OR them all together to get
-        // [address operator || uint80 creationBlock || uint16 weight]
+        // [address operator || uint64 creationBlock || uint32 weight]
         return (uint256(bytes32(op)) | cb | wt);
     }
 
@@ -55,7 +55,7 @@ library Leaf {
     }
 
     function weight(uint256 leaf) internal pure returns (uint256) {
-        // Weight is stored in the 16 least significant bits.
+        // Weight is stored in the 32 least significant bits.
         // Bitwise AND ensures that we only get the contents of those bits.
         return (leaf & WEIGHT_MAX);
     }

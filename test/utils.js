@@ -13,6 +13,14 @@ async function deploySystem(deploy_list) {
   return deployed
 }
 
+function range(n) {
+  return [...Array(n).keys()]
+}
+
+const sumReducer = (a, b) => a + b
+
 module.exports = {
   deploySystem: deploySystem,
+  range: range,
+  sumReducer: sumReducer,
 }

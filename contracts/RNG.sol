@@ -6,8 +6,8 @@ library RNG {
 
     // How many bits a position uses per level of the tree;
     // each branch of the tree contains 2**SLOT_BITS slots.
-    uint256 constant SLOT_BITS = 4;
-    uint256 constant LEVELS = 5;
+    uint256 constant SLOT_BITS = 3;
+    uint256 constant LEVELS = 7;
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -18,8 +18,8 @@ library RNG {
     /// @notice Calculate how many bits are required
     /// for an index in the range `[0 .. range-1]`.
     ///
-    /// @dev Our sortition pool can support up to 2^19 virtual stakers,
-    /// therefore we calculate how many bits we need from 1 to 19.
+    /// @dev Our sortition pool can support up to 2^21 virtual stakers,
+    /// therefore we calculate how many bits we need from 1 to 21.
     ///
     /// @param range The upper bound of the desired range, exclusive.
     ///

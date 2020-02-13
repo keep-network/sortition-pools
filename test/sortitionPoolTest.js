@@ -1,7 +1,6 @@
 const Branch = artifacts.require('Branch')
 const Position = artifacts.require('Position')
 const StackLib = artifacts.require('StackLib')
-const Trunk = artifacts.require('Trunk')
 const Leaf = artifacts.require('Leaf')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
@@ -19,7 +18,6 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(Branch)
     SortitionPool.link(Position)
     SortitionPool.link(StackLib)
-    SortitionPool.link(Trunk)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     pool = await SortitionPool.new(staking.address, minStake, accounts[9])
@@ -104,9 +102,10 @@ contract('SortitionPool', (accounts) => {
     })
 
     it('can select really large groups efficiently', async () => {
-      for (i = 0; i < 9; i++) {
-        await staking.setStake(accounts[i], minStake * (i + 10))
-        await pool.joinPool(accounts[i])
+      for (i = 101; i < 150; i++) {
+        const address = '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' + i.toString()
+        await staking.setStake(address, minStake * i)
+        await pool.joinPool(address)
       }
 
       const group = await pool.selectGroup.call(100, seed)

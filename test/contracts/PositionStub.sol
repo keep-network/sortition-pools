@@ -14,8 +14,4 @@ contract PositionStub {
   function child(uint a, uint s) public pure returns (uint) {
     return Position.child(a, s);
   }
-
-  function trunk(uint a) public pure returns (uint) {
-    return Position.trunk(a);
-  }
 }

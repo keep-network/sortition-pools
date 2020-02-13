@@ -1,7 +1,6 @@
 const Branch = artifacts.require('Branch')
 const Position = artifacts.require('Position')
 const StackLib = artifacts.require('StackLib')
-const Trunk = artifacts.require('Trunk')
 const Leaf = artifacts.require('Leaf')
 const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.sol')
 
@@ -21,7 +20,6 @@ contract('BondedSortitionPool', (accounts) => {
     BondedSortitionPool.link(Branch)
     BondedSortitionPool.link(Position)
     BondedSortitionPool.link(StackLib)
-    BondedSortitionPool.link(Trunk)
     BondedSortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     bonding = await BondingContractStub.new()
