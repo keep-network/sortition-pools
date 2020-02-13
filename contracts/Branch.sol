@@ -29,7 +29,7 @@ library Branch {
     /// but left to illustrate the meaning of a common pattern.
     /// I wish solidity had macros, even C macros.
     function slotShift(uint256 position) internal pure returns (uint256) {
-        return (LAST_SLOT - position) * SLOT_WIDTH;
+        return position * SLOT_WIDTH;
     }
 
     /// @notice Return the `position`th slot of the `node`,
@@ -37,7 +37,7 @@ library Branch {
     function getSlot(uint256 node, uint256 position)
         internal pure returns (uint256)
     {
-        uint256 shiftBits = (LAST_SLOT - position) * SLOT_WIDTH;
+        uint256 shiftBits = position * SLOT_WIDTH;
         // Doing a bitwise AND with `SLOT_MAX`
         // clears all but the 32 least significant bits.
         // Because of the right shift by `slotShift(position)` bits,
@@ -51,7 +51,7 @@ library Branch {
         pure
         returns (uint256)
     {
-        uint256 shiftBits = (LAST_SLOT - position) * SLOT_WIDTH;
+        uint256 shiftBits = position * SLOT_WIDTH;
         // Shifting `SLOT_MAX` left by `slotShift(position)` bits
         // gives us a number where all bits of the `position`th slot are set,
         // and all other bits are unset.
@@ -76,7 +76,7 @@ library Branch {
         pure
         returns (uint256)
     {
-        uint256 shiftBits = (LAST_SLOT - position) * SLOT_WIDTH;
+        uint256 shiftBits = position * SLOT_WIDTH;
         // Clear the `position`th slot like in `clearSlot()`.
         uint256 clearedNode = node & ~(SLOT_MAX << shiftBits);
         // Bitwise AND `weight` with `SLOT_MAX`
@@ -126,16 +126,18 @@ library Branch {
         pure
         returns (uint256 slot, uint256 newIndex)
     {
+        uint256 currentNode = node;
         uint256 currentSlotWeight;
         newIndex = index;
 
         for (slot = 0; slot < SLOT_COUNT; slot++) {
-            currentSlotWeight = (node >> ((LAST_SLOT - slot) * SLOT_WIDTH)) & SLOT_MAX;
+            currentSlotWeight = currentNode & SLOT_MAX;
 
             if (newIndex < currentSlotWeight) {
                 break;
             } else {
                 newIndex -= currentSlotWeight;
+                currentNode = currentNode >> SLOT_WIDTH;
             }
         }
 

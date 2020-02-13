@@ -28,9 +28,9 @@ contract('SortitionTree', (accounts) => {
   describe('setLeaf()', async () => {
     it('Sets the leaf correctly', async () => {
       const weight1 = 0x1234
-      const position1 = parseInt('07654321', 8)
+      const position1 = parseInt('00123456', 8)
       const weight2 = 0x11
-      const position2 = parseInt('06000000', 8)
+      const position2 = parseInt('01234567', 8)
 
       const leaf1 = await sortition.toLeaf.call(alice, weight1)
       await sortition.publicSetLeaf(position1, leaf1)
@@ -47,9 +47,9 @@ contract('SortitionTree', (accounts) => {
   describe('removeLeaf()', async () => {
     it('removes a leaf correctly', async () => {
       const weight1 = 0x1234
-      const position1 = parseInt('07654321', 8)
+      const position1 = parseInt('00123456', 8)
       const weight2 = 0x11
-      const position2 = parseInt('06000000', 8)
+      const position2 = parseInt('01234567', 8)
 
       const leaf1 = await sortition.toLeaf.call(alice, weight1)
       await sortition.publicSetLeaf(position1, leaf1)
@@ -74,7 +74,7 @@ contract('SortitionTree', (accounts) => {
 
       const root = await sortition.getRoot.call()
 
-      assert.equal(toHex(root), '0x1000fff100000000000000000000000000000000000000000000000000000000')
+      assert.equal(toHex(root), '0x1000fff1')
     })
 
     it('reverts if operator is already registered', async () => {
