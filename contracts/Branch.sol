@@ -126,21 +126,15 @@ library Branch {
         pure
         returns (uint256 slot, uint256 newIndex)
     {
-        uint256 currentNode = node;
-        uint256 currentSlotWeight;
         newIndex = index;
-
-        for (slot = 0; slot < SLOT_COUNT; slot++) {
-            currentSlotWeight = currentNode & SLOT_MAX;
-
-            if (newIndex < currentSlotWeight) {
-                break;
-            } else {
-                newIndex -= currentSlotWeight;
-                currentNode = currentNode >> SLOT_WIDTH;
-            }
+        uint256 newNode = node;
+        uint256 currentSlotWeight = newNode & SLOT_MAX;
+        while (newIndex >= currentSlotWeight) {
+            newIndex -= currentSlotWeight;
+            slot++;
+            newNode = newNode >> SLOT_WIDTH;
+            currentSlotWeight = newNode & SLOT_MAX;
         }
-
         return (slot, newIndex);
     }
 }
