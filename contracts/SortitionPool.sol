@@ -19,15 +19,12 @@ contract SortitionPool is AbstractSortitionPool {
     constructor(
         IStaking _stakingContract,
         uint256 _minimumStake,
-        address _poolOwner
+        address _poolOwner,
+        uint256 initBlocks
     ) public {
         staking = StakingParams(_stakingContract, _minimumStake);
-        poolOwner = _poolOwner;
+        pool = PoolParams(_poolOwner, initBlocks);
     }
-
-    // Require 10 blocks after joining
-    // before the operator can be selected for a group.
-    uint256 constant INIT_BLOCKS = 10;
 
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
@@ -45,7 +42,7 @@ contract SortitionPool is AbstractSortitionPool {
         require(poolWeight > 0, "No operators in pool");
 
         StakingParams memory _staking = staking;
-        address _poolOwner = poolOwner;
+        PoolParams memory _pool = pool;
 
         address[] memory selected = new address[](groupSize);
         uint256 nSelected = 0;
@@ -66,14 +63,14 @@ contract SortitionPool is AbstractSortitionPool {
 
             // Check that the leaf is old enough
             // FIXME: inefficient, can lead to an infinite loop.
-            if (leaf.creationBlock() + INIT_BLOCKS >= block.number) {
+            if (leaf.creationBlock() + pool._initBlocks >= block.number) {
                 continue;
             }
 
             operator = leaf.operator();
             weight = leaf.weight();
 
-            if (queryEligibleWeight(operator, _staking, _poolOwner) >= weight) {
+            if (queryEligibleWeight(operator, _staking, _pool._owner) >= weight) {
                 selected[nSelected] = operator;
                 nSelected += 1;
             } else {
@@ -96,17 +93,17 @@ contract SortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        return queryEligibleWeight(operator, staking, poolOwner);
+        return queryEligibleWeight(operator, staking, pool._owner);
     }
 
     function queryEligibleWeight(
         address operator,
         StakingParams memory _staking,
-        address _poolOwner
+        address poolOwner
     ) internal view returns (uint256) {
         uint256 operatorStake = _staking._contract.eligibleStake(
             operator,
-            _poolOwner
+            poolOwner
         );
         uint256 operatorWeight = operatorStake / _staking._minimum;
 

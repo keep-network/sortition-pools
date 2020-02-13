@@ -21,6 +21,7 @@ async function mine(blocks) {
 contract('SortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
   const minStake = 2000
+  const initBlocks = 10
   let staking
   let pool
   const alice = accounts[0]
@@ -33,7 +34,12 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(StackLib)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
-    pool = await SortitionPool.new(staking.address, minStake, accounts[9])
+    pool = await SortitionPool.new(
+      staking.address,
+      minStake,
+      accounts[9],
+      initBlocks,
+    )
   })
 
   describe('selectGroup', async () => {

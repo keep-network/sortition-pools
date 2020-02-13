@@ -27,18 +27,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumBondableValue;
     }
 
-    struct PoolParams {
+    struct GroupSelectionParams {
         StakingParams _staking;
         BondingParams _bonding;
-        address _poolOwner;
+        PoolParams _pool;
         uint256 _root;
         uint256 _poolWeight;
         bool _rootChanged;
     }
-
-    // Require 10 blocks after joining
-    // before the operator can be selected for a group.
-    uint256 constant INIT_BLOCKS = 10;
 
     BondingParams bonding;
 
@@ -47,13 +43,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
         IBonding _bondingContract,
         uint256 _minimumStake,
         uint256 _minimumBondableValue,
-        address _poolOwner
+        address _poolOwner,
+        uint256 initBlocks
     ) public {
         require(_minimumStake > 0, "Minimum stake cannot be zero");
 
         staking = StakingParams(_stakingContract, _minimumStake);
         bonding = BondingParams(_bondingContract, _minimumBondableValue);
-        poolOwner = _poolOwner;
+        pool = PoolParams(_poolOwner, initBlocks);
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -72,10 +69,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 bondValue
     ) public returns (address[] memory) {
         uint256 selectedTotalWeight = root;
-        PoolParams memory params = PoolParams(
+        GroupSelectionParams memory params = GroupSelectionParams(
             staking,
             bonding,
-            poolOwner,
+            pool,
             selectedTotalWeight,
             selectedTotalWeight.sumWeight(),
             false
@@ -121,7 +118,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             uint256 theLeaf = leaves[leafPosition];
             // Check that the leaf is old enough
             // FIXME: inefficient, can lead to an infinite loop.
-            if (theLeaf.creationBlock() + INIT_BLOCKS >= block.number) {
+            if (theLeaf.creationBlock() + params._pool._initBlocks >= block.number) {
                 continue;
             }
             address operator = theLeaf.operator();
@@ -190,10 +187,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        PoolParams memory params = PoolParams(
+        GroupSelectionParams memory params = GroupSelectionParams(
             staking,
             bonding,
-            poolOwner,
+            pool,
             0,
             0, // the pool weight doesn't matter here
             false
@@ -203,9 +200,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     function queryEligibleWeight(
         address operator,
-        PoolParams memory params
+        GroupSelectionParams memory params
     ) internal view returns (uint256) {
-        address ownerAddress = params._poolOwner;
+        address ownerAddress = params._pool._owner;
 
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond

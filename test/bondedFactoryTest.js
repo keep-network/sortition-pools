@@ -9,6 +9,7 @@ contract('BondedSortitionPoolFactory', (accounts) => {
   let bondingContract
   const minimumStake = 1
   const initialMinimumBond = 1
+  const initBlocks = 10
 
   before(async () => {
     bondedSortitionPoolFactory = await BondedSortitionPoolFactory.deployed()
@@ -23,12 +24,14 @@ contract('BondedSortitionPoolFactory', (accounts) => {
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        initBlocks,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        initBlocks,
       )
       const pool1 = await BondedSortitionPool.at(pool1Address)
 
@@ -37,12 +40,14 @@ contract('BondedSortitionPoolFactory', (accounts) => {
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        initBlocks,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        initBlocks,
       )
       const pool2 = await BondedSortitionPool.at(pool2Address)
 

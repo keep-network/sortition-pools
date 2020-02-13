@@ -18,13 +18,18 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 _minimum;
     }
 
+    struct PoolParams {
+        address _owner;
+        uint256 _initBlocks;
+    }
+
     uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
+    PoolParams pool;
 
     // The contract (e.g. Keep factory) this specific pool serves.
     // Only the pool owner can request groups.
-    address poolOwner;
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {

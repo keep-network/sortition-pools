@@ -14,7 +14,8 @@ contract BondedSortitionPoolFactory {
         IStaking stakingContract,
         IBonding bondingContract,
         uint256 minimumStake,
-        uint256 initialMinimumBond
+        uint256 initialMinimumBond,
+        uint256 initBlocks
     ) public returns (address) {
         return address(
             new BondedSortitionPool(
@@ -22,7 +23,8 @@ contract BondedSortitionPoolFactory {
                 bondingContract,
                 minimumStake,
                 initialMinimumBond,
-                msg.sender
+                msg.sender,
+                initBlocks
             )
         );
     }
