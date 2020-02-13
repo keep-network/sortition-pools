@@ -102,9 +102,8 @@ library Branch {
         //         sum := add(sum, and(0xffffffff, node))
         //     }
         // }
-        uint256 newNode = node;
-        sum = newNode & SLOT_MAX;
-        newNode = newNode >> SLOT_WIDTH;
+        sum = node & SLOT_MAX;
+        uint256 newNode = node >> SLOT_WIDTH;
         while (newNode > 0) {
             sum += (newNode & SLOT_MAX);
             newNode = newNode >> SLOT_WIDTH;
