@@ -152,8 +152,8 @@ contract('SortitionTree', (accounts) => {
 
       await sortition.publicInsertOperator(alice, 0xdead)
 
-      const undeletedLeaf = await sortition.getLeaf.call(0x00000)
-      assert.notEqual(undeletedLeaf, 0)
+      const stillDeletedLeaf = await sortition.getLeaf.call(0x00000)
+      assert.equal(stillDeletedLeaf, 0)
 
       const root = await sortition.getRoot.call()
 
