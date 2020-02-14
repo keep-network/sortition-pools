@@ -134,8 +134,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 lastOperator.a = Operator.insert(
                     selectedLeaves,
-                    Leaf.make(
+                    Operator.make(
                         operator,
+                        false,
+                        leafPtrAndStartIndex.a,
                         leafPtrAndStartIndex.b,
                         leafWeight
                     )
