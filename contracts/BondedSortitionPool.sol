@@ -118,10 +118,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
             uint256 theLeaf = leaves[leafPtrAndStartIndex.a];
             // Check that the leaf is old enough
-            // FIXME: inefficient, can lead to an infinite loop.
-            if (theLeaf.creationBlock() + INIT_BLOCKS >= block.number) {
-                continue;
-            }
+            bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
 
@@ -151,8 +148,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // And increase the skipped weight,
                 params._selectedTotalWeight += leafWeight;
 
-                selected[params._selectedCount] = operator;
-                params._selectedCount += 1;
+                if (mature) {
+                    selected[params._selectedCount] = operator;
+                    params._selectedCount += 1;
+                }
             } else {
                 indexAndRoot.b = removeLeaf(
                     leafPtrAndStartIndex.a,
