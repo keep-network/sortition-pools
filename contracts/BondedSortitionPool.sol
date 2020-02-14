@@ -74,13 +74,15 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        uint256 leafPosition = root;
+        Uint256x2 memory indexAndRoot = Uint256x2(0, root);
+        Uint256x2 memory leafPtrAndStartIndex = Uint256x2(0, 0);
+
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
-            leafPosition,
-            leafPosition.sumWeight(),
+            indexAndRoot.b,
+            indexAndRoot.b.sumWeight(),
             false,
             0,
             0,
@@ -94,13 +96,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        // selectedTotalWeight = 0;
-        // uint256 selectedCount = 0;
-
-        // uint256 leafPosition;
-        leafPosition = 0;
-        uint256 uniqueIndex;
-
         uint256[] memory selectedLeaves = new uint256[](groupSize);
 
         /* loop */
@@ -110,17 +105,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 "Not enough operators in pool"
             );
 
-            (uniqueIndex, params._rngState) = RNG.getUniqueIndex(
+            (indexAndRoot.a, params._rngState) = RNG.getUniqueIndex(
                 params._poolWeight,
                 params._rngState,
                 selectedLeaves,
                 params._selectedTotalWeight
             );
 
-            uint256 startingIndex;
-            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex, params._root);
+            nonAllocatingPick(indexAndRoot, leafPtrAndStartIndex);
 
-            uint256 theLeaf = leaves[leafPosition];
+            uint256 theLeaf = leaves[leafPtrAndStartIndex.a];
             // Check that the leaf is old enough
             // FIXME: inefficient, can lead to an infinite loop.
             if (theLeaf.creationBlock() + INIT_BLOCKS >= block.number) {
@@ -138,7 +132,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 uint256 lastOperator = Operator.insert(
                     selectedLeaves,
-                    Leaf.make(operator, startingIndex, leafWeight)
+                    Leaf.make(
+                        operator,
+                        leafPtrAndStartIndex.b,
+                        leafWeight
+                    )
                 );
 
                 // Now the outside element is the last one,
@@ -152,7 +150,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 selected[params._selectedCount] = operator;
                 params._selectedCount += 1;
             } else {
-                params._root = removeLeaf(leafPosition, params._root);
+                indexAndRoot.b = removeLeaf(
+                    leafPtrAndStartIndex.a,
+                    indexAndRoot.b
+                );
+                params._root = indexAndRoot.b;
                 removeOperatorLeaf(operator);
                 releaseGas(operator);
                 // subtract the weight of the operator from the pool weight
@@ -161,7 +163,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // selectedLeaves = RNG.remapIndices(
                 RNG.remapIndices(
-                    startingIndex,
+                    leafPtrAndStartIndex.b,
                     leafWeight,
                     selectedLeaves
                 );
