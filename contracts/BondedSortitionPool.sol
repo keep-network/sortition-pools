@@ -123,53 +123,39 @@ contract BondedSortitionPool is AbstractSortitionPool {
             uint256 leafWeight = theLeaf.weight();
             bool eligible = queryEligibleWeight(operator, params) >= leafWeight;
 
+            lastOperator.a = Operator.make(
+                operator,
+                !eligible,
+                leafPtrAndStartIndex.a,
+                leafPtrAndStartIndex.b,
+                leafWeight
+            );
+
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            if (eligible) {
-                // We insert the new index and weight into the lists,
-                // keeping them both ordered by the starting indices.
-                // To do this, we start by holding the new element outside the list.
+            if (!eligible) {
+                removeDuringSelection(params, skippedLeaves, lastOperator.a);
+                indexAndRoot.b = params._root;
+                continue;
+            }
 
-                lastOperator.a = Operator.insert(
-                    skippedLeaves,
-                    Operator.make(
-                        operator,
-                        false,
-                        leafPtrAndStartIndex.a,
-                        leafPtrAndStartIndex.b,
-                        leafWeight
-                    )
-                );
+            // We insert the new operator into the skipped list,
+            // keeping the list ordered by the starting indices.
+            lastOperator.a = Operator.insert(
+                skippedLeaves,
+                lastOperator.a
+            );
 
-                // Now the outside element is the last one,
-                // so we push it to the end of the list.
-                yoloPush(skippedLeaves, lastOperator);
-                // skippedLeaves[params._selectedCount] = lastOperator.a;
+            // Now the outside element is the last one,
+            // so we push it to the end of the list.
+            yoloPush(skippedLeaves, lastOperator);
 
-                // And increase the skipped weight,
-                params._skippedTotalWeight += leafWeight;
+            // And increase the skipped weight,
+            params._skippedTotalWeight += leafWeight;
 
-                if (mature) {
-                    selected[params._selectedCount] = operator;
-                    params._selectedCount += 1;
-                }
-            } else {
-                indexAndRoot.b = removeLeaf(
-                    leafPtrAndStartIndex.a,
-                    indexAndRoot.b
-                );
-                params._root = indexAndRoot.b;
-                removeOperatorLeaf(operator);
-                releaseGas(operator);
-                // subtract the weight of the operator from the pool weight
-                params._poolWeight -= leafWeight;
-                params._rootChanged = true;
-
-                Operator.remapIndices(
-                    leafPtrAndStartIndex.b,
-                    leafWeight,
-                    skippedLeaves
-                );
+            if (mature) {
+                selected[params._selectedCount] = operator;
+                params._selectedCount += 1;
             }
         }
         /* pool */
@@ -182,6 +168,27 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // we should have the correct size of group.
 
         return selected;
+    }
+
+    function removeDuringSelection(
+        PoolParams memory params,
+        uint256[] memory skippedLeaves,
+        uint256 operatorData
+    ) internal {
+        // Remove the leaf
+        uint256 leafPosition = Operator.position(operatorData);
+        params._root = removeLeaf(leafPosition, params._root);
+        // Remove the record of the operator's leaf and release gas
+        address operator = Operator.opAddress(operatorData);
+        removeOperatorLeaf(operator);
+        releaseGas(operator);
+        // Update the params
+        uint256 weight = Operator.opWeight(operatorData);
+        params._poolWeight -= weight;
+        params._rootChanged = true;
+        // Remap the skipped indices
+        uint256 startingIndex = Operator.index(operatorData);
+        Operator.remapIndices(startingIndex, weight, skippedLeaves);
     }
 
     // Return the eligible weight of the operator,
