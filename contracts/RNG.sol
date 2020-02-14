@@ -90,32 +90,6 @@ library RNG {
         returns (uint256, bytes32)
     {
         uint256 bits = bitsRequired(range);
-        return efficientGetIndex(range, bits, state);
-    }
-
-    /// @notice Like `getIndex()`,
-    /// returns an index in the range `[0 .. range-1]`
-    /// using the provided `state` of the RNG.
-    /// However, `efficientGetIndex()` doesn't calculate
-    /// the number of `bits` required for the range,
-    /// but instead relies on the `bits` input parameter
-    /// which is assumed to be correctly precalculated.
-    ///
-    /// @dev Unsafe if not used correctly,
-    /// but exposed for potential efficiency gains when the range is constant.
-    ///
-    /// @param bits The number of bits to use;
-    /// assumed to be the lowest number of bits required for the desired range
-    /// as would be returned by `bitsRequired(range)`.
-    /// If `bits` is less than the output of `bitsRequired(range)`,
-    /// the returned index is heavily biased.
-    /// If `bits` exceeds the correct value,
-    /// efficiency is severely compromised.
-    function efficientGetIndex(uint256 range, uint256 bits, bytes32 state)
-        internal
-        pure
-        returns (uint256, bytes32)
-    {
         bool found = false;
         uint256 index;
         bytes32 newState = state;
