@@ -5,6 +5,7 @@ import "./RNG.sol";
 import "./api/IStaking.sol";
 import "./api/IBonding.sol";
 import "./DynamicArray.sol";
+import "./Heap.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -76,16 +77,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        DynamicArray.Uint256x2 memory indexAndRoot = DynamicArray.Uint256x2(0, root);
-        DynamicArray.Uint256x2 memory leafPtrAndStartIndex = DynamicArray.Uint256x2(0, 0);
-        DynamicArray.Uint256x1 memory lastOperator = DynamicArray.Uint256x1(0);
+        Heap.Uint256x2 memory indexAndRoot = Heap.Uint256x2(0, root);
+        Heap.Uint256x2 memory leafPtrAndStartIndex = Heap.Uint256x2(0, 0);
+        Heap.Uint256 memory lastOperator = Heap.Uint256(0);
 
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
-            indexAndRoot.b,
-            indexAndRoot.b.sumWeight(),
+            indexAndRoot.snd,
+            indexAndRoot.snd.sumWeight(),
             false,
             0,
             0,
@@ -109,7 +110,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 "Not enough operators in pool"
             );
 
-            (indexAndRoot.a, params._rngState) = RNG.getUniqueIndex(
+            (indexAndRoot.fst, params._rngState) = RNG.getUniqueIndex(
                 params._poolWeight,
                 params._rngState,
                 skippedLeaves.array,
@@ -118,39 +119,39 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
             nonAllocatingPick(indexAndRoot, leafPtrAndStartIndex);
 
-            uint256 theLeaf = leaves[leafPtrAndStartIndex.a];
+            uint256 theLeaf = leaves[leafPtrAndStartIndex.fst];
             // Check that the leaf is old enough
             bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
             bool eligible = queryEligibleWeight(operator, params) >= leafWeight;
 
-            lastOperator.a = Operator.make(
+            lastOperator.data = Operator.make(
                 operator,
                 !eligible,
-                leafPtrAndStartIndex.a,
-                leafPtrAndStartIndex.b,
+                leafPtrAndStartIndex.fst,
+                leafPtrAndStartIndex.snd,
                 leafWeight
             );
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             if (!eligible) {
-                removeDuringSelection(params, skippedLeaves.array, lastOperator.a);
-                indexAndRoot.b = params._root;
+                removeDuringSelection(params, skippedLeaves.array, lastOperator.data);
+                indexAndRoot.snd = params._root;
                 continue;
             }
 
             // We insert the new operator into the skipped list,
             // keeping the list ordered by the starting indices.
-            lastOperator.a = Operator.insert(
+            lastOperator.data = Operator.insert(
                 skippedLeaves.array,
-                lastOperator.a
+                lastOperator.data
             );
 
             // Now the outside element is the last one,
             // so we push it to the end of the list.
-            skippedLeaves.push(lastOperator.a);
+            skippedLeaves.push(lastOperator.data);
 
             // And increase the skipped weight,
             params._skippedTotalWeight += leafWeight;

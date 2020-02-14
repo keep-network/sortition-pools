@@ -1,15 +1,6 @@
 pragma solidity ^0.5.10;
 
 library DynamicArray {
-    struct Uint256x1 {
-        uint256 a;
-    }
-
-    struct Uint256x2 {
-        uint256 a;
-        uint256 b;
-    }
-
     struct Array {
         uint256 allocatedMemory;
         uint256[] array;

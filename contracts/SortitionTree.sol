@@ -4,7 +4,7 @@ import "./StackLib.sol";
 import "./Branch.sol";
 import "./Position.sol";
 import "./Leaf.sol";
-import "./DynamicArray.sol";
+import "./Heap.sol";
 
 contract SortitionTree {
     using StackLib for uint256[];
@@ -181,20 +181,20 @@ contract SortitionTree {
         view
         returns (uint256, uint256)
     {
-        DynamicArray.Uint256x2 memory _args = DynamicArray.Uint256x2(index, _root);
-        DynamicArray.Uint256x2 memory _return = DynamicArray.Uint256x2(0, 0);
+        Heap.Uint256x2 memory _args = Heap.Uint256x2(index, _root);
+        Heap.Uint256x2 memory _return = Heap.Uint256x2(0, 0);
         nonAllocatingPick(_args, _return);
-        uint256 leafPosition = _return.a;
-        uint256 leafFirstIndex = _return.b;
+        uint256 leafPosition = _return.fst;
+        uint256 leafFirstIndex = _return.snd;
         return (leafPosition, leafFirstIndex);
     }
 
     function nonAllocatingPick(
-        DynamicArray.Uint256x2 memory _args,
-        DynamicArray.Uint256x2 memory _return
+        Heap.Uint256x2 memory _args,
+        Heap.Uint256x2 memory _return
     ) internal view {
-        uint256 index = _args.a;
-        uint256 _root = _args.b;
+        uint256 index = _args.fst;
+        uint256 _root = _args.snd;
         uint256 currentIndex = index;
         uint256 currentNode = _root;
         uint256 currentPosition = 0;
@@ -222,8 +222,8 @@ contract SortitionTree {
         // This works because the last weight returned from `pickWeightedSlot()`
         // equals the "overflow" from getting the current slot.
         uint256 leafFirstIndex = index - currentIndex;
-        _return.a = leafPosition;
-        _return.b = leafFirstIndex;
+        _return.fst = leafPosition;
+        _return.snd = leafFirstIndex;
     }
 
     function pickWeightedLeaf(uint256 index, uint256 _root) internal view returns (uint256) {
