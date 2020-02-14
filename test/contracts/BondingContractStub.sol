@@ -10,7 +10,7 @@ contract BondingContractStub {
     function availableUnbondedValue(
         address operator,
         address, // bondCreator,
-        address // additionalAuthorizedContract
+        address // authorizedApplication
     ) external view returns (uint256) {
         return unbondedValue[operator];
     }

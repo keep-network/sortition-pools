@@ -9,6 +9,6 @@ interface IBonding {
     function availableUnbondedValue(
         address operator,
         address bondCreator,
-        address authorizedSortitionPool
+        address authorizedApplication
     ) external view returns (uint256);
 }

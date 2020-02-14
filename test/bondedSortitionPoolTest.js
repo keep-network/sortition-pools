@@ -26,6 +26,7 @@ contract('BondedSortitionPool', (accounts) => {
   const minStake = 2000
   const initBlocks = 10
   const owner = accounts[9]
+  const application = accounts[8]
   let pool
   let bonding
   let staking
@@ -52,6 +53,7 @@ contract('BondedSortitionPool', (accounts) => {
       bond,
       owner,
       initBlocks,
+      application,
     )
   })
 
@@ -83,7 +85,7 @@ contract('BondedSortitionPool', (accounts) => {
       await mine(11)
 
       try {
-        await pool.selectGroup.call(1, seed, { from: accounts[1] })
+        await pool.selectSetGroup.call(1, seed, bond, { from: accounts[1] })
       } catch (error) {
         assert.include(error.message, 'Only owner may select groups')
         return

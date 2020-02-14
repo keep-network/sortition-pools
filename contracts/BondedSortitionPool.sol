@@ -25,6 +25,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     struct BondingParams {
         IBonding _contract;
         uint256 _minimumBondableValue;
+        address _application;
     }
 
     struct GroupSelectionParams {
@@ -44,12 +45,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumStake,
         uint256 _minimumBondableValue,
         address _poolOwner,
-        uint256 initBlocks
+        uint256 initBlocks,
+        address application
     ) public {
         require(_minimumStake > 0, "Minimum stake cannot be zero");
 
         staking = StakingParams(_stakingContract, _minimumStake);
-        bonding = BondingParams(_bondingContract, _minimumBondableValue);
+        bonding = BondingParams(_bondingContract, _minimumBondableValue, application);
         pool = PoolParams(_poolOwner, initBlocks);
     }
 
@@ -215,7 +217,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 bondableValue = params._bonding._contract.availableUnbondedValue(
             operator,
             ownerAddress,
-            address(this)
+            params._bonding._application
         );
 
         // Don't query stake if bond is insufficient.
