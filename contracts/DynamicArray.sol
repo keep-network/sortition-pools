@@ -30,4 +30,24 @@ contract DynamicArray {
         }
         return array;
     }
+
+    function yoloPush(uint256[] memory array, Uint256x1 memory item) internal {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Get array length
+            let length := mload(array)
+            // Calculate how many bytes the array takes in memory,
+            // including the length field
+            let arraySize := mul(0x20, add(length, 1))
+            // Calculate the first memory position after the array
+            let nextPosition := add(array, arraySize)
+            // XXX: Nuke whatever was immediately behind the array
+            mstore(nextPosition, mload(item))
+            // Increment array length
+            mstore(array, add(length, 1))
+            // XXX: Say goodbye to the rest of the memory,
+            //      hope you had nothing important stored there
+            mstore(0x40, add(nextPosition, 0x20))
+        }
+    }
 }

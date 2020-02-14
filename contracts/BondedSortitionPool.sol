@@ -76,6 +76,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) public returns (address[] memory) {
         Uint256x2 memory indexAndRoot = Uint256x2(0, root);
         Uint256x2 memory leafPtrAndStartIndex = Uint256x2(0, 0);
+        Uint256x1 memory lastOperator = Uint256x1(0);
 
         PoolParams memory params = PoolParams(
             staking,
@@ -96,7 +97,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        uint256[] memory selectedLeaves = new uint256[](groupSize);
+        // uint256[] memory selectedLeaves = new uint256[]();
+        uint256[] memory selectedLeaves = allocateCreate();
 
         /* loop */
         while (params._selectedCount < groupSize) {
@@ -130,7 +132,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
-                uint256 lastOperator = Operator.insert(
+                lastOperator.a = Operator.insert(
                     selectedLeaves,
                     Leaf.make(
                         operator,
@@ -141,8 +143,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                // allocatePush(selectedLeaves, lastOperator);
-                selectedLeaves[params._selectedCount] = lastOperator;
+                yoloPush(selectedLeaves, lastOperator);
+                // selectedLeaves[params._selectedCount] = lastOperator.a;
 
                 // And increase the skipped weight,
                 params._selectedTotalWeight += leafWeight;
@@ -242,18 +244,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
     }
 
     function allocatePush(uint256[] memory array, uint256 item) internal {
-        uint256 freeMemoryPointer;
         uint256 arrayLastItemPointer;
         uint256 arrayLength = array.length;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
-            freeMemoryPointer := mload(0x40)
             arrayLastItemPointer := add(array, mul(add(arrayLength, 1), 0x20))
         }
-        // require(
-        //     freeMemoryPointer == (arrayLastItemPointer + 0x20),
-        //     "Memory has been allocated past dynamic array"
-        // );
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             mstore(add(arrayLastItemPointer, 0x20), item)
