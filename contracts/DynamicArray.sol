@@ -1,6 +1,6 @@
 pragma solidity ^0.5.10;
 
-contract DynamicArray {
+library DynamicArray {
     struct Uint256x1 {
         uint256 a;
     }

@@ -4,6 +4,7 @@ import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
 import "./api/IStaking.sol";
 import "./api/IBonding.sol";
+import "./DynamicArray.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -17,6 +18,7 @@ import "./api/IBonding.sol";
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
 contract BondedSortitionPool is AbstractSortitionPool {
+    using DynamicArray for DynamicArray.Array;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
     // to prevent griefing by operators joining without enough bondable value.
@@ -74,9 +76,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        Uint256x2 memory indexAndRoot = Uint256x2(0, root);
-        Uint256x2 memory leafPtrAndStartIndex = Uint256x2(0, 0);
-        Uint256x1 memory lastOperator = Uint256x1(0);
+        DynamicArray.Uint256x2 memory indexAndRoot = DynamicArray.Uint256x2(0, root);
+        DynamicArray.Uint256x2 memory leafPtrAndStartIndex = DynamicArray.Uint256x2(0, 0);
+        DynamicArray.Uint256x1 memory lastOperator = DynamicArray.Uint256x1(0);
 
         PoolParams memory params = PoolParams(
             staking,
@@ -98,7 +100,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         address[] memory selected = new address[](groupSize);
 
         // uint256[] memory skippedLeaves = new uint256[]();
-        uint256[] memory skippedLeaves = allocateCreate();
+        DynamicArray.Array memory skippedLeaves = DynamicArray.createArray(groupSize);
 
         /* loop */
         while (params._selectedCount < groupSize) {
@@ -110,7 +112,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             (indexAndRoot.a, params._rngState) = RNG.getUniqueIndex(
                 params._poolWeight,
                 params._rngState,
-                skippedLeaves,
+                skippedLeaves.array,
                 params._skippedTotalWeight
             );
 
@@ -134,7 +136,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             if (!eligible) {
-                removeDuringSelection(params, skippedLeaves, lastOperator.a);
+                removeDuringSelection(params, skippedLeaves.array, lastOperator.a);
                 indexAndRoot.b = params._root;
                 continue;
             }
@@ -142,13 +144,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // We insert the new operator into the skipped list,
             // keeping the list ordered by the starting indices.
             lastOperator.a = Operator.insert(
-                skippedLeaves,
+                skippedLeaves.array,
                 lastOperator.a
             );
 
             // Now the outside element is the last one,
             // so we push it to the end of the list.
-            yoloPush(skippedLeaves, lastOperator);
+            skippedLeaves.push(lastOperator.a);
 
             // And increase the skipped weight,
             params._skippedTotalWeight += leafWeight;

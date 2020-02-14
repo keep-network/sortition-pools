@@ -6,7 +6,7 @@ import "./Position.sol";
 import "./Leaf.sol";
 import "./DynamicArray.sol";
 
-contract SortitionTree is DynamicArray {
+contract SortitionTree {
     using StackLib for uint256[];
     using Branch for uint256;
     using Position for uint256;
@@ -181,8 +181,8 @@ contract SortitionTree is DynamicArray {
         view
         returns (uint256, uint256)
     {
-        Uint256x2 memory _args = Uint256x2(index, _root);
-        Uint256x2 memory _return = Uint256x2(0, 0);
+        DynamicArray.Uint256x2 memory _args = DynamicArray.Uint256x2(index, _root);
+        DynamicArray.Uint256x2 memory _return = DynamicArray.Uint256x2(0, 0);
         nonAllocatingPick(_args, _return);
         uint256 leafPosition = _return.a;
         uint256 leafFirstIndex = _return.b;
@@ -190,8 +190,8 @@ contract SortitionTree is DynamicArray {
     }
 
     function nonAllocatingPick(
-        Uint256x2 memory _args,
-        Uint256x2 memory _return
+        DynamicArray.Uint256x2 memory _args,
+        DynamicArray.Uint256x2 memory _return
     ) internal view {
         uint256 index = _args.a;
         uint256 _root = _args.b;

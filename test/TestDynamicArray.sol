@@ -3,9 +3,11 @@ pragma solidity ^0.5.10;
 import "truffle/Assert.sol";
 import "../contracts/DynamicArray.sol";
 
-contract TestDynamicArray is DynamicArray {
+contract TestDynamicArray {
+    using DynamicArray for DynamicArray.Array;
+
     function testCreateArray() public {
-        DynamicArray.Array memory dynamic = createArray(32);
+        DynamicArray.Array memory dynamic = DynamicArray.createArray(32);
 
         Assert.equal(
             dynamic.array.length,
@@ -20,7 +22,7 @@ contract TestDynamicArray is DynamicArray {
     }
 
     function testPush() public {
-        DynamicArray.Array memory dynamic = createArray(2);
+        DynamicArray.Array memory dynamic = DynamicArray.createArray(2);
 
         Assert.equal(
             dynamic.array.length,
@@ -33,7 +35,7 @@ contract TestDynamicArray is DynamicArray {
             "Array should've allocated 2 slots of memory"
         );
 
-        push(dynamic, 123);
+        dynamic.push(123);
         Assert.equal(
             dynamic.array.length,
             1,
@@ -45,7 +47,7 @@ contract TestDynamicArray is DynamicArray {
             "Array contents should be accessible normally"
         );
 
-        push(dynamic, 456);
+        dynamic.push(456);
         Assert.equal(
             dynamic.array.length,
             2,
@@ -57,7 +59,7 @@ contract TestDynamicArray is DynamicArray {
             "Array should still have 2 slots of memory"
         );
 
-        push(dynamic, 789);
+        dynamic.push(789);
         Assert.equal(
             dynamic.array.length,
             3,
