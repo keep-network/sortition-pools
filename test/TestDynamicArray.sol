@@ -5,10 +5,73 @@ import "../contracts/DynamicArray.sol";
 
 contract TestDynamicArray is DynamicArray {
     function testCreateArray() public {
-        uint256[] memory array = createArray(32);
+        DynamicArray.Array memory dynamic = createArray(32);
 
-        Assert.equal(array.length, 32, "Dynamic array should be allocated correctly");
-        Assert.equal(array[10], 42, "Items in the array should be correct");
-        Assert.equal(array[31], 63, "Items in the array should be correct");
+        Assert.equal(
+            dynamic.array.length,
+            0,
+            "Array should start with zero length"
+        );
+        Assert.equal(
+            dynamic.allocatedMemory,
+            32,
+            "The array should've allocated 32 slots of memory"
+        );
+    }
+
+    function testPush() public {
+        DynamicArray.Array memory dynamic = createArray(2);
+
+        Assert.equal(
+            dynamic.array.length,
+            0,
+            "Array should start with zero length"
+        );
+        Assert.equal(
+            dynamic.allocatedMemory,
+            2,
+            "Array should've allocated 2 slots of memory"
+        );
+
+        push(dynamic, 123);
+        Assert.equal(
+            dynamic.array.length,
+            1,
+            "Array should now have one item"
+        );
+        Assert.equal(
+            dynamic.array[0],
+            123,
+            "Array contents should be accessible normally"
+        );
+
+        push(dynamic, 456);
+        Assert.equal(
+            dynamic.array.length,
+            2,
+            "Array should now have two items"
+        );
+        Assert.equal(
+            dynamic.allocatedMemory,
+            2,
+            "Array should still have 2 slots of memory"
+        );
+
+        push(dynamic, 789);
+        Assert.equal(
+            dynamic.array.length,
+            3,
+            "Array should now have three items"
+        );
+        Assert.equal(
+            dynamic.allocatedMemory,
+            4,
+            "Array should now have allocated 4 slots of memory"
+        );
+        Assert.equal(
+            dynamic.array[0],
+            123,
+            "Array contents should be copied correctly"
+        );
     }
 }
