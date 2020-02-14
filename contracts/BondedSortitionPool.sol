@@ -172,7 +172,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 params._poolWeight -= leafWeight;
                 params._rootChanged = true;
 
-                selectedLeaves = RNG.remapIndices(
+                // selectedLeaves = RNG.remapIndices(
+                RNG.remapIndices(
                     startingIndex,
                     leafWeight,
                     selectedLeaves
@@ -238,5 +239,20 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
         return (eligibleStake / params._staking._minimum);
+    }
+
+    function allocatePush(uint256[] memory array, uint256 item) internal {
+        uint256 freeMemoryPointer;
+        uint256 arrayLastItemPointer;
+        uint256 arrayLength = array.length;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            freeMemoryPointer := mload(0x40)
+            arrayLastItemPointer := add(array, mul(add(arrayLength, 1), 0x20))
+        }
+        require(
+            freeMemoryPointer == (arrayLastItemPointer + 0x20),
+            "Memory allocated behind dynamic array"
+        );
     }
 }

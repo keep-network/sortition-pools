@@ -228,7 +228,7 @@ library RNG {
     )
         internal
         pure
-        returns (IndexWeight[] memory)
+        // returns (IndexWeight[] memory)
     {
         uint256 nPreviousLeaves = previousLeaves.length;
 
@@ -240,6 +240,6 @@ library RNG {
             }
         }
 
-        return previousLeaves;
+        // return previousLeaves;
     }
 }
