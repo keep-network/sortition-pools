@@ -252,7 +252,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
         }
         require(
             freeMemoryPointer == (arrayLastItemPointer + 0x20),
-            "Memory allocated behind dynamic array"
+            "Memory has been allocated past dynamic array"
         );
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            mstore(freeMemoryPointer, item)
+            mstore(array, add(arrayLength, 1))
+            mstore(0x40, add(freeMemoryPointer, 0x20))
+        }
     }
 }
