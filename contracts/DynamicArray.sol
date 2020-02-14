@@ -27,9 +27,17 @@ library DynamicArray {
         _push(dynamic.array, item);
     }
 
+    /// @notice Pop the last item from the dynamic array,
+    /// removing it and shortening the array length.
+    function pop(Array memory dynamic) internal returns (uint256) {
+        uint256 length = dynamic.array.length;
+        require(length > 0, "Can't pop from empty array");
+        return _pop(dynamic.array);
+    }
+
     /// @notice Allocate an empty array,
     /// reserving enough memory to safely store `length` items.
-    function _allocate(uint256 length) private returns (uint256[] memory) {
+    function _allocate(uint256 length) private pure returns (uint256[] memory) {
         uint256[] memory array;
         // Calculate the size of the allocated block.
         uint256 inMemorySize = (length + 1) * 0x20;
@@ -50,7 +58,7 @@ library DynamicArray {
     /// @notice Unsafe function to copy the contents of one array
     /// into an empty initialized array
     /// with sufficient free memory available.
-    function _copy(uint256[] memory dest, uint256[] memory src) private {
+    function _copy(uint256[] memory dest, uint256[] memory src) private pure {
         uint256 length = src.length;
         uint256 byteLength = length * 0x20;
         // solium-disable-next-line security/no-inline-assembly
@@ -84,7 +92,7 @@ library DynamicArray {
 
     /// @notice Unsafe function to push past the limit of an array.
     /// Only use with preallocated free memory.
-    function _push(uint256[] memory array, uint256 item) private {
+    function _push(uint256[] memory array, uint256 item) private pure {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             // Get array length
@@ -99,5 +107,23 @@ library DynamicArray {
             // Increment array length
             mstore(array, add(length, 1))
         }
+    }
+
+    /// @notice Unsafe function to push past the limit of an array.
+    /// Only use with preallocated free memory.
+    function _pop(uint256[] memory array) private pure returns (uint256) {
+        uint256 item;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Get array length
+            let length := mload(array)
+            // Calculate the memory position of the last element
+            let lastPosition := add(array, mul(length, 0x20))
+            // Retrieve the last item
+            item := mload(lastPosition)
+            // Decrement array length
+            mstore(array, sub(length, 1))
+        }
+        return item;
     }
 }

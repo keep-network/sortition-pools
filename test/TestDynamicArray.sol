@@ -76,4 +76,27 @@ contract TestDynamicArray {
             "Array contents should be copied correctly"
         );
     }
+
+    function testPop() public {
+        DynamicArray.Array memory dynamic = DynamicArray.createArray(4);
+        dynamic.push(123);
+        dynamic.push(456);
+        dynamic.push(789);
+
+        Assert.equal(
+            dynamic.array.length,
+            3,
+            "Array should now have three items"
+        );
+        Assert.equal(
+            dynamic.pop(),
+            789,
+            "Pop should return last element"
+        );
+        Assert.equal(
+            dynamic.array.length,
+            2,
+            "Array should now have two items"
+        );
+    }
 }
