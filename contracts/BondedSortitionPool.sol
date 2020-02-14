@@ -34,7 +34,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _root;
         uint256 _poolWeight;
         bool _rootChanged;
-        uint256 _selectedTotalWeight;
+        uint256 _skippedTotalWeight;
         uint256 _selectedCount;
         bytes32 _rngState;
     }
@@ -97,21 +97,21 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        // uint256[] memory selectedLeaves = new uint256[]();
-        uint256[] memory selectedLeaves = allocateCreate();
+        // uint256[] memory skippedLeaves = new uint256[]();
+        uint256[] memory skippedLeaves = allocateCreate();
 
         /* loop */
         while (params._selectedCount < groupSize) {
             require(
-                params._poolWeight > params._selectedTotalWeight,
+                params._poolWeight > params._skippedTotalWeight,
                 "Not enough operators in pool"
             );
 
             (indexAndRoot.a, params._rngState) = RNG.getUniqueIndex(
                 params._poolWeight,
                 params._rngState,
-                selectedLeaves,
-                params._selectedTotalWeight
+                skippedLeaves,
+                params._skippedTotalWeight
             );
 
             nonAllocatingPick(indexAndRoot, leafPtrAndStartIndex);
@@ -121,16 +121,17 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
+            bool eligible = queryEligibleWeight(operator, params) >= leafWeight;
 
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
-            if (queryEligibleWeight(operator, params) >= leafWeight) {
+            if (eligible) {
                 // We insert the new index and weight into the lists,
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
                 lastOperator.a = Operator.insert(
-                    selectedLeaves,
+                    skippedLeaves,
                     Operator.make(
                         operator,
                         false,
@@ -142,11 +143,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                yoloPush(selectedLeaves, lastOperator);
-                // selectedLeaves[params._selectedCount] = lastOperator.a;
+                yoloPush(skippedLeaves, lastOperator);
+                // skippedLeaves[params._selectedCount] = lastOperator.a;
 
                 // And increase the skipped weight,
-                params._selectedTotalWeight += leafWeight;
+                params._skippedTotalWeight += leafWeight;
 
                 if (mature) {
                     selected[params._selectedCount] = operator;
@@ -164,11 +165,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 params._poolWeight -= leafWeight;
                 params._rootChanged = true;
 
-                // selectedLeaves = RNG.remapIndices(
+                // skippedLeaves = RNG.remapIndices(
                 RNG.remapIndices(
                     leafPtrAndStartIndex.b,
                     leafWeight,
-                    selectedLeaves
+                    skippedLeaves
                 );
             }
         }
