@@ -227,21 +227,11 @@ library RNG {
     )
         internal
         pure
-        // returns (IndexWeight[] memory)
     {
-        uint256 nPreviousLeaves = previousLeaves.length;
-
-        for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            uint256 operator = previousLeaves[i];
-            uint256 index = Operator.index(operator);
-            // If index is greater than the index of the deleted leaf,
-            // reduce the starting index by the weight of the deleted leaf.
-            if (index > deletedStartingIndex) {
-                uint256 newIndex = index - deletedWeight;
-                previousLeaves[i] = Operator.setIndex(operator, newIndex);
-            }
-        }
-
-        // return previousLeaves;
+        Operator.remapIndices(
+            deletedStartingIndex,
+            deletedWeight,
+            previousLeaves
+        );
     }
 }

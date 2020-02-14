@@ -126,4 +126,36 @@ library Operator {
         }
         return mappedIndex;
     }
+
+    /// @notice Recalculate the starting indices of the previousLeaves
+    /// when leaf is removed from the tree at the specified index.
+    /// @dev Subtracts deletedWeight from each starting index in previousLeaves
+    /// that exceeds deletedStartingIndex.
+    /// @param deletedStartingIndex The starting index of the deleted leaf.
+    /// @param deletedWeight The weight of the deleted leaf.
+    /// @param previousLeaves The starting indices and weights
+    /// of the previously selected leaves.
+    /// @return The starting indices of the previous leaves
+    /// in a tree without the deleted leaf.
+    function remapIndices(
+        uint256 deletedStartingIndex,
+        uint256 deletedWeight,
+        uint256[] memory previousLeaves
+    )
+        internal
+        pure
+    {
+        uint256 nPreviousLeaves = previousLeaves.length;
+
+        for (uint256 i = 0; i < nPreviousLeaves; i++) {
+            uint256 operator = previousLeaves[i];
+            uint256 startingIndex = index(operator);
+            // If index is greater than the index of the deleted leaf,
+            // reduce the starting index by the weight of the deleted leaf.
+            if (startingIndex > deletedStartingIndex) {
+                uint256 newIndex = startingIndex - deletedWeight;
+                previousLeaves[i] = setIndex(operator, newIndex);
+            }
+        }
+    }
 }
