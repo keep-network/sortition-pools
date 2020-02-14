@@ -43,10 +43,6 @@ library Operator {
     // - leaf position
     // - whether the operator is to be deleted or only skipped
     // - operator address
-    //
-    // For weight and address, use Leaf
-    // To create, use Leaf.make(operator, startingIndex, weight)
-    // and set delete flag if needed.
 
     function make(
         address operator,
