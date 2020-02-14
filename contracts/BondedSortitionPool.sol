@@ -241,30 +241,4 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // If eligibleStake < minimumStake, return 0 = ineligible.
         return (eligibleStake / params._staking._minimum);
     }
-
-    function allocateCreate() internal returns (uint256[] memory) {
-        uint256[] memory array;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            array := mload(0x40)
-            mstore(array, 0)
-            mstore(0x40, add(array, 0x20))
-        }
-        return array;
-    }
-
-    function allocatePush(uint256[] memory array, uint256 item) internal {
-        uint256 arrayLastItemPointer;
-        uint256 arrayLength = array.length;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            arrayLastItemPointer := add(array, mul(add(arrayLength, 1), 0x20))
-        }
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            mstore(add(arrayLastItemPointer, 0x20), item)
-            mstore(array, add(arrayLength, 1))
-            mstore(0x40, add(arrayLastItemPointer, 0x40))
-        }
-    }
 }
