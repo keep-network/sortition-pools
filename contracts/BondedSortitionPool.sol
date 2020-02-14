@@ -165,8 +165,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 params._poolWeight -= leafWeight;
                 params._rootChanged = true;
 
-                // skippedLeaves = RNG.remapIndices(
-                RNG.remapIndices(
+                Operator.remapIndices(
                     leafPtrAndStartIndex.b,
                     leafWeight,
                     skippedLeaves
