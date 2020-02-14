@@ -94,7 +94,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
+        uint256[] memory selectedLeaves = new uint256[](
             groupSize
         );
 
@@ -116,8 +116,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 params._poolWeight,
                 params._rngState,
                 selectedLeaves,
-                params._selectedTotalWeight,
-                params._selectedCount
+                params._selectedTotalWeight
             );
 
             uint256 startingIndex;
@@ -139,25 +138,30 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // keeping them both ordered by the starting indices.
                 // To do this, we start by holding the new element outside the list.
 
-                RNG.IndexWeight memory tempIW = RNG.IndexWeight(
-                    startingIndex,
-                    leafWeight
+                uint256 lastOperator = Operator.insert(
+                    selectedLeaves,
+                    Leaf.make(operator, startingIndex, leafWeight)
                 );
 
-                for (uint256 i = 0; i < params._selectedCount; i++) {
-                    RNG.IndexWeight memory thisIW = selectedLeaves[i];
-                    // With each element of the list,
-                    // we check if the outside element should go before it.
-                    // If true, we swap that element and the outside element.
-                    if (tempIW.index < thisIW.index) {
-                        selectedLeaves[i] = tempIW;
-                        tempIW = thisIW;
-                    }
-                }
+                // RNG.IndexWeight memory tempIW = RNG.IndexWeight(
+                //     startingIndex,
+                //     leafWeight
+                // );
+
+                // for (uint256 i = 0; i < params._selectedCount; i++) {
+                //     RNG.IndexWeight memory thisIW = selectedLeaves[i];
+                //     // With each element of the list,
+                //     // we check if the outside element should go before it.
+                //     // If true, we swap that element and the outside element.
+                //     if (tempIW.index < thisIW.index) {
+                //         selectedLeaves[i] = tempIW;
+                //         tempIW = thisIW;
+                //     }
+                // }
 
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
-                selectedLeaves[params._selectedCount] = tempIW;
+                selectedLeaves[params._selectedCount] = lastOperator;
 
                 // And increase the skipped weight,
                 params._selectedTotalWeight += leafWeight;

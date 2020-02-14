@@ -1,5 +1,8 @@
 pragma solidity ^0.5.10;
 
+import "./Leaf.sol";
+import "./Operator.sol";
+
 library RNG {
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
@@ -149,17 +152,14 @@ library RNG {
     /// Could be calculated from `previousLeafWeights`
     /// but providing it explicitly makes the function a bit simpler.
     ///
-    /// @param nPreviousLeaves The number of previousLeaves
-    ///
     /// @return uniqueIndex An index in [0, range) that does not overlap
     /// any of the previousLeaves,
     /// as determined by the range [index, index + weight).
     function getUniqueIndex(
         uint256 range,
         bytes32 state,
-        IndexWeight[] memory previousLeaves,
-        uint256 sumPreviousWeights,
-        uint256 nPreviousLeaves
+        uint256[] memory previousLeaves,
+        uint256 sumPreviousWeights
     )
         internal
         pure
@@ -173,10 +173,9 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
         // Map the truncated index to the available unique indices.
-        uniqueIndex = uniquifyIndex(
+        uniqueIndex = Operator.skip(
             truncatedIndex,
-            previousLeaves,
-            nPreviousLeaves
+            previousLeaves
         );
 
         return (uniqueIndex, newState);
@@ -224,7 +223,7 @@ library RNG {
     function remapIndices(
         uint256 deletedStartingIndex,
         uint256 deletedWeight,
-        IndexWeight[] memory previousLeaves
+        uint256[] memory previousLeaves
     )
         internal
         pure
@@ -233,10 +232,13 @@ library RNG {
         uint256 nPreviousLeaves = previousLeaves.length;
 
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
+            uint256 operator = previousLeaves[i];
+            uint256 index = Operator.index(operator);
             // If index is greater than the index of the deleted leaf,
             // reduce the starting index by the weight of the deleted leaf.
-            if (previousLeaves[i].index > deletedStartingIndex) {
-                previousLeaves[i].index -= deletedWeight;
+            if (index > deletedStartingIndex) {
+                uint256 newIndex = index - deletedWeight;
+                previousLeaves[i] = Operator.setIndex(operator, newIndex);
             }
         }
 
