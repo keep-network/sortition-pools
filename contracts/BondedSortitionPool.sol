@@ -78,6 +78,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
             false
         );
 
+        require(
+            msg.sender == params._pool._owner,
+            "Only owner may select groups"
+        );
+
         if (params._bonding._minimumBondableValue != bondValue) {
             params._bonding._minimumBondableValue = bondValue;
             bonding._minimumBondableValue = bondValue;

@@ -44,6 +44,8 @@ contract SortitionPool is AbstractSortitionPool {
         StakingParams memory _staking = staking;
         PoolParams memory _pool = pool;
 
+        require(msg.sender == _pool._owner, "Only owner may select groups");
+
         address[] memory selected = new address[](groupSize);
         uint256 nSelected = 0;
 

@@ -27,6 +27,7 @@ contract('SortitionPool', (accounts) => {
   const alice = accounts[0]
   const bob = accounts[1]
   const carol = accounts[2]
+  const owner = accounts[9]
 
   beforeEach(async () => {
     SortitionPool.link(Branch)
@@ -37,7 +38,7 @@ contract('SortitionPool', (accounts) => {
     pool = await SortitionPool.new(
       staking.address,
       minStake,
-      accounts[9],
+      owner,
       initBlocks,
     )
   })
@@ -53,15 +54,30 @@ contract('SortitionPool', (accounts) => {
 
       await mine(11)
 
-      const group = await pool.selectGroup.call(3, seed)
-      await pool.selectGroup(3, seed)
+      const group = await pool.selectGroup.call(3, seed, { from: owner })
+      await pool.selectGroup(3, seed, { from: owner })
 
       assert.equal(group.length, 3)
     })
 
+    it('only serves its owner', async () => {
+      await staking.setStake(alice, 20000)
+      await pool.joinPool(alice)
+
+      await mine(11)
+      try {
+        await pool.selectGroup.call(1, seed, { from: bob })
+      } catch (error) {
+        assert.include(error.message, 'Only owner may select groups')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
+
     it('reverts when there are no operators in pool', async () => {
       try {
-        await pool.selectGroup.call(3, seed)
+        await pool.selectGroup.call(3, seed, { from: owner })
       } catch (error) {
         assert.include(error.message, 'No operators in pool')
         return
@@ -76,8 +92,8 @@ contract('SortitionPool', (accounts) => {
 
       await mine(11)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.equal(group.length, 5)
     })
 
@@ -91,8 +107,8 @@ contract('SortitionPool', (accounts) => {
 
       await mine(11)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -106,8 +122,8 @@ contract('SortitionPool', (accounts) => {
 
       await mine(11)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -125,8 +141,8 @@ contract('SortitionPool', (accounts) => {
       await pool.updateOperatorStatus(bob)
       await pool.updateOperatorStatus(alice)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
 
@@ -139,14 +155,14 @@ contract('SortitionPool', (accounts) => {
 
       await pool.joinPool(bob)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
 
       await mine(11)
       await staking.setStake(alice, 1000)
 
-      const group2 = await pool.selectGroup.call(5, seed)
+      const group2 = await pool.selectGroup.call(5, seed, { from: owner })
       assert.deepEqual(group2, [bob, bob, bob, bob, bob])
     })
 
@@ -159,8 +175,8 @@ contract('SortitionPool', (accounts) => {
 
       await mine(11)
 
-      const group = await pool.selectGroup.call(100, seed)
-      await pool.selectGroup(100, seed)
+      const group = await pool.selectGroup.call(100, seed, { from: owner })
+      await pool.selectGroup(100, seed, { from: owner })
       assert.equal(group.length, 100)
     })
   })
