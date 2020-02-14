@@ -94,16 +94,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        uint256[] memory selectedLeaves = new uint256[](
-            groupSize
-        );
-
         // selectedTotalWeight = 0;
         // uint256 selectedCount = 0;
 
         // uint256 leafPosition;
         leafPosition = 0;
         uint256 uniqueIndex;
+
+        uint256[] memory selectedLeaves = new uint256[](groupSize);
 
         /* loop */
         while (params._selectedCount < groupSize) {
@@ -143,24 +141,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
                     Leaf.make(operator, startingIndex, leafWeight)
                 );
 
-                // RNG.IndexWeight memory tempIW = RNG.IndexWeight(
-                //     startingIndex,
-                //     leafWeight
-                // );
-
-                // for (uint256 i = 0; i < params._selectedCount; i++) {
-                //     RNG.IndexWeight memory thisIW = selectedLeaves[i];
-                //     // With each element of the list,
-                //     // we check if the outside element should go before it.
-                //     // If true, we swap that element and the outside element.
-                //     if (tempIW.index < thisIW.index) {
-                //         selectedLeaves[i] = tempIW;
-                //         tempIW = thisIW;
-                //     }
-                // }
-
                 // Now the outside element is the last one,
                 // so we push it to the end of the list.
+                // allocatePush(selectedLeaves, lastOperator);
                 selectedLeaves[params._selectedCount] = lastOperator;
 
                 // And increase the skipped weight,
@@ -245,6 +228,17 @@ contract BondedSortitionPool is AbstractSortitionPool {
         return (eligibleStake / params._staking._minimum);
     }
 
+    function allocateCreate() internal returns (uint256[] memory) {
+        uint256[] memory array;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            array := mload(0x40)
+            mstore(array, 0)
+            mstore(0x40, add(array, 0x20))
+        }
+        return array;
+    }
+
     function allocatePush(uint256[] memory array, uint256 item) internal {
         uint256 freeMemoryPointer;
         uint256 arrayLastItemPointer;
@@ -254,15 +248,15 @@ contract BondedSortitionPool is AbstractSortitionPool {
             freeMemoryPointer := mload(0x40)
             arrayLastItemPointer := add(array, mul(add(arrayLength, 1), 0x20))
         }
-        require(
-            freeMemoryPointer == (arrayLastItemPointer + 0x20),
-            "Memory has been allocated past dynamic array"
-        );
+        // require(
+        //     freeMemoryPointer == (arrayLastItemPointer + 0x20),
+        //     "Memory has been allocated past dynamic array"
+        // );
         // solium-disable-next-line security/no-inline-assembly
         assembly {
-            mstore(freeMemoryPointer, item)
+            mstore(add(arrayLastItemPointer, 0x20), item)
             mstore(array, add(arrayLength, 1))
-            mstore(0x40, add(freeMemoryPointer, 0x20))
+            mstore(0x40, add(arrayLastItemPointer, 0x40))
         }
     }
 }
