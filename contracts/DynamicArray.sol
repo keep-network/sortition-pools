@@ -1,6 +1,68 @@
 pragma solidity ^0.5.10;
 
 library DynamicArray {
+    // The in-memory dynamic Array is implemented
+    // by recording the amount of allocated memory
+    // separately from the length of the array.
+    // This gives us a perfectly normal in-memory array
+    // with all the behavior we're used to,
+    // but also makes O(1) `push` operations possible
+    // by expanding into the preallocated memory.
+    //
+    // When we run out of preallocated memory when trying to `push`,
+    // we allocate twice as much and copy the array over.
+    // With linear allocation costs this would amortize to O(1)
+    // but with EVM allocations being actually quadratic
+    // the real performance is a very technical O(N).
+    // Nonetheless, this is reasonably performant in practice.
+    //
+    // A dynamic array can be useful
+    // even when you aren't dealing with an unknown number of items.
+    // Because the array tracks the allocated space
+    // separately from the number of stored items,
+    // you can push items into the dynamic array
+    // and iterate over the currently present items
+    // without tracking their number yourself,
+    // or using a special null value for empty elements.
+    //
+    // Because Solidity doesn't really have useful safety features,
+    // only enough superficial inconveniences
+    // to lull yourself into a false sense of security,
+    // dynamic arrays require a bit of care to handle appropriately.
+    //
+    // First of all,
+    // dynamic arrays must not be created or modified manually.
+    // Use `createArray(length)`, or `convert(existingArray)`
+    // which will perform a safe and efficient conversion for you.
+    // This also applies to storage;
+    // in-memory dynamic arrays are for efficient in-memory operations only,
+    // and it is unnecessary to store dynamic arrays.
+    // Use a regular `uint256[]` instead.
+    // The contents of `array` may be written like `dynamicArray.array[i] = x`
+    // but never reassign the `array` pointer itself
+    // nor mess with `allocatedMemory` in any way whatsoever.
+    // If you fail to follow these precautions,
+    // dragons inhabiting the no-man's-land
+    // between the array as it's seen by Solidity
+    // and the next thing allocated after it
+    // will be unleashed to wreak havoc upon your memory buffers.
+    //
+    // Second,
+    // because the `array` may be reassigned when pushing,
+    // the following pattern is unsafe:
+    // ```
+    // Array dynamicArray;
+    // uint256 len = dynamicArray.array.length;
+    // uint256[] danglingPointer = dynamicArray.array;
+    // danglingPointer[0] = x;
+    // dynamicArray.push(y);
+    // danglingPointer[0] = z;
+    // ```
+    // After the above code block,
+    // `dynamicArray.array[0]` may be either `x` or `z`,
+    // and `danglingPointer[len]` may be `y` or out of bounds.
+    // This will not share your address space with a malevolent agent of chaos,
+    // but it will cause entirely avoidable scratchings of the head.
     struct Array {
         // XXX: Do not modify this value.
         // In fact, do not even read it.
