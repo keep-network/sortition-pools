@@ -6,24 +6,45 @@ library DynamicArray {
         uint256[] array;
     }
 
-    /// @notice Create a dynamic array,
+    /// @notice Create an empty dynamic array,
     /// with preallocated memory for up to `length` elements.
+    /// @dev Knowing or estimating the preallocated length in advance
+    /// helps avoid frequent early allocations when filling the array.
+    /// @param length The number of items to preallocate space for.
+    /// @return A new dynamic array.
     function createArray(uint256 length) internal returns (Array memory) {
         uint256[] memory array = _allocate(length);
         return Array(length, array);
+    }
+
+    /// @notice Convert an existing non-dynamic array into a dynamic array.
+    /// @dev The dynamic array is created
+    /// with allocated memory equal to the length of the array.
+    /// @param array The array to convert.
+    /// @return A new dynamic array,
+    /// containing the contents of the argument `array`.
+    function convert(uint256[] memory array) internal returns (Array memory) {
+        return Array(array.length, array);
     }
 
     /// @notice Push `item` into the dynamic array,
     /// allocating more memory behind the scenes if necessary.
     function push(Array memory dynamic, uint256 item) internal {
         uint256 length = dynamic.array.length;
-        if (length == dynamic.allocatedMemory) {
+        uint256 allocLength = dynamic.allocatedMemory;
+        require(
+            length <= allocLength,
+            "The dynamic array is broken"
+        );
+        // The dynamic array is full so we need to allocate more first.
+        if (length == allocLength) {
             uint256 newMemory = length * 2;
             uint256[] memory newArray = _allocate(newMemory);
             _copy(newArray, dynamic.array);
             dynamic.array = newArray;
             dynamic.allocatedMemory = newMemory;
         }
+        // We have enough free memory so we can push into the array.
         _push(dynamic.array, item);
     }
 
