@@ -79,7 +79,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) public returns (address[] memory) {
         Heap.Uint256x2 memory indexAndRoot = Heap.Uint256x2(0, root);
         Heap.Uint256x2 memory leafPtrAndStartIndex = Heap.Uint256x2(0, 0);
-        Heap.Uint256 memory lastOperator = Heap.Uint256(0);
 
         PoolParams memory params = PoolParams(
             staking,
@@ -126,7 +125,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             uint256 leafWeight = theLeaf.weight();
             bool eligible = queryEligibleWeight(operator, params) >= leafWeight;
 
-            lastOperator.data = Operator.make(
+            uint256 lastOperator = Operator.make(
                 operator,
                 !eligible,
                 leafPtrAndStartIndex.fst,
@@ -137,21 +136,21 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Good operators go into the group and the list to skip,
             // naughty operators get deleted
             if (!eligible) {
-                removeDuringSelection(params, skippedLeaves.array, lastOperator.data);
+                removeDuringSelection(params, skippedLeaves.array, lastOperator);
                 indexAndRoot.snd = params._root;
                 continue;
             }
 
             // We insert the new operator into the skipped list,
             // keeping the list ordered by the starting indices.
-            lastOperator.data = Operator.insert(
+            lastOperator = Operator.insert(
                 skippedLeaves.array,
-                lastOperator.data
+                lastOperator
             );
 
             // Now the outside element is the last one,
             // so we push it to the end of the list.
-            skippedLeaves.push(lastOperator.data);
+            skippedLeaves.push(lastOperator);
 
             // And increase the skipped weight,
             params._skippedTotalWeight += leafWeight;
