@@ -2,7 +2,33 @@ pragma solidity ^0.5.10;
 
 library DynamicArray {
     struct Array {
+        // XXX: Do not modify this value.
+        // In fact, do not even read it.
+        // There is never a legitimate reason to do anything with this value.
+        // She is quiet and wishes to be left alone.
+        // The silent vigil of `allocatedMemory`
+        // is the only thing standing between your contract
+        // and complete chaos in its memory.
+        // Respect her wish or face the monstrosities she is keeping at bay.
         uint256 allocatedMemory;
+        // Unlike her sharp and vengeful sister,
+        // `array` is safe to use normally
+        // for anything you might do with a normal `uint256[]`.
+        // Reads and loops will check bounds,
+        // and writing in individual indices like `myArray.array[i] = x`
+        // is perfectly fine.
+        // No curse will befall you as long as you obey this one rule:
+        //
+        // XXX: Never scorn her by writing down the accursed words
+        // `myArray.array = anotherArray`.
+        //
+        // If you do, your cattle will be diseased,
+        // your children will be led astray in the woods,
+        // and your memory will be silently overwritten.
+        // Instead, give her a friend with
+        // `mySecondArray = convert(anotherArray)`.
+        // She will recognize your respect
+        // and ward your memory against corruption.
         uint256[] array;
     }
 
@@ -27,8 +53,18 @@ library DynamicArray {
         return Array(array.length, array);
     }
 
-    /// @notice Push `item` into the dynamic array,
+    /// @notice Push `item` into the dynamic array.
+    /// @dev This function will be safe
+    /// as long as you haven't scorned either of the sisters.
+    /// If you have, the dragons will be released
+    /// to wreak havoc upon your memory.
+    /// A spell to dispel the curse exists,
+    /// but a sacred vow prohibits it from being shared
+    /// with those who do not know how to discover it on their own.
+    /// @param dynamic The dynamic array to push into;
+    /// after the call it will be mutated in place to contain the item,
     /// allocating more memory behind the scenes if necessary.
+    /// @param item The item you wish to push into the array.
     function push(Array memory dynamic, uint256 item) internal pure {
         uint256 length = dynamic.array.length;
         uint256 allocLength = dynamic.allocatedMemory;
@@ -46,7 +82,12 @@ library DynamicArray {
     }
 
     /// @notice Pop the last item from the dynamic array,
-    /// removing it and shortening the array length.
+    /// removing it and decrementing the array length in place.
+    /// @dev This makes the dragons happy
+    /// as they have more space to roam.
+    /// Thus they have no desire to escape and ravage your buffers.
+    /// @param dynamic The array to pop from.
+    /// @return item The previously last element in the array.
     function pop(Array memory dynamic) internal pure returns (uint256 item) {
         uint256[] memory array = dynamic.array;
         uint256 length = array.length;
@@ -65,6 +106,12 @@ library DynamicArray {
 
     /// @notice Allocate an empty array,
     /// reserving enough memory to safely store `length` items.
+    /// @dev The array starts with zero length,
+    /// but the allocated buffer has space for `length` words.
+    /// "What be beyond the bounds of `array`?" you may ask.
+    /// The answer is: dragons.
+    /// But do not worry,
+    /// for `Array.allocatedMemory` protects your EVM from them.
     function _allocate(uint256 length) private pure returns (uint256[] memory) {
         uint256[] memory array;
         // Calculate the size of the allocated block.
