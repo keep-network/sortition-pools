@@ -125,24 +125,24 @@ library DynamicArray {
     /// A spell to dispel the curse exists,
     /// but a sacred vow prohibits it from being shared
     /// with those who do not know how to discover it on their own.
-    /// @param dynamic The dynamic array to push into;
+    /// @param self The dynamic array to push into;
     /// after the call it will be mutated in place to contain the item,
     /// allocating more memory behind the scenes if necessary.
     /// @param item The item you wish to push into the array.
-    function push(Array memory dynamic, uint256 item) internal pure {
-        uint256 length = dynamic.array.length;
-        uint256 allocLength = dynamic.allocatedMemory;
+    function push(Array memory self, uint256 item) internal pure {
+        uint256 length = self.array.length;
+        uint256 allocLength = self.allocatedMemory;
         // The dynamic array is full so we need to allocate more first.
         if (length >= allocLength) {
             require(length == allocLength, "Array length exceeds allocation");
             uint256 newMemory = length * 2;
             uint256[] memory newArray = _allocate(newMemory);
-            _copy(newArray, dynamic.array);
-            dynamic.array = newArray;
-            dynamic.allocatedMemory = newMemory;
+            _copy(newArray, self.array);
+            self.array = newArray;
+            self.allocatedMemory = newMemory;
         }
         // We have enough free memory so we can push into the array.
-        _push(dynamic.array, item);
+        _push(self.array, item);
     }
 
     /// @notice Pop the last item from the dynamic array,
@@ -150,10 +150,10 @@ library DynamicArray {
     /// @dev This makes the dragons happy
     /// as they have more space to roam.
     /// Thus they have no desire to escape and ravage your buffers.
-    /// @param dynamic The array to pop from.
+    /// @param self The array to pop from.
     /// @return item The previously last element in the array.
-    function pop(Array memory dynamic) internal pure returns (uint256 item) {
-        uint256[] memory array = dynamic.array;
+    function pop(Array memory self) internal pure returns (uint256 item) {
+        uint256[] memory array = self.array;
         uint256 length = array.length;
         require(length > 0, "Can't pop from empty array");
         // solium-disable-next-line security/no-inline-assembly
