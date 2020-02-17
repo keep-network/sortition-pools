@@ -32,12 +32,9 @@ library DynamicArray {
     function push(Array memory dynamic, uint256 item) internal pure {
         uint256 length = dynamic.array.length;
         uint256 allocLength = dynamic.allocatedMemory;
-        require(
-            length <= allocLength,
-            "The dynamic array is broken"
-        );
         // The dynamic array is full so we need to allocate more first.
-        if (length == allocLength) {
+        if (length >= allocLength) {
+            require(length == allocLength, "Array length exceeds allocation");
             uint256 newMemory = length * 2;
             uint256[] memory newArray = _allocate(newMemory);
             _copy(newArray, dynamic.array);
@@ -128,15 +125,16 @@ library DynamicArray {
         assembly {
             // Get array length
             let length := mload(array)
+            let newLength := add(length, 1)
             // Calculate how many bytes the array takes in memory,
             // including the length field
-            let arraySize := mul(0x20, add(length, 1))
+            let arraySize := mul(0x20, newLength)
             // Calculate the first memory position after the array
             let nextPosition := add(array, arraySize)
             // Store the item in the available position
             mstore(nextPosition, item)
             // Increment array length
-            mstore(array, add(length, 1))
+            mstore(array, newLength)
         }
     }
 }
