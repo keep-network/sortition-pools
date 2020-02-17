@@ -12,7 +12,7 @@ library DynamicArray {
     /// helps avoid frequent early allocations when filling the array.
     /// @param length The number of items to preallocate space for.
     /// @return A new dynamic array.
-    function createArray(uint256 length) internal returns (Array memory) {
+    function createArray(uint256 length) internal pure returns (Array memory) {
         uint256[] memory array = _allocate(length);
         return Array(length, array);
     }
@@ -23,13 +23,13 @@ library DynamicArray {
     /// @param array The array to convert.
     /// @return A new dynamic array,
     /// containing the contents of the argument `array`.
-    function convert(uint256[] memory array) internal returns (Array memory) {
+    function convert(uint256[] memory array) internal pure returns (Array memory) {
         return Array(array.length, array);
     }
 
     /// @notice Push `item` into the dynamic array,
     /// allocating more memory behind the scenes if necessary.
-    function push(Array memory dynamic, uint256 item) internal {
+    function push(Array memory dynamic, uint256 item) internal pure {
         uint256 length = dynamic.array.length;
         uint256 allocLength = dynamic.allocatedMemory;
         require(
@@ -50,10 +50,20 @@ library DynamicArray {
 
     /// @notice Pop the last item from the dynamic array,
     /// removing it and shortening the array length.
-    function pop(Array memory dynamic) internal returns (uint256) {
-        uint256 length = dynamic.array.length;
+    function pop(Array memory dynamic) internal pure returns (uint256 item) {
+        uint256[] memory array = dynamic.array;
+        uint256 length = array.length;
         require(length > 0, "Can't pop from empty array");
-        return _pop(dynamic.array);
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Calculate the memory position of the last element
+            let lastPosition := add(array, mul(length, 0x20))
+            // Retrieve the last item
+            item := mload(lastPosition)
+            // Decrement array length
+            mstore(array, sub(length, 1))
+        }
+        return item;
     }
 
     /// @notice Allocate an empty array,
@@ -128,23 +138,5 @@ library DynamicArray {
             // Increment array length
             mstore(array, add(length, 1))
         }
-    }
-
-    /// @notice Unsafe function to push past the limit of an array.
-    /// Only use with preallocated free memory.
-    function _pop(uint256[] memory array) private pure returns (uint256) {
-        uint256 item;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            // Get array length
-            let length := mload(array)
-            // Calculate the memory position of the last element
-            let lastPosition := add(array, mul(length, 0x20))
-            // Retrieve the last item
-            item := mload(lastPosition)
-            // Decrement array length
-            mstore(array, sub(length, 1))
-        }
-        return item;
     }
 }
