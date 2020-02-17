@@ -79,16 +79,18 @@ library DynamicArray {
         // Reads and loops will check bounds,
         // and writing in individual indices like `myArray.array[i] = x`
         // is perfectly fine.
-        // No curse will befall you as long as you obey this one rule:
+        // No curse will befall you as long as you obey this rule:
         //
-        // XXX: Never scorn her by writing down the accursed words
-        // `myArray.array = anotherArray`.
+        // XXX: Never try to replace her or separate her from her sister
+        // by writing down the accursed words
+        // `myArray.array = anotherArray` or `lonelyArray = myArray.array`.
         //
         // If you do, your cattle will be diseased,
         // your children will be led astray in the woods,
         // and your memory will be silently overwritten.
         // Instead, give her a friend with
-        // `mySecondArray = convert(anotherArray)`.
+        // `mySecondArray = convert(anotherArray)`,
+        // and call her by her family name first.
         // She will recognize your respect
         // and ward your memory against corruption.
         uint256[] array;
