@@ -67,6 +67,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
+        require(msg.sender == poolOwner, "Only owner may select groups");
+
         uint256 selectedTotalWeight = root;
         PoolParams memory params = PoolParams(
             staking,

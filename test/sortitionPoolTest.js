@@ -13,6 +13,7 @@ contract('SortitionPool', (accounts) => {
   const alice = accounts[0]
   const bob = accounts[1]
   const carol = accounts[2]
+  const owner = accounts[9]
 
   beforeEach(async () => {
     SortitionPool.link(Branch)
@@ -20,7 +21,7 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(StackLib)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
-    pool = await SortitionPool.new(staking.address, minStake, accounts[9])
+    pool = await SortitionPool.new(staking.address, minStake, owner)
   })
 
   describe('selectGroup', async () => {
@@ -32,15 +33,33 @@ contract('SortitionPool', (accounts) => {
       await pool.joinPool(bob)
       await pool.joinPool(carol)
 
-      const group = await pool.selectGroup.call(3, seed)
-      await pool.selectGroup(3, seed)
+      const group = await pool.selectGroup.call(3, seed, { from: owner })
+      await pool.selectGroup(3, seed, { from: owner })
 
       assert.equal(group.length, 3)
     })
 
+    it('reverts when called by non-owner', async () => {
+      await staking.setStake(alice, 20000)
+      await staking.setStake(bob, 22000)
+      await staking.setStake(carol, 24000)
+      await pool.joinPool(alice)
+      await pool.joinPool(bob)
+      await pool.joinPool(carol)
+
+      try {
+        await pool.selectGroup.call(3, seed, { from: accounts[0] })
+      } catch (error) {
+        assert.include(error.message, 'Only owner may select groups')
+        return
+      }
+
+      assert.fail('Expected throw not received')
+    })
+
     it('reverts when there are no operators in pool', async () => {
       try {
-        await pool.selectGroup.call(3, seed)
+        await pool.selectGroup.call(3, seed, { from: owner })
       } catch (error) {
         assert.include(error.message, 'No operators in pool')
         return
@@ -53,8 +72,8 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(alice, 2000)
       await pool.joinPool(alice)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.equal(group.length, 5)
     })
 
@@ -66,8 +85,8 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 1000)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -79,8 +98,8 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 390000)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
     })
 
@@ -96,8 +115,8 @@ contract('SortitionPool', (accounts) => {
       await pool.updateOperatorStatus(bob)
       await pool.updateOperatorStatus(alice)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
 
@@ -108,8 +127,8 @@ contract('SortitionPool', (accounts) => {
         await pool.joinPool(address)
       }
 
-      const group = await pool.selectGroup.call(100, seed)
-      await pool.selectGroup(100, seed)
+      const group = await pool.selectGroup.call(100, seed, { from: owner })
+      await pool.selectGroup(100, seed, { from: owner })
       assert.equal(group.length, 100)
     })
   })

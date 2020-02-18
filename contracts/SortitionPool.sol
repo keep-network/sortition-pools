@@ -35,6 +35,8 @@ contract SortitionPool is AbstractSortitionPool {
     function selectGroup(
         uint256 groupSize, bytes32 seed
     ) public returns (address[] memory)  {
+        require(msg.sender == poolOwner, "Only owner may select groups");
+
         uint256 _root = root;
         bool _rootChanged = false;
         uint256 poolWeight = _root.sumWeight();
