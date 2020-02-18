@@ -20,6 +20,7 @@ import "./Heap.sol";
 /// again with the updated input to ensure correctness.
 contract BondedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.UintArray;
+    using DynamicArray for DynamicArray.AddressArray;
     using RNG for RNG.State;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
@@ -37,7 +38,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
         address _poolOwner;
         uint256 _root;
         bool _rootChanged;
-        uint256 _selectedCount;
     }
 
     // Require 10 blocks after joining
@@ -75,30 +75,18 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        PoolParams memory params = PoolParams(
-            staking,
-            bonding,
-            poolOwner,
-            root,
-            false,
-            0
-        );
+        PoolParams memory params;
+        DynamicArray.AddressArray memory selected;
+        RNG.State memory rng;
 
-        if (params._bonding._minimumBondableValue != bondValue) {
-            params._bonding._minimumBondableValue = bondValue;
-            bonding._minimumBondableValue = bondValue;
-        }
-
-        address[] memory selected = new address[](groupSize);
-
-        RNG.State memory rng = RNG.initialize(
+        (params, selected, rng) = initializeSelection(
+            groupSize,
             seed,
-            params._root.sumWeight(),
-            groupSize
+            bondValue
         );
 
         /* loop */
-        while (params._selectedCount < groupSize) {
+        while (selected.array.length < groupSize) {
             require(
                 rng.truncatedRange > 0,
                 "Not enough operators in pool"
@@ -143,8 +131,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // the operator is not out of date.
             // This means that checking whether it is `mature` is enough.
             if (mature) {
-                selected[params._selectedCount] = operator;
-                params._selectedCount += 1;
+                selected.push(operator);
             }
         }
         /* pool */
@@ -156,7 +143,45 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // If nothing has exploded by now,
         // we should have the correct size of group.
 
-        return selected;
+        return selected.array;
+    }
+
+    function initializeSelection(
+        uint256 groupSize,
+        bytes32 seed,
+        uint256 bondValue
+    ) internal returns (
+        PoolParams memory params,
+        DynamicArray.AddressArray memory selected,
+        RNG.State memory rng
+    ) {
+        uint256 tempRoot = root;
+        uint256 poolWeight = tempRoot.sumWeight();
+        require(poolWeight > 0, "Not enough operators in pool");
+
+        StakingParams memory _staking = staking;
+        BondingParams memory _bonding = bonding;
+
+        if (_bonding._minimumBondableValue != bondValue) {
+            _bonding._minimumBondableValue = bondValue;
+            bonding._minimumBondableValue = bondValue;
+        }
+
+        params = PoolParams(
+            _staking,
+            _bonding,
+            poolOwner,
+            tempRoot,
+            false
+        );
+
+        selected = DynamicArray.addressArray(groupSize);
+
+        rng = RNG.initialize(
+            seed,
+            poolWeight,
+            groupSize
+        );
     }
 
     function removeDuringSelection(
@@ -182,8 +207,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bonding,
             poolOwner,
             0,
-            false,
-            0
+            false
         );
         return queryEligibleWeight(operator, params);
     }
