@@ -1,5 +1,3 @@
-const { time } = require('@openzeppelin/test-helpers')
-
 const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory.sol')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
