@@ -36,8 +36,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
         StakingParams _staking;
         BondingParams _bonding;
         address _poolOwner;
-        uint256 _root;
-        bool _rootChanged;
     }
 
     // Require 10 blocks after joining
@@ -75,6 +73,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
+        uint256 _root = root;
+        bool rootChanged = false;
+
         PoolParams memory params;
         DynamicArray.AddressArray memory selected;
         RNG.State memory rng;
@@ -82,7 +83,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         (params, selected, rng) = initializeSelection(
             groupSize,
             seed,
-            bondValue
+            bondValue,
+            _root
         );
 
         /* loop */
@@ -90,7 +92,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             rng.generateNewIndex();
 
             (uint256 leafPosition, uint256 startingIndex) =
-                pickWeightedLeafWithIndex(rng.currentMappedIndex, params._root);
+                pickWeightedLeafWithIndex(rng.currentMappedIndex, _root);
 
             uint256 theLeaf = leaves[leafPosition];
             // Check that the leaf is old enough
@@ -105,13 +107,15 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Remove the operator and get next one if out of date,
             // otherwise add it to the list of operators to skip.
             if (outOfDate) {
+                // Update the RNG
                 rng.removeInterval(startingIndex, leafWeight);
                 // rng.retryIndex();
-                removeDuringSelection(
-                    params,
-                    leafPosition,
-                    operator
-                );
+                // Remove the leaf and update root
+                _root = removeLeaf(leafPosition, _root);
+                rootChanged = true;
+                // Remove the record of the operator's leaf and release gas
+                removeOperatorLeaf(operator);
+                releaseGas(operator);
                 continue;
             }
 
@@ -126,8 +130,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         }
         /* pool */
 
-        if (params._rootChanged) {
-            root = params._root;
+        if (rootChanged) {
+            root = _root;
         }
 
         // If nothing has exploded by now,
@@ -139,14 +143,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
     function initializeSelection(
         uint256 groupSize,
         bytes32 seed,
-        uint256 bondValue
+        uint256 bondValue,
+        uint256 _root
     ) internal returns (
         PoolParams memory params,
         DynamicArray.AddressArray memory selected,
         RNG.State memory rng
     ) {
-        uint256 tempRoot = root;
-        uint256 poolWeight = tempRoot.sumWeight();
+        uint256 poolWeight = _root.sumWeight();
         require(poolWeight > 0, "Not enough operators in pool");
 
         StakingParams memory _staking = staking;
@@ -160,9 +164,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         params = PoolParams(
             _staking,
             _bonding,
-            poolOwner,
-            tempRoot,
-            false
+            poolOwner
         );
 
         selected = DynamicArray.addressArray(groupSize);
@@ -174,20 +176,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
     }
 
-    function removeDuringSelection(
-        PoolParams memory params,
-        uint256 leafPosition,
-        address operator
-    ) internal {
-        // Remove the leaf
-        params._root = removeLeaf(leafPosition, params._root);
-        // Remove the record of the operator's leaf and release gas
-        removeOperatorLeaf(operator);
-        releaseGas(operator);
-        // Update the params
-        params._rootChanged = true;
-    }
-
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
@@ -195,9 +183,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         PoolParams memory params = PoolParams(
             staking,
             bonding,
-            poolOwner,
-            0,
-            false
+            poolOwner
         );
         return queryEligibleWeight(operator, params);
     }
