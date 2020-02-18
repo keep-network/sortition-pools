@@ -123,19 +123,22 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
-            bool eligible = queryEligibleWeight(operator, params) >= leafWeight;
+            // Only query the up-to-dateness of mature operators,
+            // to reduce the cost of dealing with immature ones.
+            bool outOfDate = mature &&
+                (queryEligibleWeight(operator, params) < leafWeight);
 
             uint256 lastOperator = Operator.make(
                 operator,
-                !eligible,
+                outOfDate,
                 leafPtrAndStartIndex.fst,
                 leafPtrAndStartIndex.snd,
                 leafWeight
             );
 
-            // Good operators go into the group and the list to skip,
-            // naughty operators get deleted
-            if (!eligible) {
+            // Remove the operator and get next one if out of date,
+            // otherwise add it to the list of operators to skip.
+            if (outOfDate) {
                 removeDuringSelection(params, skippedLeaves.array, lastOperator);
                 indexAndRoot.snd = params._root;
                 continue;
@@ -155,6 +158,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // And increase the skipped weight,
             params._skippedTotalWeight += leafWeight;
 
+            // If we didn't short-circuit out,
+            // the operator is not out of date.
+            // This means that checking whether it is `mature` is enough.
             if (mature) {
                 selected[params._selectedCount] = operator;
                 params._selectedCount += 1;
