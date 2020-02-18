@@ -94,14 +94,15 @@ library Branch {
     }
 
     /// @notice Calculate the summed weight of all slots in the `node`.
-    function sumWeight(uint256 node) internal pure returns (uint256) {
-        uint256 sum;
-
-        for (uint256 i = 0; i < SLOT_COUNT; i++) {
-            // Iterate through each slot
-            // by shifting `node` right in increments of 32 bits,
-            // and adding the 32 least significant bits to the `sum`.
-            sum += (node >> (i * SLOT_WIDTH)) & SLOT_MAX;
+    function sumWeight(uint256 node) internal pure returns (uint256 sum) {
+        sum = node & SLOT_MAX;
+        // Iterate through each slot
+        // by shifting `node` right in increments of 32 bits,
+        // and adding the 32 least significant bits to the `sum`.
+        uint256 newNode = node >> SLOT_WIDTH;
+        while (newNode > 0) {
+            sum += (newNode & SLOT_MAX);
+            newNode = newNode >> SLOT_WIDTH;
         }
         return sum;
     }
@@ -126,21 +127,15 @@ library Branch {
         pure
         returns (uint256 slot, uint256 newIndex)
     {
-        uint256 currentNode = node;
-        uint256 currentSlotWeight;
         newIndex = index;
-
-        for (slot = 0; slot < SLOT_COUNT; slot++) {
-            currentSlotWeight = currentNode & SLOT_MAX;
-
-            if (newIndex < currentSlotWeight) {
-                break;
-            } else {
-                newIndex -= currentSlotWeight;
-                currentNode = currentNode >> SLOT_WIDTH;
-            }
+        uint256 newNode = node;
+        uint256 currentSlotWeight = newNode & SLOT_MAX;
+        while (newIndex >= currentSlotWeight) {
+            newIndex -= currentSlotWeight;
+            slot++;
+            newNode = newNode >> SLOT_WIDTH;
+            currentSlotWeight = newNode & SLOT_MAX;
         }
-
         return (slot, newIndex);
     }
 }
