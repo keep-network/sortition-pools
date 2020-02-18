@@ -6,7 +6,7 @@ import "../contracts/DynamicArray.sol";
 contract TestDynamicArray {
     using DynamicArray for DynamicArray.UintArray;
 
-    function testCreateArray() public {
+    function testUintArray() public {
         DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(32);
 
         Assert.equal(
@@ -89,7 +89,7 @@ contract TestDynamicArray {
             "Array should now have three items"
         );
         Assert.equal(
-            dynamic.pop(),
+            dynamic.arrayPop(),
             789,
             "Pop should return last element"
         );

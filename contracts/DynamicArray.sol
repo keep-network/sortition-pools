@@ -96,6 +96,11 @@ library DynamicArray {
         uint256[] array;
     }
 
+    struct AddressArray {
+        uint256 allocatedMemory;
+        address[] array;
+    }
+
     /// @notice Create an empty dynamic array,
     /// with preallocated memory for up to `length` elements.
     /// @dev Knowing or estimating the preallocated length in advance
@@ -107,6 +112,16 @@ library DynamicArray {
         return UintArray(length, array);
     }
 
+    function addressArray(uint256 length) internal pure returns (AddressArray memory) {
+        uint256[] memory temp = _allocate(length);
+        address[] memory array;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            array := temp
+        }
+        return AddressArray(length, array);
+    }
+
     /// @notice Convert an existing non-dynamic array into a dynamic array.
     /// @dev The dynamic array is created
     /// with allocated memory equal to the length of the array.
@@ -115,6 +130,10 @@ library DynamicArray {
     /// containing the contents of the argument `array`.
     function convert(uint256[] memory array) internal pure returns (UintArray memory) {
         return UintArray(array.length, array);
+    }
+
+    function convert(address[] memory array) internal pure returns (AddressArray memory) {
+        return AddressArray(array.length, array);
     }
 
     /// @notice Push `item` into the dynamic array.
@@ -151,6 +170,17 @@ library DynamicArray {
         _push(self.array, item);
     }
 
+    function push(AddressArray memory self, address item) internal pure {
+        UintArray memory tempArray;
+        uint256 tempItem;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            tempArray := self
+            tempItem := item
+        }
+        push(tempArray, tempItem);
+    }
+
     /// @notice Pop the last item from the dynamic array,
     /// removing it and decrementing the array length in place.
     /// @dev This makes the dragons happy
@@ -158,20 +188,18 @@ library DynamicArray {
     /// Thus they have no desire to escape and ravage your buffers.
     /// @param self The array to pop from.
     /// @return item The previously last element in the array.
-    function pop(UintArray memory self) internal pure returns (uint256 item) {
+    function arrayPop(UintArray memory self) internal pure returns (uint256 item) {
         uint256[] memory array = self.array;
         uint256 length = array.length;
         require(length > 0, "Can't pop from empty array");
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            // Calculate the memory position of the last element
-            let lastPosition := add(array, mul(length, 0x20))
-            // Retrieve the last item
-            item := mload(lastPosition)
-            // Decrement array length
-            mstore(array, sub(length, 1))
-        }
-        return item;
+        return _pop(array);
+    }
+
+    function arrayPop(AddressArray memory self) internal pure returns (address item) {
+        address[] memory array = self.array;
+        uint256 length = array.length;
+        require(length > 0, "Can't pop from empty array");
+        return _pop(array);
     }
 
     /// @notice Allocate an empty array,
@@ -182,8 +210,7 @@ library DynamicArray {
     /// The answer is: dragons.
     /// But do not worry,
     /// for `Array.allocatedMemory` protects your EVM from them.
-    function _allocate(uint256 length) private pure returns (uint256[] memory) {
-        uint256[] memory array;
+    function _allocate(uint256 length) private pure returns (uint256[] memory array) {
         // Calculate the size of the allocated block.
         uint256 inMemorySize = (length + 1) * 0x20;
         // solium-disable-next-line security/no-inline-assembly
@@ -204,10 +231,10 @@ library DynamicArray {
     /// into an empty initialized array
     /// with sufficient free memory available.
     function _copy(uint256[] memory dest, uint256[] memory src) private pure {
-        uint256 length = src.length;
-        uint256 byteLength = length * 0x20;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
+            let length := mload(src)
+            let byteLength := mul(length, 0x20)
             // Store the resulting length of the array.
             mstore(dest, length)
             // Maintain a memory counter
@@ -254,5 +281,33 @@ library DynamicArray {
             // Increment array length
             mstore(array, newLength)
         }
+    }
+
+    function _pop(uint256[] memory array) private pure returns (uint256 item) {
+        uint256 length = array.length;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Calculate the memory position of the last element
+            let lastPosition := add(array, mul(length, 0x20))
+            // Retrieve the last item
+            item := mload(lastPosition)
+            // Decrement array length
+            mstore(array, sub(length, 1))
+        }
+        return item;
+    }
+
+    function _pop(address[] memory array) private pure returns (address item) {
+        uint256 length = array.length;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            // Calculate the memory position of the last element
+            let lastPosition := add(array, mul(length, 0x20))
+            // Retrieve the last item
+            item := mload(lastPosition)
+            // Decrement array length
+            mstore(array, sub(length, 1))
+        }
+        return item;
     }
 }
