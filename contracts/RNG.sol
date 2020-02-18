@@ -41,7 +41,7 @@ library RNG {
         bytes32 seed,
         uint256 range,
         uint256 expectedSkippedCount
-    ) internal view returns (State memory self) {
+    ) internal pure returns (State memory self) {
         self = State(
             0,
             0,
@@ -92,9 +92,11 @@ library RNG {
     }
 
     function generateNewIndex(State memory self) internal view {
-        uint256 bits = bitsRequired(self.truncatedRange);
+        uint256 _truncatedRange = self.truncatedRange;
+        require(_truncatedRange > 0, "Not enough operators in pool");
+        uint256 bits = bitsRequired(_truncatedRange);
         uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
-        while (truncatedIndex >= self.truncatedRange) {
+        while (truncatedIndex >= _truncatedRange) {
             self.currentSeed = keccak256(
                 abi.encodePacked(self.currentSeed, address(this), "RNG_generate")
             );

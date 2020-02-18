@@ -87,11 +87,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         /* loop */
         while (selected.array.length < groupSize) {
-            require(
-                rng.truncatedRange > 0,
-                "Not enough operators in pool"
-            );
-
             rng.generateNewIndex();
 
             (uint256 leafPosition, uint256 startingIndex) =
