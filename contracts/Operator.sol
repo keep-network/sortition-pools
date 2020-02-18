@@ -1,8 +1,10 @@
 pragma solidity ^0.5.10;
 
 import "./Leaf.sol";
+import "./DynamicArray.sol";
 
 library Operator {
+    using DynamicArray for DynamicArray.Array;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
@@ -56,33 +58,34 @@ library Operator {
         return op & (~(START_INDEX_MAX << WEIGHT_WIDTH)) | shiftedIndex;
     }
 
-    function insert(uint256[] memory operators, uint256 operator)
+    function insert(DynamicArray.Array memory operators, uint256 operator)
         internal
         pure
-        returns (uint256) // The last operator left outside the array
+        // returns (uint256) // The last operator left outside the array
     {
         uint256 tempOperator = operator;
-        for (uint256 i = 0; i < operators.length; i++) {
-            uint256 thisOperator = operators[i];
+        for (uint256 i = 0; i < operators.array.length; i++) {
+            uint256 thisOperator = operators.array[i];
             // We can compare the raw underlying uint256 values
             // because the starting index is stored
             // in the most significant nonzero bits.
             if (tempOperator < thisOperator) {
-                operators[i] = tempOperator;
+                operators.array[i] = tempOperator;
                 tempOperator = thisOperator;
             }
         }
-        return tempOperator;
+        operators.push(tempOperator);
+        // return tempOperator;
     }
 
-    function skip(uint256 truncatedIndex, uint256[] memory operators)
+    function skip(uint256 truncatedIndex, DynamicArray.Array memory operators)
         internal
         pure
         returns (uint256 mappedIndex)
     {
         mappedIndex = truncatedIndex;
-        for (uint256 i = 0; i < operators.length; i++) {
-            uint256 operator = operators[i];
+        for (uint256 i = 0; i < operators.array.length; i++) {
+            uint256 operator = operators.array[i];
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
             if (mappedIndex >= index(operator)) {
@@ -109,21 +112,21 @@ library Operator {
     function remapIndices(
         uint256 deletedStartingIndex,
         uint256 deletedWeight,
-        uint256[] memory previousLeaves
+        DynamicArray.Array memory previousLeaves
     )
         internal
         pure
     {
-        uint256 nPreviousLeaves = previousLeaves.length;
+        uint256 nPreviousLeaves = previousLeaves.array.length;
 
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            uint256 operator = previousLeaves[i];
+            uint256 operator = previousLeaves.array[i];
             uint256 startingIndex = index(operator);
             // If index is greater than the index of the deleted leaf,
             // reduce the starting index by the weight of the deleted leaf.
             if (startingIndex > deletedStartingIndex) {
                 uint256 newIndex = startingIndex - deletedWeight;
-                previousLeaves[i] = setIndex(operator, newIndex);
+                previousLeaves.array[i] = setIndex(operator, newIndex);
             }
         }
     }

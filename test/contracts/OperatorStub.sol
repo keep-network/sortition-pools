@@ -1,6 +1,7 @@
 pragma solidity ^0.5.10;
 
 import '../../contracts/Operator.sol';
+import '../../contracts/DynamicArray.sol';
 
 contract OperatorStub {
     function skip(
@@ -25,6 +26,6 @@ contract OperatorStub {
             );
         }
 
-        return Operator.skip(truncatedIndex, previousLeaves);
+        return Operator.skip(truncatedIndex, DynamicArray.convert(previousLeaves));
     }
 }

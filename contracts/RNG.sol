@@ -26,7 +26,6 @@ library RNG {
         uint256 currentTruncatedIndex;
         // The random bytes used to derive indices
         bytes32 currentSeed;
-        bytes32 baseSeed;
         // The full range of indices;
         // generated random numbers are in [0, fullRange).
         uint256 fullRange;
@@ -35,7 +34,6 @@ library RNG {
         // Random indices are generated within this range,
         // and mapped to the full range by skipping the specified intervals.
         uint256 truncatedRange;
-        // The starting indices and lengths of all skipped intervals.
         DynamicArray.Array skippedIntervals;
     }
 
@@ -48,22 +46,11 @@ library RNG {
             0,
             0,
             seed,
-            seed,
             range,
             range,
             DynamicArray.createArray(expectedSkippedCount)
         );
-        generateNewIndex(self);
         return self;
-    }
-
-    function updateSeed(State memory self) internal view {
-        bytes32 newSeed = keccak256(
-            abi.encodePacked(self.baseSeed, address(this), "RNG_update")
-        );
-        self.baseSeed = newSeed;
-        self.currentSeed = newSeed;
-        generateNewIndex(self);
     }
 
     function retryIndex(State memory self) internal view {
@@ -71,28 +58,28 @@ library RNG {
         if (self.currentTruncatedIndex < self.truncatedRange) {
             self.currentMappedIndex = Operator.skip(
                 truncatedIndex,
-                self.skippedIntervals.array
+                self.skippedIntervals
             );
         } else {
             generateNewIndex(self);
         }
     }
 
-    function addSkippedInterval(State memory self, uint256 interval)
-        internal view
-    {
+    function addSkippedInterval(
+        State memory self,
+        uint256 interval
+    ) internal pure {
         self.truncatedRange -= Operator.opWeight(interval);
-        uint256 lastInterval = Operator.insert(
-            self.skippedIntervals.array,
+        Operator.insert(
+            self.skippedIntervals,
             interval
         );
-        self.skippedIntervals.push(lastInterval);
-        retryIndex(self);
     }
 
-    function removeInterval(State memory self, uint256 interval)
-        internal view
-    {
+    function removeInterval(
+        State memory self,
+        uint256 interval
+    ) internal pure {
         uint256 startIndex = Operator.index(interval);
         uint256 deletedWeight = Operator.opWeight(interval);
         self.truncatedRange -= deletedWeight;
@@ -100,14 +87,11 @@ library RNG {
         Operator.remapIndices(
             startIndex,
             deletedWeight,
-            self.skippedIntervals.array
+            self.skippedIntervals
         );
-        retryIndex(self);
     }
 
-    function generateNewIndex(State memory self)
-        internal view
-    {
+    function generateNewIndex(State memory self) internal view {
         uint256 bits = bitsRequired(self.truncatedRange);
         uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
         while (truncatedIndex >= self.truncatedRange) {
@@ -119,7 +103,7 @@ library RNG {
         self.currentTruncatedIndex = truncatedIndex;
         self.currentMappedIndex = Operator.skip(
             truncatedIndex,
-            self.skippedIntervals.array
+            self.skippedIntervals
         );
     }
 
@@ -254,7 +238,7 @@ library RNG {
         // Map the truncated index to the available unique indices.
         uniqueIndex = Operator.skip(
             truncatedIndex,
-            previousLeaves
+            DynamicArray.convert(previousLeaves)
         );
 
         return (uniqueIndex, newState);

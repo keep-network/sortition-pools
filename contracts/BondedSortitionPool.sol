@@ -20,6 +20,7 @@ import "./Heap.sol";
 /// again with the updated input to ensure correctness.
 contract BondedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.Array;
+    using RNG for RNG.State;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
     // to prevent griefing by operators joining without enough bondable value.
@@ -99,22 +100,21 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address[] memory selected = new address[](groupSize);
 
-        // uint256[] memory skippedLeaves = new uint256[]();
-        DynamicArray.Array memory skippedLeaves = DynamicArray.createArray(groupSize);
+        RNG.State memory rng = RNG.initialize(
+            seed,
+            params._poolWeight,
+            groupSize
+        );
 
         /* loop */
         while (params._selectedCount < groupSize) {
             require(
-                params._poolWeight > params._skippedTotalWeight,
+                rng.truncatedRange > 0,
                 "Not enough operators in pool"
             );
 
-            (indexAndRoot.fst, params._rngState) = RNG.getUniqueIndex(
-                params._poolWeight,
-                params._rngState,
-                skippedLeaves.array,
-                params._skippedTotalWeight
-            );
+            rng.generateNewIndex();
+            indexAndRoot.fst = rng.currentMappedIndex;
 
             (leafPtrAndStartIndex.fst, leafPtrAndStartIndex.snd) =
                 pickWeightedLeafWithIndex(indexAndRoot.fst, indexAndRoot.snd);
@@ -129,7 +129,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bool outOfDate = mature &&
                 (queryEligibleWeight(operator, params) < leafWeight);
 
-            uint256 lastOperator = Operator.make(
+            uint256 currentOperatorInterval = Operator.make(
                 leafPtrAndStartIndex.snd,
                 leafWeight
             );
@@ -137,10 +137,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Remove the operator and get next one if out of date,
             // otherwise add it to the list of operators to skip.
             if (outOfDate) {
+                rng.removeInterval(currentOperatorInterval);
+                // rng.retryIndex();
                 removeDuringSelection(
                     params,
-                    skippedLeaves.array,
-                    lastOperator,
                     leafPtrAndStartIndex.fst,
                     operator
                 );
@@ -148,16 +148,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 continue;
             }
 
-            // We insert the new operator into the skipped list,
-            // keeping the list ordered by the starting indices.
-            lastOperator = Operator.insert(
-                skippedLeaves.array,
-                lastOperator
-            );
-
-            // Now the outside element is the last one,
-            // so we push it to the end of the list.
-            skippedLeaves.push(lastOperator);
+            rng.addSkippedInterval(currentOperatorInterval);
 
             // And increase the skipped weight,
             params._skippedTotalWeight += leafWeight;
@@ -184,8 +175,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     function removeDuringSelection(
         PoolParams memory params,
-        uint256[] memory skippedLeaves,
-        uint256 operatorData,
         uint256 leafPosition,
         address operator
     ) internal {
@@ -195,12 +184,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         removeOperatorLeaf(operator);
         releaseGas(operator);
         // Update the params
-        uint256 weight = Operator.opWeight(operatorData);
-        params._poolWeight -= weight;
         params._rootChanged = true;
-        // Remap the skipped indices
-        uint256 startingIndex = Operator.index(operatorData);
-        Operator.remapIndices(startingIndex, weight, skippedLeaves);
     }
 
     // Return the eligible weight of the operator,
