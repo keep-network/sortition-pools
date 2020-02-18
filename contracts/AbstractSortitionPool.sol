@@ -18,19 +18,19 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 _minimum;
     }
 
-    // Require 10 blocks after joining before the operator can be selected for 
-    // a group. This reduces the degrees of freedom miners and other 
+    // Require 10 blocks after joining before the operator can be selected for
+    // a group. This reduces the degrees of freedom miners and other
     // front-runners have in conducting pool-bumping attacks.
     //
-    // We don't use the stack of empty leaves until we run out of space on the 
+    // We don't use the stack of empty leaves until we run out of space on the
     // rightmost leaf (i.e. after 2 million operators have joined the pool).
-    // It means all insertions are at the right end, so one can't reorder 
+    // It means all insertions are at the right end, so one can't reorder
     // operators already in the pool until the pool has been filled once.
-    // Because the index is calculated by taking the minimum number of required 
-    // random bits, and seeing if it falls in the range of the total pool weight, 
-    // the only scenarios where insertions on the right matter are if it crosses 
-    // a power of two threshold for the total weight and unlocks another random 
-    // bit, or if a random number that would otherwise be discarded happens to 
+    // Because the index is calculated by taking the minimum number of required
+    // random bits, and seeing if it falls in the range of the total pool weight,
+    // the only scenarios where insertions on the right matter are if it crosses
+    // a power of two threshold for the total weight and unlocks another random
+    // bit, or if a random number that would otherwise be discarded happens to
     // fall within that space.
     uint256 constant INIT_BLOCKS = 10;
 
@@ -41,6 +41,12 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // The contract (e.g. Keep factory) this specific pool serves.
     // Only the pool owner can request groups.
     address poolOwner;
+
+    /// @notice The number of blocks that must be mined before the operator who
+    // joined the pool is eligible for work selection.
+    function operatorInitBlocks() public pure returns (uint256) {
+        return INIT_BLOCKS;
+    }
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
@@ -114,11 +120,5 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     function gasDepositSize() internal pure returns (uint256) {
         return GAS_DEPOSIT_SIZE;
-    }
-
-    /// @notice The number of blocks that must be mined before the operator who 
-    // joined the pool is eligible for work selection.
-    function operatorInitBlocks() public pure returns (uint256) {
-        return INIT_BLOCKS;
     }
 }

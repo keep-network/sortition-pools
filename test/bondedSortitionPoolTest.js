@@ -204,13 +204,13 @@ contract('BondedSortitionPool', (accounts) => {
       assert.isFalse(hasDuplicates(group))
     })
 
-    it.only('ignores too recently added operators', async () => {
+    it('ignores too recently added operators', async () => {
       await prepareOperator(accounts[0], 1)
       await prepareOperator(accounts[1], 1)
       await prepareOperator(accounts[2], 1)
       await prepareOperator(accounts[3], 1)
       await prepareOperator(accounts[4], 1)
-      // no accounts[5] here      
+      // no accounts[5] here
       await prepareOperator(accounts[6], 1)
       await prepareOperator(accounts[7], 1)
       await prepareOperator(accounts[8], 1)
