@@ -25,10 +25,6 @@ contract SortitionPool is AbstractSortitionPool {
         poolOwner = _poolOwner;
     }
 
-    // Require 10 blocks after joining
-    // before the operator can be selected for a group.
-    uint256 constant INIT_BLOCKS = 10;
-
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
     /// registered in the pool, otherwise the function fails reverting the
