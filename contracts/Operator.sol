@@ -64,7 +64,10 @@ library Operator {
         uint256 tempOperator = operator;
         for (uint256 i = 0; i < operators.length; i++) {
             uint256 thisOperator = operators[i];
-            if (index(tempOperator) < index(thisOperator)) {
+            // We can compare the raw underlying uint256 values
+            // because the starting index is stored
+            // in the most significant nonzero bits.
+            if (tempOperator < thisOperator) {
                 operators[i] = tempOperator;
                 tempOperator = thisOperator;
             }
