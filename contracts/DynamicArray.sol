@@ -32,7 +32,7 @@ library DynamicArray {
     //
     // First of all,
     // dynamic arrays must not be created or modified manually.
-    // Use `createArray(length)`, or `convert(existingArray)`
+    // Use `uintArray(length)`, or `convert(existingArray)`
     // which will perform a safe and efficient conversion for you.
     // This also applies to storage;
     // in-memory dynamic arrays are for efficient in-memory operations only,
@@ -63,7 +63,7 @@ library DynamicArray {
     // and `danglingPointer[len]` may be `y` or out of bounds.
     // This will not share your address space with a malevolent agent of chaos,
     // but it will cause entirely avoidable scratchings of the head.
-    struct Array {
+    struct UintArray {
         // XXX: Do not modify this value.
         // In fact, do not even read it.
         // There is never a legitimate reason to do anything with this value.
@@ -102,9 +102,9 @@ library DynamicArray {
     /// helps avoid frequent early allocations when filling the array.
     /// @param length The number of items to preallocate space for.
     /// @return A new dynamic array.
-    function createArray(uint256 length) internal pure returns (Array memory) {
+    function uintArray(uint256 length) internal pure returns (UintArray memory) {
         uint256[] memory array = _allocate(length);
-        return Array(length, array);
+        return UintArray(length, array);
     }
 
     /// @notice Convert an existing non-dynamic array into a dynamic array.
@@ -113,8 +113,8 @@ library DynamicArray {
     /// @param array The array to convert.
     /// @return A new dynamic array,
     /// containing the contents of the argument `array`.
-    function convert(uint256[] memory array) internal pure returns (Array memory) {
-        return Array(array.length, array);
+    function convert(uint256[] memory array) internal pure returns (UintArray memory) {
+        return UintArray(array.length, array);
     }
 
     /// @notice Push `item` into the dynamic array.
@@ -129,7 +129,7 @@ library DynamicArray {
     /// after the call it will be mutated in place to contain the item,
     /// allocating more memory behind the scenes if necessary.
     /// @param item The item you wish to push into the array.
-    function push(Array memory self, uint256 item) internal pure {
+    function push(UintArray memory self, uint256 item) internal pure {
         uint256 length = self.array.length;
         uint256 allocLength = self.allocatedMemory;
         // The dynamic array is full so we need to allocate more first.
@@ -158,7 +158,7 @@ library DynamicArray {
     /// Thus they have no desire to escape and ravage your buffers.
     /// @param self The array to pop from.
     /// @return item The previously last element in the array.
-    function pop(Array memory self) internal pure returns (uint256 item) {
+    function pop(UintArray memory self) internal pure returns (uint256 item) {
         uint256[] memory array = self.array;
         uint256 length = array.length;
         require(length > 0, "Can't pop from empty array");

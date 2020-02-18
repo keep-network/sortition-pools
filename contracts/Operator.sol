@@ -4,7 +4,7 @@ import "./Leaf.sol";
 import "./DynamicArray.sol";
 
 library Operator {
-    using DynamicArray for DynamicArray.Array;
+    using DynamicArray for DynamicArray.UintArray;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
@@ -58,7 +58,7 @@ library Operator {
         return op & (~(START_INDEX_MAX << WEIGHT_WIDTH)) | shiftedIndex;
     }
 
-    function insert(DynamicArray.Array memory operators, uint256 operator)
+    function insert(DynamicArray.UintArray memory operators, uint256 operator)
         internal
         pure
         // returns (uint256) // The last operator left outside the array
@@ -78,7 +78,7 @@ library Operator {
         // return tempOperator;
     }
 
-    function skip(uint256 truncatedIndex, DynamicArray.Array memory operators)
+    function skip(uint256 truncatedIndex, DynamicArray.UintArray memory operators)
         internal
         pure
         returns (uint256 mappedIndex)
@@ -112,7 +112,7 @@ library Operator {
     function remapIndices(
         uint256 deletedStartingIndex,
         uint256 deletedWeight,
-        DynamicArray.Array memory previousLeaves
+        DynamicArray.UintArray memory previousLeaves
     )
         internal
         pure

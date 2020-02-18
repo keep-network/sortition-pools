@@ -19,7 +19,7 @@ import "./Heap.sol";
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
 contract BondedSortitionPool is AbstractSortitionPool {
-    using DynamicArray for DynamicArray.Array;
+    using DynamicArray for DynamicArray.UintArray;
     using RNG for RNG.State;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,

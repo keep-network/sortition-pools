@@ -4,10 +4,10 @@ import "truffle/Assert.sol";
 import "../contracts/DynamicArray.sol";
 
 contract TestDynamicArray {
-    using DynamicArray for DynamicArray.Array;
+    using DynamicArray for DynamicArray.UintArray;
 
     function testCreateArray() public {
-        DynamicArray.Array memory dynamic = DynamicArray.createArray(32);
+        DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(32);
 
         Assert.equal(
             dynamic.array.length,
@@ -22,7 +22,7 @@ contract TestDynamicArray {
     }
 
     function testPush() public {
-        DynamicArray.Array memory dynamic = DynamicArray.createArray(2);
+        DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(2);
 
         Assert.equal(
             dynamic.array.length,
@@ -78,7 +78,7 @@ contract TestDynamicArray {
     }
 
     function testPop() public {
-        DynamicArray.Array memory dynamic = DynamicArray.createArray(4);
+        DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(4);
         dynamic.push(123);
         dynamic.push(456);
         dynamic.push(789);

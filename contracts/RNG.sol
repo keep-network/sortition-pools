@@ -5,7 +5,7 @@ import "./Operator.sol";
 import "./DynamicArray.sol";
 
 library RNG {
-    using DynamicArray for DynamicArray.Array;
+    using DynamicArray for DynamicArray.UintArray;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
@@ -34,7 +34,7 @@ library RNG {
         // Random indices are generated within this range,
         // and mapped to the full range by skipping the specified intervals.
         uint256 truncatedRange;
-        DynamicArray.Array skippedIntervals;
+        DynamicArray.UintArray skippedIntervals;
     }
 
     function initialize(
@@ -48,7 +48,7 @@ library RNG {
             seed,
             range,
             range,
-            DynamicArray.createArray(expectedSkippedCount)
+            DynamicArray.uintArray(expectedSkippedCount)
         );
         return self;
     }
