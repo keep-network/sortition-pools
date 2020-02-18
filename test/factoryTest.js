@@ -1,8 +1,3 @@
-require('@openzeppelin/test-helpers/configure')({
-  singletons: {
-    defaultGas: 6e6,
-  },
-})
 const { time } = require('@openzeppelin/test-helpers')
 
 const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory.sol')
