@@ -4,7 +4,6 @@ import "./StackLib.sol";
 import "./Branch.sol";
 import "./Position.sol";
 import "./Leaf.sol";
-import "./Heap.sol";
 
 contract SortitionTree {
     using StackLib for uint256[];

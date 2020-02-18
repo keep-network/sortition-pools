@@ -5,7 +5,6 @@ import "./RNG.sol";
 import "./api/IStaking.sol";
 import "./api/IBonding.sol";
 import "./DynamicArray.sol";
-import "./Heap.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
