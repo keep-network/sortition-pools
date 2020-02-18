@@ -152,14 +152,15 @@ contract('SortitionPool', (accounts) => {
 
       await pool.joinPool(bob)
 
-      const group = await pool.selectGroup.call(5, seed)
-      await pool.selectGroup(5, seed)
+      const group = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
 
       await mine(11)
       await staking.setStake(alice, 1000)
 
-      const group2 = await pool.selectGroup.call(5, seed)
+      const group2 = await pool.selectGroup.call(5, seed, { from: owner })
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group2, [bob, bob, bob, bob, bob])
     })
 
