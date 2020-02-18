@@ -204,6 +204,32 @@ contract('BondedSortitionPool', (accounts) => {
       assert.isFalse(hasDuplicates(group))
     })
 
+    it.only('ignores too recently added operators', async () => {
+      await prepareOperator(accounts[0], 1)
+      await prepareOperator(accounts[1], 1)
+      await prepareOperator(accounts[2], 1)
+      await prepareOperator(accounts[3], 1)
+      await prepareOperator(accounts[4], 1)
+      // no accounts[5] here      
+      await prepareOperator(accounts[6], 1)
+      await prepareOperator(accounts[7], 1)
+      await prepareOperator(accounts[8], 1)
+      await prepareOperator(accounts[9], 1)
+
+      await mineBlocks(11)
+
+      await prepareOperator(accounts[5], 1)
+
+      await mineBlocks(10)
+
+      group = await pool.selectSetGroup.call(9, seed, bond, { from: owner })
+      await pool.selectSetGroup(9, seed, bond, { from: owner })
+
+      assert.equal(group.length, 9)
+      assert.isFalse(hasDuplicates(group))
+      assert.isFalse(group.includes(accounts[5]))
+    })
+
     it('updates the bond value', async () => {
       await prepareOperator(accounts[0], 10)
       await prepareOperator(accounts[1], 21)
