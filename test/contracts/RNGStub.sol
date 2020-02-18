@@ -11,7 +11,7 @@ contract RNGStub {
         return RNG.truncate(bits, input);
     }
 
-    function getIndex(uint range, uint state) public pure returns (uint) {
+    function getIndex(uint range, uint state) public view returns (uint) {
         uint i;
         bytes32 s;
         (i, s) = RNG.getIndex(range, bytes32(state));

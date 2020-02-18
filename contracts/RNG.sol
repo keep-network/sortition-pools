@@ -86,7 +86,7 @@ library RNG {
     /// the previous stored state must be overwritten with the latest output.
     function getIndex(uint256 range, bytes32 state)
         internal
-        pure
+        view
         returns (uint256, bytes32)
     {
         uint256 bits = bitsRequired(range);
@@ -95,7 +95,7 @@ library RNG {
         bytes32 newState = state;
         while (!found) {
             index = truncate(bits, uint256(newState));
-            newState = keccak256(abi.encode(newState));
+            newState = keccak256(abi.encodePacked(newState, address(this)));
             if (index < range) {
                 found = true;
             }
@@ -136,7 +136,7 @@ library RNG {
         uint256 sumPreviousWeights
     )
         internal
-        pure
+        view
         returns (uint256 uniqueIndex, bytes32 newState)
     {
         // Get an index in the truncated range.
