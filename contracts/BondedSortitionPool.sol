@@ -36,11 +36,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         BondingParams _bonding;
         address _poolOwner;
         uint256 _root;
-        uint256 _poolWeight;
         bool _rootChanged;
-        uint256 _skippedTotalWeight;
         uint256 _selectedCount;
-        bytes32 _rngState;
     }
 
     // Require 10 blocks after joining
@@ -78,19 +75,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        Heap.Uint256x2 memory indexAndRoot = Heap.Uint256x2(0, root);
-        Heap.Uint256x2 memory leafPtrAndStartIndex = Heap.Uint256x2(0, 0);
-
         PoolParams memory params = PoolParams(
             staking,
             bonding,
             poolOwner,
-            indexAndRoot.snd,
-            indexAndRoot.snd.sumWeight(),
+            root,
             false,
-            0,
-            0,
-            seed
+            0
         );
 
         if (params._bonding._minimumBondableValue != bondValue) {
@@ -102,7 +93,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         RNG.State memory rng = RNG.initialize(
             seed,
-            params._poolWeight,
+            params._root.sumWeight(),
             groupSize
         );
 
@@ -114,12 +105,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
             );
 
             rng.generateNewIndex();
-            indexAndRoot.fst = rng.currentMappedIndex;
 
-            (leafPtrAndStartIndex.fst, leafPtrAndStartIndex.snd) =
-                pickWeightedLeafWithIndex(indexAndRoot.fst, indexAndRoot.snd);
+            (uint256 leafPosition, uint256 startingIndex) =
+                pickWeightedLeafWithIndex(rng.currentMappedIndex, params._root);
 
-            uint256 theLeaf = leaves[leafPtrAndStartIndex.fst];
+            uint256 theLeaf = leaves[leafPosition];
             // Check that the leaf is old enough
             bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
             address operator = theLeaf.operator();
@@ -130,7 +120,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 (queryEligibleWeight(operator, params) < leafWeight);
 
             uint256 currentOperatorInterval = Operator.make(
-                leafPtrAndStartIndex.snd,
+                startingIndex,
                 leafWeight
             );
 
@@ -141,17 +131,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // rng.retryIndex();
                 removeDuringSelection(
                     params,
-                    leafPtrAndStartIndex.fst,
+                    leafPosition,
                     operator
                 );
-                indexAndRoot.snd = params._root;
                 continue;
             }
 
             rng.addSkippedInterval(currentOperatorInterval);
-
-            // And increase the skipped weight,
-            params._skippedTotalWeight += leafWeight;
 
             // If we didn't short-circuit out,
             // the operator is not out of date.
@@ -196,11 +182,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bonding,
             poolOwner,
             0,
-            0, // the pool weight doesn't matter here
             false,
-            0,
-            0,
-            bytes32(0)
+            0
         );
         return queryEligibleWeight(operator, params);
     }
