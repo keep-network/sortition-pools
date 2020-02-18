@@ -20,9 +20,6 @@ contract OperatorStub {
             uint256 index = previousLeafStartingIndices[i];
             uint256 weight = previousLeafWeights[i];
             previousLeaves[i] = Operator.make(
-                address(0),
-                false,
-                0,
                 index,
                 weight
             );

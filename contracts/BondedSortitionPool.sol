@@ -129,9 +129,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 (queryEligibleWeight(operator, params) < leafWeight);
 
             uint256 lastOperator = Operator.make(
-                operator,
-                outOfDate,
-                leafPtrAndStartIndex.fst,
                 leafPtrAndStartIndex.snd,
                 leafWeight
             );
@@ -139,7 +136,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
             // Remove the operator and get next one if out of date,
             // otherwise add it to the list of operators to skip.
             if (outOfDate) {
-                removeDuringSelection(params, skippedLeaves.array, lastOperator);
+                removeDuringSelection(
+                    params,
+                    skippedLeaves.array,
+                    lastOperator,
+                    leafPtrAndStartIndex.fst,
+                    operator
+                );
                 indexAndRoot.snd = params._root;
                 continue;
             }
@@ -181,13 +184,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
     function removeDuringSelection(
         PoolParams memory params,
         uint256[] memory skippedLeaves,
-        uint256 operatorData
+        uint256 operatorData,
+        uint256 leafPosition,
+        address operator
     ) internal {
         // Remove the leaf
-        uint256 leafPosition = Operator.position(operatorData);
         params._root = removeLeaf(leafPosition, params._root);
         // Remove the record of the operator's leaf and release gas
-        address operator = Operator.opAddress(operatorData);
         removeOperatorLeaf(operator);
         releaseGas(operator);
         // Update the params
