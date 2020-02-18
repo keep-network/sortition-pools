@@ -87,7 +87,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
             _root
         );
 
-        /* loop */
         while (selected.array.length < groupSize) {
             rng.generateNewIndex();
 
@@ -116,27 +115,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 // Remove the record of the operator's leaf and release gas
                 removeOperatorLeaf(operator);
                 releaseGas(operator);
-                continue;
-            }
-
-            rng.addSkippedInterval(startingIndex, leafWeight);
-
-            // If we didn't short-circuit out,
-            // the operator is not out of date.
-            // This means that checking whether it is `mature` is enough.
-            if (mature) {
+            } else if (mature) {
+                rng.addSkippedInterval(startingIndex, leafWeight);
                 selected.push(operator);
+            } else {
+                rng.addSkippedInterval(startingIndex, leafWeight);
             }
         }
-        /* pool */
-
         if (rootChanged) {
             root = _root;
         }
-
-        // If nothing has exploded by now,
-        // we should have the correct size of group.
-
         return selected.array;
     }
 
