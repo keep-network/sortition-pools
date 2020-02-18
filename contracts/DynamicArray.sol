@@ -133,8 +133,14 @@ library DynamicArray {
         uint256 length = self.array.length;
         uint256 allocLength = self.allocatedMemory;
         // The dynamic array is full so we need to allocate more first.
+        // Consider the >= case instead of the == case
+        // so that we can put the require inside the conditional,
+        // reducing the gas costs of `push` slightly.
         if (length >= allocLength) {
+            // This should never happen if `allocatedMemory` isn't messed with.
             require(length == allocLength, "Array length exceeds allocation");
+            // Allocate twice the original array length,
+            // then copy the contents over.
             uint256 newMemory = length * 2;
             uint256[] memory newArray = _allocate(newMemory);
             _copy(newArray, self.array);
@@ -238,7 +244,8 @@ library DynamicArray {
             let length := mload(array)
             let newLength := add(length, 1)
             // Calculate how many bytes the array takes in memory,
-            // including the length field
+            // including the length field.
+            // This is equal to 32 * the incremented length.
             let arraySize := mul(0x20, newLength)
             // Calculate the first memory position after the array
             let nextPosition := add(array, arraySize)
