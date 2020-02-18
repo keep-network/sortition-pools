@@ -67,26 +67,26 @@ library RNG {
 
     function addSkippedInterval(
         State memory self,
-        uint256 interval
+        uint256 startIndex,
+        uint256 weight
     ) internal pure {
-        self.truncatedRange -= Operator.opWeight(interval);
+        self.truncatedRange -= weight;
         Operator.insert(
             self.skippedIntervals,
-            interval
+            Operator.make(startIndex, weight)
         );
     }
 
     function removeInterval(
         State memory self,
-        uint256 interval
+        uint256 startIndex,
+        uint256 weight
     ) internal pure {
-        uint256 startIndex = Operator.index(interval);
-        uint256 deletedWeight = Operator.opWeight(interval);
-        self.truncatedRange -= deletedWeight;
-        self.fullRange -= deletedWeight;
+        self.truncatedRange -= weight;
+        self.fullRange -= weight;
         Operator.remapIndices(
             startIndex,
-            deletedWeight,
+            weight,
             self.skippedIntervals
         );
     }

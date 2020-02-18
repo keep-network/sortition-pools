@@ -102,15 +102,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
             bool outOfDate = mature &&
                 (queryEligibleWeight(operator, params) < leafWeight);
 
-            uint256 currentOperatorInterval = Operator.make(
-                startingIndex,
-                leafWeight
-            );
-
             // Remove the operator and get next one if out of date,
             // otherwise add it to the list of operators to skip.
             if (outOfDate) {
-                rng.removeInterval(currentOperatorInterval);
+                rng.removeInterval(startingIndex, leafWeight);
                 // rng.retryIndex();
                 removeDuringSelection(
                     params,
@@ -120,7 +115,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 continue;
             }
 
-            rng.addSkippedInterval(currentOperatorInterval);
+            rng.addSkippedInterval(startingIndex, leafWeight);
 
             // If we didn't short-circuit out,
             // the operator is not out of date.
