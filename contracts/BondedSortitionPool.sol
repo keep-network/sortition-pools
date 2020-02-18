@@ -116,7 +116,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
                 params._skippedTotalWeight
             );
 
-            nonAllocatingPick(indexAndRoot, leafPtrAndStartIndex);
+            (leafPtrAndStartIndex.fst, leafPtrAndStartIndex.snd) =
+                pickWeightedLeafWithIndex(indexAndRoot.fst, indexAndRoot.snd);
 
             uint256 theLeaf = leaves[leafPtrAndStartIndex.fst];
             // Check that the leaf is old enough
