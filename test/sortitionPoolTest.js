@@ -7,11 +7,7 @@ const Leaf = artifacts.require('Leaf')
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
-async function mine(blocks) {
-  for (i = 0; i < blocks; i++) {
-    await time.advanceBlock()
-  }
-}
+const { mineBlocks } = require('./mineBlocks')
 
 contract('SortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
@@ -41,7 +37,7 @@ contract('SortitionPool', (accounts) => {
       await pool.joinPool(bob)
       await pool.joinPool(carol)
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(3, seed, { from: owner })
       await pool.selectGroup(3, seed, { from: owner })
@@ -56,6 +52,8 @@ contract('SortitionPool', (accounts) => {
       await pool.joinPool(alice)
       await pool.joinPool(bob)
       await pool.joinPool(carol)
+
+      await mineBlocks(11)
 
       try {
         await pool.selectGroup.call(3, seed, { from: accounts[0] })
@@ -82,7 +80,7 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(alice, 2000)
       await pool.joinPool(alice)
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(5, seed, { from: owner })
       await pool.selectGroup(5, seed, { from: owner })
@@ -97,7 +95,7 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 1000)
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(5, seed, { from: owner })
       await pool.selectGroup(5, seed, { from: owner })
@@ -112,7 +110,7 @@ contract('SortitionPool', (accounts) => {
 
       await staking.setStake(bob, 390000)
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(5, seed, { from: owner })
       await pool.selectGroup(5, seed, { from: owner })
@@ -128,7 +126,7 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(bob, 390000)
       await staking.setStake(alice, 1000)
 
-      await mine(11)
+      await mineBlocks(11)
 
       await pool.updateOperatorStatus(bob)
       await pool.updateOperatorStatus(alice)
@@ -143,7 +141,7 @@ contract('SortitionPool', (accounts) => {
       await staking.setStake(bob, 2000)
       await pool.joinPool(alice)
 
-      await mine(11)
+      await mineBlocks(11)
 
       await pool.joinPool(bob)
 
@@ -151,7 +149,7 @@ contract('SortitionPool', (accounts) => {
       await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [alice, alice, alice, alice, alice])
 
-      await mine(11)
+      await mineBlocks(11)
       await staking.setStake(alice, 1000)
 
       const group2 = await pool.selectGroup.call(5, seed, { from: owner })
@@ -166,7 +164,7 @@ contract('SortitionPool', (accounts) => {
         await pool.joinPool(address)
       }
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(100, seed, { from: owner })
       await pool.selectGroup(100, seed, { from: owner })

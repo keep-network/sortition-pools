@@ -4,11 +4,7 @@ const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory
 const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
 const StakingContractStub = artifacts.require('StakingContractStub.sol')
 
-async function mine(blocks) {
-  for (i = 0; i < blocks; i++) {
-    await time.advanceBlock()
-  }
-}
+const { mineBlocks } = require('./mineBlocks')
 
 contract('SortitionPoolFactory', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
@@ -40,7 +36,7 @@ contract('SortitionPoolFactory', (accounts) => {
       await sortitionPool1.joinPool(alice)
       await sortitionPool2.joinPool(bob)
 
-      await mine(11)
+      await mineBlocks(11)
 
       const group1 = await sortitionPool1.selectGroup.call(2, seed)
       assert.deepEqual(group1, [alice, alice])
