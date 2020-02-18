@@ -2,8 +2,10 @@ pragma solidity ^0.5.10;
 
 import "./Leaf.sol";
 import "./Operator.sol";
+import "./DynamicArray.sol";
 
 library RNG {
+    using DynamicArray for DynamicArray.Array;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
@@ -17,6 +19,109 @@ library RNG {
     // Derived constants, do not touch
     uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
     ////////////////////////////////////////////////////////////////////////////
+
+    struct State {
+        // RNG output
+        uint256 currentMappedIndex;
+        uint256 currentTruncatedIndex;
+        // The random bytes used to derive indices
+        bytes32 currentSeed;
+        bytes32 baseSeed;
+        // The full range of indices;
+        // generated random numbers are in [0, fullRange).
+        uint256 fullRange;
+        // The truncated range of indices;
+        // how many non-skipped indices are left to consider.
+        // Random indices are generated within this range,
+        // and mapped to the full range by skipping the specified intervals.
+        uint256 truncatedRange;
+        // The starting indices and lengths of all skipped intervals.
+        DynamicArray.Array skippedIntervals;
+    }
+
+    function initialize(
+        bytes32 seed,
+        uint256 range,
+        uint256 expectedSkippedCount
+    ) internal view returns (State memory self) {
+        self = State(
+            0,
+            0,
+            seed,
+            seed,
+            range,
+            range,
+            DynamicArray.createArray(expectedSkippedCount)
+        );
+        generateNewIndex(self);
+        return self;
+    }
+
+    function updateSeed(State memory self) internal view {
+        bytes32 newSeed = keccak256(
+            abi.encodePacked(self.baseSeed, address(this), "RNG_update")
+        );
+        self.baseSeed = newSeed;
+        self.currentSeed = newSeed;
+        generateNewIndex(self);
+    }
+
+    function retryIndex(State memory self) internal view {
+        uint256 truncatedIndex = self.currentTruncatedIndex;
+        if (self.currentTruncatedIndex < self.truncatedRange) {
+            self.currentMappedIndex = Operator.skip(
+                truncatedIndex,
+                self.skippedIntervals.array
+            );
+        } else {
+            generateNewIndex(self);
+        }
+    }
+
+    function addSkippedInterval(State memory self, uint256 interval)
+        internal view
+    {
+        self.truncatedRange -= Operator.opWeight(interval);
+        uint256 lastInterval = Operator.insert(
+            self.skippedIntervals.array,
+            interval
+        );
+        self.skippedIntervals.push(lastInterval);
+        retryIndex(self);
+    }
+
+    function removeInterval(State memory self, uint256 interval)
+        internal view
+    {
+        uint256 startIndex = Operator.index(interval);
+        uint256 deletedWeight = Operator.opWeight(interval);
+        self.truncatedRange -= deletedWeight;
+        self.fullRange -= deletedWeight;
+        Operator.remapIndices(
+            startIndex,
+            deletedWeight,
+            self.skippedIntervals.array
+        );
+        retryIndex(self);
+    }
+
+    function generateNewIndex(State memory self)
+        internal view
+    {
+        uint256 bits = bitsRequired(self.truncatedRange);
+        uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
+        while (truncatedIndex >= self.truncatedRange) {
+            self.currentSeed = keccak256(
+                abi.encodePacked(self.currentSeed, address(this), "RNG_generate")
+            );
+            truncatedIndex = truncate(bits, uint256(self.currentSeed));
+        }
+        self.currentTruncatedIndex = truncatedIndex;
+        self.currentMappedIndex = Operator.skip(
+            truncatedIndex,
+            self.skippedIntervals.array
+        );
+    }
 
     /// @notice Calculate how many bits are required
     /// for an index in the range `[0 .. range-1]`.
