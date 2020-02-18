@@ -115,4 +115,10 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     function gasDepositSize() internal pure returns (uint256) {
         return GAS_DEPOSIT_SIZE;
     }
+
+    /// @notice The number of blocks that must be mined before the operator who 
+    // joined the pool is eligible for work selection.
+    function operatorInitBlocks() public pure returns (uint256) {
+        return INIT_BLOCKS;
+    }
 }
