@@ -117,6 +117,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
             (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex, params._root);
 
             uint256 theLeaf = leaves[leafPosition];
+            // Check that the leaf is old enough
+            // FIXME: inefficient, can lead to an infinite loop.
+            if (theLeaf.creationBlock() + INIT_BLOCKS >= block.number) {
+                continue;
+            }
             address operator = theLeaf.operator();
             uint256 leafWeight = theLeaf.weight();
 
