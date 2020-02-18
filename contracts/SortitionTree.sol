@@ -179,22 +179,8 @@ contract SortitionTree {
     function pickWeightedLeafWithIndex(uint256 index, uint256 _root)
         internal
         view
-        returns (uint256, uint256)
+        returns (uint256 leafPosition, uint256 leafFirstIndex)
     {
-        Heap.Uint256x2 memory _args = Heap.Uint256x2(index, _root);
-        Heap.Uint256x2 memory _return = Heap.Uint256x2(0, 0);
-        nonAllocatingPick(_args, _return);
-        uint256 leafPosition = _return.fst;
-        uint256 leafFirstIndex = _return.snd;
-        return (leafPosition, leafFirstIndex);
-    }
-
-    function nonAllocatingPick(
-        Heap.Uint256x2 memory _args,
-        Heap.Uint256x2 memory _return
-    ) internal view {
-        uint256 index = _args.fst;
-        uint256 _root = _args.snd;
         uint256 currentIndex = index;
         uint256 currentNode = _root;
         uint256 currentPosition = 0;
@@ -217,13 +203,11 @@ contract SortitionTree {
         }
 
         // get leaf position
-        uint256 leafPosition = currentPosition.child(currentSlot);
+        leafPosition = currentPosition.child(currentSlot);
         // get the first index of the leaf
         // This works because the last weight returned from `pickWeightedSlot()`
         // equals the "overflow" from getting the current slot.
-        uint256 leafFirstIndex = index - currentIndex;
-        _return.fst = leafPosition;
-        _return.snd = leafFirstIndex;
+        leafFirstIndex = index - currentIndex;
     }
 
     function pickWeightedLeaf(uint256 index, uint256 _root) internal view returns (uint256) {
