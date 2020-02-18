@@ -57,7 +57,7 @@ contract('SortitionPool', (accounts) => {
       try {
         await pool.selectGroup.call(3, seed)
       } catch (error) {
-        assert.include(error.message, 'No operators in pool')
+        assert.include(error.message, 'Not enough operators in pool')
         return
       }
 

@@ -32,10 +32,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumBondableValue;
     }
 
-    struct PoolParams {
+    struct SelectionParams {
         StakingParams _staking;
         BondingParams _bonding;
-        address _poolOwner;
+        PoolParams _pool;
     }
 
     // Require 10 blocks after joining
@@ -55,7 +55,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         staking = StakingParams(_stakingContract, _minimumStake);
         bonding = BondingParams(_bondingContract, _minimumBondableValue);
-        poolOwner = _poolOwner;
+        poolParams = PoolParams(_poolOwner, INIT_BLOCKS);
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -73,114 +73,92 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        uint256 _root = root;
-        bool rootChanged = false;
-
-        PoolParams memory params;
-        DynamicArray.AddressArray memory selected;
-        RNG.State memory rng;
-
-        (params, selected, rng) = initializeSelection(
+        uint256 paramsPtr = initializeSelectionParams(
+            bondValue
+        );
+        return generalizedSelectGroup(
             groupSize,
             seed,
-            bondValue,
-            _root
+            paramsPtr,
+            true
         );
-
-        while (selected.array.length < groupSize) {
-            rng.generateNewIndex();
-
-            (uint256 leafPosition, uint256 startingIndex) =
-                pickWeightedLeafWithIndex(rng.currentMappedIndex, _root);
-
-            uint256 theLeaf = leaves[leafPosition];
-            // Check that the leaf is old enough
-            bool mature = theLeaf.creationBlock() + INIT_BLOCKS < block.number;
-            address operator = theLeaf.operator();
-            uint256 leafWeight = theLeaf.weight();
-            // Only query the up-to-dateness of mature operators,
-            // to reduce the cost of dealing with immature ones.
-            bool outOfDate = mature &&
-                (queryEligibleWeight(operator, params) < leafWeight);
-
-            // Remove the operator and get next one if out of date,
-            // otherwise add it to the list of operators to skip.
-            if (outOfDate) {
-                // Update the RNG
-                rng.removeInterval(startingIndex, leafWeight);
-                // rng.retryIndex();
-                // Remove the leaf and update root
-                _root = removeLeaf(leafPosition, _root);
-                rootChanged = true;
-                // Remove the record of the operator's leaf and release gas
-                removeOperatorLeaf(operator);
-                releaseGas(operator);
-            } else if (mature) {
-                rng.addSkippedInterval(startingIndex, leafWeight);
-                selected.push(operator);
-            } else {
-                rng.addSkippedInterval(startingIndex, leafWeight);
-            }
-        }
-        if (rootChanged) {
-            root = _root;
-        }
-        return selected.array;
     }
 
-    function initializeSelection(
-        uint256 groupSize,
-        bytes32 seed,
-        uint256 bondValue,
-        uint256 _root
-    ) internal returns (
-        PoolParams memory params,
-        DynamicArray.AddressArray memory selected,
-        RNG.State memory rng
-    ) {
-        uint256 poolWeight = _root.sumWeight();
-        require(poolWeight > 0, "Not enough operators in pool");
-
+    function initializeSelectionParams(
+        uint256 bondValue
+    ) internal returns (uint256 paramsPtr) {
         StakingParams memory _staking = staking;
         BondingParams memory _bonding = bonding;
+        PoolParams memory _pool = poolParams;
 
         if (_bonding._minimumBondableValue != bondValue) {
             _bonding._minimumBondableValue = bondValue;
             bonding._minimumBondableValue = bondValue;
         }
 
-        params = PoolParams(
+        SelectionParams memory params = SelectionParams(
             _staking,
             _bonding,
-            poolOwner
+            _pool
         );
-
-        selected = DynamicArray.addressArray(groupSize);
-
-        rng = RNG.initialize(
-            seed,
-            poolWeight,
-            groupSize
-        );
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            paramsPtr := params
+        }
+        return paramsPtr;
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        PoolParams memory params = PoolParams(
-            staking,
-            bonding,
-            poolOwner
+        address ownerAddress = poolParams._owner;
+        // Get the amount of bondable value available for this pool.
+        // We only care that this covers one single bond
+        // regardless of the weight of the operator in the pool.
+        uint256 bondableValue = bonding._contract.availableUnbondedValue(
+            operator,
+            ownerAddress,
+            address(this)
         );
-        return queryEligibleWeight(operator, params);
+
+        // Don't query stake if bond is insufficient.
+        if (bondableValue < bonding._minimumBondableValue) {
+            return 0;
+        }
+
+        uint256 eligibleStake = staking._contract.eligibleStake(
+            operator,
+            ownerAddress
+        );
+
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        // If eligibleStake < minimumStake, return 0 = ineligible.
+        return (eligibleStake / staking._minimum);
     }
 
-    function queryEligibleWeight(
-        address operator,
-        PoolParams memory params
-    ) internal view returns (uint256) {
-        address ownerAddress = params._poolOwner;
+    function decideFate(
+        uint256 leaf,
+        DynamicArray.AddressArray memory selected,
+        uint256 paramsPtr
+    ) internal view returns (Decision) {
+        SelectionParams memory params;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            params := paramsPtr
+        }
+        address operator = leaf.operator();
+        uint256 createdAt = leaf.creationBlock();
+        uint256 leafWeight = leaf.weight();
+
+        uint256 initBlocks = params._pool._initBlocks;
+
+        if (createdAt + initBlocks >= block.number) {
+            return Decision.Skip;
+        }
+
+        address ownerAddress = params._pool._owner;
 
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond
@@ -193,7 +171,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         // Don't query stake if bond is insufficient.
         if (bondableValue < params._bonding._minimumBondableValue) {
-            return 0;
+            return Decision.Delete;
         }
 
         uint256 eligibleStake = params._staking._contract.eligibleStake(
@@ -203,7 +181,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
+        uint256 eligibleWeight = eligibleStake / params._staking._minimum;
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / params._staking._minimum);
+        if (eligibleWeight < leafWeight) {
+            return Decision.Delete;
+        } else {
+            return Decision.Select;
+        }
     }
 }

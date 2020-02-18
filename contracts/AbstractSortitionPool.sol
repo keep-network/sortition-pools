@@ -3,6 +3,7 @@ pragma solidity ^0.5.10;
 import "./GasStation.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
+import "./DynamicArray.sol";
 import "./api/IStaking.sol";
 
 /// @title Abstract Sortition Pool
@@ -12,19 +13,28 @@ import "./api/IStaking.sol";
 contract AbstractSortitionPool is SortitionTree, GasStation {
     using Leaf for uint256;
     using Position for uint256;
+    using DynamicArray for DynamicArray.UintArray;
+    using DynamicArray for DynamicArray.AddressArray;
+    using RNG for RNG.State;
+
+    enum Decision { Select, Skip, Delete }
 
     struct StakingParams {
         IStaking _contract;
         uint256 _minimum;
     }
 
+    struct PoolParams {
+        // The contract (e.g. Keep factory) this specific pool serves.
+        // Only the pool owner can request groups.
+        address _owner;
+        uint256 _initBlocks;
+    }
+
     uint256 constant GAS_DEPOSIT_SIZE = 1;
 
     StakingParams staking;
-
-    // The contract (e.g. Keep factory) this specific pool serves.
-    // Only the pool owner can request groups.
-    address poolOwner;
+    PoolParams poolParams;
 
     // Return whether the operator is eligible for the pool.
     function isOperatorEligible(address operator) public view returns (bool) {
@@ -80,21 +90,86 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         );
 
         if (eligibleWeight == 0) {
-            removeFromPool(operator);
+            removeOperator(operator);
+            releaseGas(operator);
         } else {
             updateOperator(operator, eligibleWeight);
         }
     }
 
-    function removeFromPool(address operator) internal {
-        removeOperator(operator);
-        releaseGas(operator);
+    function generalizedSelectGroup(
+        uint256 groupSize,
+        bytes32 seed,
+        uint256 paramsPtr,
+        bool noDuplicates
+    ) internal returns (address[] memory) {
+        uint256 _root = root;
+        bool rootChanged = false;
+
+        DynamicArray.AddressArray memory selected;
+        selected = DynamicArray.addressArray(groupSize);
+
+        RNG.State memory rng;
+        rng = RNG.initialize(
+            seed,
+            _root.sumWeight(),
+            groupSize
+        );
+
+        while (selected.array.length < groupSize) {
+            rng.generateNewIndex();
+
+            (uint256 leafPosition, uint256 startingIndex) =
+                pickWeightedLeafWithIndex(rng.currentMappedIndex, _root);
+
+            uint256 leaf = leaves[leafPosition];
+            address operator = leaf.operator();
+            uint256 leafWeight = leaf.weight();
+
+            Decision decision = decideFate(
+                leaf,
+                selected,
+                paramsPtr
+            );
+
+            if (decision == Decision.Select) {
+                selected.push(operator);
+                if (noDuplicates) {
+                    rng.addSkippedInterval(startingIndex, leafWeight);
+                }
+                continue;
+            }
+            if (decision == Decision.Skip) {
+                rng.addSkippedInterval(startingIndex, leafWeight);
+                continue;
+            }
+            if (decision == Decision.Delete) {
+                // Update the RNG
+                rng.removeInterval(startingIndex, leafWeight);
+                // Remove the leaf and update root
+                _root = removeLeaf(leafPosition, _root);
+                rootChanged = true;
+                // Remove the record of the operator's leaf and release gas
+                removeOperatorLeaf(operator);
+                releaseGas(operator);
+                continue;
+            }
+        }
+        if (rootChanged) {
+            root = _root;
+        }
+        return selected.array;
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256);
+
+    function decideFate(
+        uint256 leaf,
+        DynamicArray.AddressArray memory selected,
+        uint256 paramsPtr) internal view returns (Decision);
 
     function gasDepositSize() internal pure returns (uint256) {
         return GAS_DEPOSIT_SIZE;
