@@ -27,7 +27,7 @@ library Interval {
     uint256 constant START_INDEX_SHIFT = WEIGHT_WIDTH;
     ////////////////////////////////////////////////////////////////////////////
 
-    // Operator stores information about a selected operator
+    // Interval stores information about a selected interval
     // inside a single uint256 in a manner similar to Leaf
     // but optimized for use within group selection
     //
@@ -48,7 +48,7 @@ library Interval {
         return (op & WEIGHT_MAX);
     }
 
-    // Return the starting index of the operator
+    // Return the starting index of the interval
     function index(uint256 a) internal pure returns (uint256) {
         return ((a >> WEIGHT_WIDTH) & START_INDEX_MAX);
     }
@@ -58,40 +58,38 @@ library Interval {
         return op & (~(START_INDEX_MAX << WEIGHT_WIDTH)) | shiftedIndex;
     }
 
-    function insert(DynamicArray.UintArray memory operators, uint256 operator)
+    function insert(DynamicArray.UintArray memory intervals, uint256 interval)
         internal
         pure
-        // returns (uint256) // The last operator left outside the array
     {
-        uint256 tempOperator = operator;
-        for (uint256 i = 0; i < operators.array.length; i++) {
-            uint256 thisOperator = operators.array[i];
+        uint256 tempInterval = interval;
+        for (uint256 i = 0; i < intervals.array.length; i++) {
+            uint256 thisInterval = intervals.array[i];
             // We can compare the raw underlying uint256 values
             // because the starting index is stored
             // in the most significant nonzero bits.
-            if (tempOperator < thisOperator) {
-                operators.array[i] = tempOperator;
-                tempOperator = thisOperator;
+            if (tempInterval < thisInterval) {
+                intervals.array[i] = tempInterval;
+                tempInterval = thisInterval;
             }
         }
-        operators.push(tempOperator);
-        // return tempOperator;
+        intervals.push(tempInterval);
     }
 
-    function skip(uint256 truncatedIndex, DynamicArray.UintArray memory operators)
+    function skip(uint256 truncatedIndex, DynamicArray.UintArray memory intervals)
         internal
         pure
         returns (uint256 mappedIndex)
     {
         mappedIndex = truncatedIndex;
-        for (uint256 i = 0; i < operators.array.length; i++) {
-            uint256 operator = operators.array[i];
+        for (uint256 i = 0; i < intervals.array.length; i++) {
+            uint256 interval = intervals.array[i];
             // If the index is greater than the starting index of the `i`th leaf,
             // we need to skip that leaf.
-            if (mappedIndex >= index(operator)) {
+            if (mappedIndex >= index(interval)) {
                 // Add the weight of this previous leaf to the index,
                 // ensuring that we skip the leaf.
-                mappedIndex += Leaf.weight(operator);
+                mappedIndex += Leaf.weight(interval);
             } else {
                 break;
             }
@@ -120,13 +118,13 @@ library Interval {
         uint256 nPreviousLeaves = previousLeaves.array.length;
 
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            uint256 operator = previousLeaves.array[i];
-            uint256 startingIndex = index(operator);
+            uint256 interval = previousLeaves.array[i];
+            uint256 startingIndex = index(interval);
             // If index is greater than the index of the deleted leaf,
             // reduce the starting index by the weight of the deleted leaf.
             if (startingIndex > deletedStartingIndex) {
                 uint256 newIndex = startingIndex - deletedWeight;
-                previousLeaves.array[i] = setIndex(operator, newIndex);
+                previousLeaves.array[i] = setIndex(interval, newIndex);
             }
         }
     }
