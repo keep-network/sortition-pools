@@ -50,7 +50,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         staking = StakingParams(_stakingContract, _minimumStake);
         bonding = BondingParams(_bondingContract, _minimumBondableValue);
-        poolParams = PoolParams(_poolOwner, INIT_BLOCKS);
+        poolParams = PoolParams(_poolOwner);
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -152,9 +152,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 createdAt = leaf.creationBlock();
         uint256 leafWeight = leaf.weight();
 
-        uint256 initBlocks = params._pool._initBlocks;
-
-        if (createdAt + initBlocks >= block.number) {
+        if (createdAt + INIT_BLOCKS >= block.number) {
             return Decision.Skip;
         }
 

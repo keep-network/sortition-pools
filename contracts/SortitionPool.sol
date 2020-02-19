@@ -22,7 +22,7 @@ contract SortitionPool is AbstractSortitionPool {
         address _poolOwner
     ) public {
         staking = StakingParams(_stakingContract, _minimumStake);
-        poolParams = PoolParams(_poolOwner, INIT_BLOCKS);
+        poolParams = PoolParams(_poolOwner);
     }
 
     struct SelectionParams {
@@ -106,9 +106,7 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 createdAt = leaf.creationBlock();
         uint256 leafWeight = leaf.weight();
 
-        uint256 initBlocks = params._pool._initBlocks;
-
-        if (createdAt + initBlocks >= block.number) {
+        if (createdAt + INIT_BLOCKS >= block.number) {
             return Decision.Skip;
         }
 
