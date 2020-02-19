@@ -95,14 +95,10 @@ library Branch {
 
     /// @notice Calculate the summed weight of all slots in the `node`.
     function sumWeight(uint256 node) internal pure returns (uint256 sum) {
-        // solium-disable-next-line security/no-inline-assembly
-        // assembly {
-        //     sum := and(node, 0xffffffff)
-        //     for { node := shr(32, node) } gt(node, 0) { node := shr(32, node) } {
-        //         sum := add(sum, and(0xffffffff, node))
-        //     }
-        // }
         sum = node & SLOT_MAX;
+        // Iterate through each slot
+        // by shifting `node` right in increments of 32 bits,
+        // and adding the 32 least significant bits to the `sum`.
         uint256 newNode = node >> SLOT_WIDTH;
         while (newNode > 0) {
             sum += (newNode & SLOT_MAX);

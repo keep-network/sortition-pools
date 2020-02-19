@@ -25,10 +25,6 @@ contract SortitionPool is AbstractSortitionPool {
         poolParams = PoolParams(_poolOwner, INIT_BLOCKS);
     }
 
-    // Require 10 blocks after joining
-    // before the operator can be selected for a group.
-    uint256 constant INIT_BLOCKS = 10;
-
     struct SelectionParams {
         StakingParams _staking;
         PoolParams _pool;
@@ -44,7 +40,16 @@ contract SortitionPool is AbstractSortitionPool {
     function selectGroup(
         uint256 groupSize, bytes32 seed
     ) public returns (address[] memory)  {
-        uint256 paramsPtr = initializeSelectionParams();
+        SelectionParams memory params = initializeSelectionParams();
+        require(
+            msg.sender == params._pool._owner,
+            "Only owner may select groups"
+        );
+        uint256 paramsPtr;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            paramsPtr := params
+        }
         return generalizedSelectGroup(
             groupSize,
             seed,
@@ -53,19 +58,17 @@ contract SortitionPool is AbstractSortitionPool {
         );
     }
 
-    function initializeSelectionParams() internal returns (uint256 paramsPtr) {
+    function initializeSelectionParams()
+        internal view returns (SelectionParams memory params)
+    {
         StakingParams memory _staking = staking;
         PoolParams memory _pool = poolParams;
 
-        SelectionParams memory params = SelectionParams(
+        params = SelectionParams(
             _staking,
             _pool
         );
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            paramsPtr := params
-        }
-        return paramsPtr;
+        return params;
     }
 
     // Return the eligible weight of the operator,

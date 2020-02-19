@@ -25,6 +25,7 @@ contract SortitionTree {
     uint256 constant SLOT_COUNT = 2 ** SLOT_BITS;
     uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
     uint256 constant SLOT_MAX = (2 ** SLOT_WIDTH) - 1;
+    uint256 constant POOL_CAPACITY = SLOT_COUNT ** LEVELS;
     ////////////////////////////////////////////////////////////////////////////
 
     // implicit tree
@@ -219,13 +220,15 @@ contract SortitionTree {
     function getEmptyLeaf()
         internal returns (uint256)
     {
-        bool emptyLeavesInStack = leavesInStack();
-        if (emptyLeavesInStack) {
-            return emptyLeaves.stackPop();
-        } else {
-            uint256 rLeaf = rightmostLeaf;
+        uint256 rLeaf = rightmostLeaf;
+        bool spaceOnRight = (rLeaf + 1) < POOL_CAPACITY;
+        if (spaceOnRight) {
             rightmostLeaf = rLeaf + 1;
             return rLeaf;
+        } else {
+            bool emptyLeavesInStack = leavesInStack();
+            require(emptyLeavesInStack, "Pool is full");
+            return emptyLeaves.stackPop();
         }
     }
 
