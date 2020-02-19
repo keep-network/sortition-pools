@@ -166,7 +166,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
             );
 
             if (decision == Decision.Select) {
-                selected.push(operator);
+                selected.arrayPush(operator);
                 if (noDuplicates) {
                     rng.addSkippedInterval(startingIndex, leafWeight);
                 }

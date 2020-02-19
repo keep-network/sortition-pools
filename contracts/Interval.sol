@@ -73,7 +73,7 @@ library Interval {
                 tempInterval = thisInterval;
             }
         }
-        intervals.push(tempInterval);
+        intervals.arrayPush(tempInterval);
     }
 
     function skip(uint256 truncatedIndex, DynamicArray.UintArray memory intervals)

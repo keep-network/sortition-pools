@@ -21,7 +21,7 @@ contract TestDynamicArray {
         );
     }
 
-    function testPush() public {
+    function testArrayPush() public {
         DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(2);
 
         Assert.equal(
@@ -35,7 +35,7 @@ contract TestDynamicArray {
             "Array should've allocated 2 slots of memory"
         );
 
-        dynamic.push(123);
+        dynamic.arrayPush(123);
         Assert.equal(
             dynamic.array.length,
             1,
@@ -47,7 +47,7 @@ contract TestDynamicArray {
             "Array contents should be accessible normally"
         );
 
-        dynamic.push(456);
+        dynamic.arrayPush(456);
         Assert.equal(
             dynamic.array.length,
             2,
@@ -59,7 +59,7 @@ contract TestDynamicArray {
             "Array should still have 2 slots of memory"
         );
 
-        dynamic.push(789);
+        dynamic.arrayPush(789);
         Assert.equal(
             dynamic.array.length,
             3,
@@ -79,9 +79,9 @@ contract TestDynamicArray {
 
     function testPop() public {
         DynamicArray.UintArray memory dynamic = DynamicArray.uintArray(4);
-        dynamic.push(123);
-        dynamic.push(456);
-        dynamic.push(789);
+        dynamic.arrayPush(123);
+        dynamic.arrayPush(456);
+        dynamic.arrayPush(789);
 
         Assert.equal(
             dynamic.array.length,

@@ -158,7 +158,7 @@ library DynamicArray {
     /// after the call it will be mutated in place to contain the item,
     /// allocating more memory behind the scenes if necessary.
     /// @param item The item you wish to push into the array.
-    function push(UintArray memory self, uint256 item) internal pure {
+    function arrayPush(UintArray memory self, uint256 item) internal pure {
         uint256 length = self.array.length;
         uint256 allocLength = self.allocatedMemory;
         // The dynamic array is full so we need to allocate more first.
@@ -180,7 +180,7 @@ library DynamicArray {
         _push(self.array, item);
     }
 
-    function push(AddressArray memory self, address item) internal pure {
+    function arrayPush(AddressArray memory self, address item) internal pure {
         uint256 length = self.array.length;
         uint256 allocLength = self.allocatedMemory;
         if (length >= allocLength) {
