@@ -51,18 +51,33 @@ library DynamicArray {
     // because the `array` may be reassigned when pushing,
     // the following pattern is unsafe:
     // ```
-    // Array dynamicArray;
+    // UintArray dynamicArray;
     // uint256 len = dynamicArray.array.length;
     // uint256[] danglingPointer = dynamicArray.array;
     // danglingPointer[0] = x;
     // dynamicArray.push(y);
     // danglingPointer[0] = z;
+    // uint256 surprise = danglingPointer[len];
     // ```
     // After the above code block,
     // `dynamicArray.array[0]` may be either `x` or `z`,
-    // and `danglingPointer[len]` may be `y` or out of bounds.
+    // and `surprise` may be `y` or out of bounds.
     // This will not share your address space with a malevolent agent of chaos,
     // but it will cause entirely avoidable scratchings of the head.
+    //
+    // Dynamic arrays should be safe to use like ordinary arrays
+    // if you always refer to the array field of the dynamic array
+    // when reading or writing values:
+    // ```
+    // UintArray dynamicArray;
+    // uint256 len = dynamicArray.array.length;
+    // dynamicArray.array[0] = x;
+    // dynamicArray.push(y);
+    // dynamicArray.array[0] = z;
+    // uint256 notSurprise = dynamicArray.array[len];
+    // ```
+    // After this code `notSurprise` is reliably `y`,
+    // and `dynamicArray.array[0]` is `z`.
     struct UintArray {
         // XXX: Do not modify this value.
         // In fact, do not even read it.
@@ -152,7 +167,7 @@ library DynamicArray {
         uint256 length = self.array.length;
         uint256 allocLength = self.allocatedMemory;
         // The dynamic array is full so we need to allocate more first.
-        // Consider the >= case instead of the == case
+        // We check for >= instead of ==
         // so that we can put the require inside the conditional,
         // reducing the gas costs of `push` slightly.
         if (length >= allocLength) {
@@ -212,13 +227,19 @@ library DynamicArray {
     /// for `Array.allocatedMemory` protects your EVM from them.
     function _allocate(uint256 length) private pure returns (uint256[] memory array) {
         // Calculate the size of the allocated block.
+        // Solidity arrays without a specified constant length
+        // (i.e. `uint256[]` instead of `uint256[8]`)
+        // store the length at the first memory position
+        // and the contents of the array after it,
+        // so we add 1 to the length to account for this.
         uint256 inMemorySize = (length + 1) * 0x20;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             // Get some free memory
             array := mload(0x40)
             // Write a zero in the length field;
-            // we set the length elsewhere.
+            // we set the length elsewhere
+            // if we store anything in the array immediately.
             mstore(array, 0)
             // Move the free memory pointer
             // to the end of the allocated block.
@@ -237,27 +258,31 @@ library DynamicArray {
             let byteLength := mul(length, 0x20)
             // Store the resulting length of the array.
             mstore(dest, length)
-            // Maintain a memory counter
+            // Maintain a write pointer
             // for the current write location in the destination array
             // by adding the 32 bytes for the array length
             // to the starting location.
-            let mc := add(dest, 0x20)
-            // Stop copying when the memory counter reaches
+            let writePtr := add(dest, 0x20)
+            // Stop copying when the write pointer reaches
             // the length of the source array.
-            let end := add(mc, byteLength)
+            // We can track the endpoint either from the write or read pointer.
+            // This uses the write pointer
+            // because that's the way it was done
+            // in the (public domain) code I stole this from.
+            let end := add(writePtr, byteLength)
 
             for {
-                // Initialize a copy counter to the start of the source array,
+                // Initialize a read pointer to the start of the source array,
                 // 32 bytes into its memory.
-                let cc := add(src, 0x20)
-            } lt(mc, end) {
-                // Increase both counters by 32 bytes each iteration.
-                mc := add(mc, 0x20)
-                cc := add(cc, 0x20)
+                let readPtr := add(src, 0x20)
+            } lt(writePtr, end) {
+                // Increase both pointers by 32 bytes each iteration.
+                writePtr := add(writePtr, 0x20)
+                readPtr := add(readPtr, 0x20)
             } {
                 // Write the source array into the dest memory
                 // 32 bytes at a time.
-                mstore(mc, mload(cc))
+                mstore(writePtr, mload(readPtr))
             }
         }
     }
