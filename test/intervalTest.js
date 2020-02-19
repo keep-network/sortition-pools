@@ -19,6 +19,7 @@ contract('Interval', (accounts) => {
     weightSum = 4088
   })
 
+  // Weights of operators in this test
   // alice 451
   // bob 1997
   // phyllis 497
@@ -28,6 +29,7 @@ contract('Interval', (accounts) => {
   // mark 1984
   // william 9000
 
+  // Starting indices of the same operators
   // alice 0
   // bob 451
   // phyllis 2448
