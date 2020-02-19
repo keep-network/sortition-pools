@@ -1,6 +1,11 @@
 pragma solidity ^0.5.10;
 
+import "./Leaf.sol";
+import "./Interval.sol";
+import "./DynamicArray.sol";
+
 library RNG {
+    using DynamicArray for DynamicArray.UintArray;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
 
@@ -14,6 +19,110 @@ library RNG {
     // Derived constants, do not touch
     uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
     ////////////////////////////////////////////////////////////////////////////
+
+    struct State {
+        // RNG output
+        uint256 currentMappedIndex;
+        uint256 currentTruncatedIndex;
+        // The random bytes used to derive indices
+        bytes32 currentSeed;
+        // The full range of indices;
+        // generated random numbers are in [0, fullRange).
+        uint256 fullRange;
+        // The truncated range of indices;
+        // how many non-skipped indices are left to consider.
+        // Random indices are generated within this range,
+        // and mapped to the full range by skipping the specified intervals.
+        uint256 truncatedRange;
+        DynamicArray.UintArray skippedIntervals;
+    }
+
+    function initialize(
+        bytes32 seed,
+        uint256 range,
+        uint256 expectedSkippedCount
+    ) internal view returns (State memory self) {
+        self = State(
+            0,
+            0,
+            seed,
+            range,
+            range,
+            DynamicArray.uintArray(expectedSkippedCount)
+        );
+        reseed(self, seed, 0);
+        return self;
+    }
+
+    function reseed(
+        State memory self,
+        bytes32 seed,
+        uint256 nonce
+    ) internal view {
+        self.currentSeed = keccak256(
+            abi.encodePacked(seed, nonce, address(this), "reseed")
+        );
+    }
+
+    function retryIndex(State memory self) internal view {
+        uint256 truncatedIndex = self.currentTruncatedIndex;
+        if (self.currentTruncatedIndex < self.truncatedRange) {
+            self.currentMappedIndex = Interval.skip(
+                truncatedIndex,
+                self.skippedIntervals
+            );
+        } else {
+            generateNewIndex(self);
+        }
+    }
+
+    function addSkippedInterval(
+        State memory self,
+        uint256 startIndex,
+        uint256 weight
+    ) internal pure {
+        self.truncatedRange -= weight;
+        Interval.insert(
+            self.skippedIntervals,
+            Interval.make(startIndex, weight)
+        );
+    }
+
+    function removeInterval(
+        State memory self,
+        uint256 startIndex,
+        uint256 weight
+    ) internal pure {
+        self.truncatedRange -= weight;
+        self.fullRange -= weight;
+        Interval.remapIndices(
+            startIndex,
+            weight,
+            self.skippedIntervals
+        );
+    }
+
+    /// @notice Generate a new index based on the current seed,
+    /// without reseeding first.
+    /// This will result in the same truncated index as before
+    /// if it still fits in the current truncated range.
+    function generateNewIndex(State memory self) internal view {
+        uint256 _truncatedRange = self.truncatedRange;
+        require(_truncatedRange > 0, "Not enough operators in pool");
+        uint256 bits = bitsRequired(_truncatedRange);
+        uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
+        while (truncatedIndex >= _truncatedRange) {
+            self.currentSeed = keccak256(
+                abi.encodePacked(self.currentSeed, address(this), "generate")
+            );
+            truncatedIndex = truncate(bits, uint256(self.currentSeed));
+        }
+        self.currentTruncatedIndex = truncatedIndex;
+        self.currentMappedIndex = Interval.skip(
+            truncatedIndex,
+            self.skippedIntervals
+        );
+    }
 
     /// @notice Calculate how many bits are required
     /// for an index in the range `[0 .. range-1]`.
@@ -83,42 +192,16 @@ library RNG {
     /// the previous stored state must be overwritten with the latest output.
     function getIndex(uint256 range, bytes32 state)
         internal
-        pure
+        view
         returns (uint256, bytes32)
     {
         uint256 bits = bitsRequired(range);
-        return efficientGetIndex(range, bits, state);
-    }
-
-    /// @notice Like `getIndex()`,
-    /// returns an index in the range `[0 .. range-1]`
-    /// using the provided `state` of the RNG.
-    /// However, `efficientGetIndex()` doesn't calculate
-    /// the number of `bits` required for the range,
-    /// but instead relies on the `bits` input parameter
-    /// which is assumed to be correctly precalculated.
-    ///
-    /// @dev Unsafe if not used correctly,
-    /// but exposed for potential efficiency gains when the range is constant.
-    ///
-    /// @param bits The number of bits to use;
-    /// assumed to be the lowest number of bits required for the desired range
-    /// as would be returned by `bitsRequired(range)`.
-    /// If `bits` is less than the output of `bitsRequired(range)`,
-    /// the returned index is heavily biased.
-    /// If `bits` exceeds the correct value,
-    /// efficiency is severely compromised.
-    function efficientGetIndex(uint256 range, uint256 bits, bytes32 state)
-        internal
-        pure
-        returns (uint256, bytes32)
-    {
         bool found = false;
         uint256 index;
         bytes32 newState = state;
         while (!found) {
             index = truncate(bits, uint256(newState));
-            newState = keccak256(abi.encode(newState));
+            newState = keccak256(abi.encodePacked(newState, address(this)));
             if (index < range) {
                 found = true;
             }
@@ -149,20 +232,17 @@ library RNG {
     /// Could be calculated from `previousLeafWeights`
     /// but providing it explicitly makes the function a bit simpler.
     ///
-    /// @param nPreviousLeaves The number of previousLeaves
-    ///
     /// @return uniqueIndex An index in [0, range) that does not overlap
     /// any of the previousLeaves,
     /// as determined by the range [index, index + weight).
     function getUniqueIndex(
         uint256 range,
         bytes32 state,
-        IndexWeight[] memory previousLeaves,
-        uint256 sumPreviousWeights,
-        uint256 nPreviousLeaves
+        uint256[] memory previousLeaves,
+        uint256 sumPreviousWeights
     )
         internal
-        pure
+        view
         returns (uint256 uniqueIndex, bytes32 newState)
     {
         // Get an index in the truncated range.
@@ -173,73 +253,11 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
         // Map the truncated index to the available unique indices.
-        uniqueIndex = uniquifyIndex(
+        uniqueIndex = Interval.skip(
             truncatedIndex,
-            previousLeaves,
-            nPreviousLeaves
+            DynamicArray.convert(previousLeaves)
         );
 
         return (uniqueIndex, newState);
-    }
-
-    struct IndexWeight {
-        uint256 index;
-        uint256 weight;
-    }
-
-    function uniquifyIndex(
-        uint256 truncatedIndex,
-        IndexWeight[] memory previousLeaves,
-        uint256 nPreviousLeaves
-    )
-        internal
-        pure
-        returns (uint256 mappedIndex)
-    {
-        mappedIndex = truncatedIndex;
-
-        for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            // If the index is greater than the starting index of the `i`th leaf,
-            // we need to skip that leaf.
-            if (mappedIndex >= previousLeaves[i].index) {
-                // Add the weight of this previous leaf to the index,
-                // ensuring that we skip the leaf.
-                mappedIndex += previousLeaves[i].weight;
-            }
-        }
-
-        return mappedIndex;
-    }
-
-    /// @notice Recalculate the starting indices of the previousLeaves
-    /// when leaf is removed from the tree at the specified index.
-    /// @dev Subtracts deletedWeight from each starting index in previousLeaves
-    /// that exceeds deletedStartingIndex.
-    /// @param deletedStartingIndex The starting index of the deleted leaf.
-    /// @param deletedWeight The weight of the deleted leaf.
-    /// @param previousLeaves The starting indices and weights
-    /// of the previously selected leaves.
-    /// @return The starting indices of the previous leaves
-    /// in a tree without the deleted leaf.
-    function remapIndices(
-        uint256 deletedStartingIndex,
-        uint256 deletedWeight,
-        IndexWeight[] memory previousLeaves
-    )
-        internal
-        pure
-        returns (IndexWeight[] memory)
-    {
-        uint256 nPreviousLeaves = previousLeaves.length;
-
-        for (uint256 i = 0; i < nPreviousLeaves; i++) {
-            // If index is greater than the index of the deleted leaf,
-            // reduce the starting index by the weight of the deleted leaf.
-            if (previousLeaves[i].index > deletedStartingIndex) {
-                previousLeaves[i].index -= deletedWeight;
-            }
-        }
-
-        return previousLeaves;
     }
 }
