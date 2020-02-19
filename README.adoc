@@ -7,8 +7,20 @@ based on the provided pseudo-random seed and optional bonding requirements.
 Each privileged application has its own sortition pool and eligibility is checked 
 when an operator is selected, rejecting and removing ineligible operators from the pool.
 
-Pool provides instant  selection results and is less affected by censorship that the
-ticket selection, although malicious miners can still censor protocol result submissions.
+A sortition pool provides instant selection results
+and is less affected by censorship that the ticket selection,
+although malicious miners can still censor protocol result submissions.
+Additionally, miners and other actors that can predict the selection seed
+(due to frontrunning the beacon or a public cached seed being used)
+may be able to manipulate selection outcomes to some degree
+by selectively updating the pool.
+To mitigate this,
+operators who have joined the pool too recently are ineligible for selection,
+and the pool and its RNG have been designed
+to reduce the degrees of freedom available to such an adversary.
+The fewer outdated operators there are in the pool,
+the less attack surface the pool presents,
+so proactive maintenance is also helpful.
 
 ## Overview
 
