@@ -123,17 +123,12 @@ library DynamicArray {
     /// @param length The number of items to preallocate space for.
     /// @return A new dynamic array.
     function uintArray(uint256 length) internal pure returns (UintArray memory) {
-        uint256[] memory array = _allocate(length);
+        uint256[] memory array = _allocateUints(length);
         return UintArray(length, array);
     }
 
     function addressArray(uint256 length) internal pure returns (AddressArray memory) {
-        uint256[] memory temp = _allocate(length);
-        address[] memory array;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            array := temp
-        }
+        address[] memory array = _allocateAddresses(length);
         return AddressArray(length, array);
     }
 
@@ -176,7 +171,7 @@ library DynamicArray {
             // Allocate twice the original array length,
             // then copy the contents over.
             uint256 newMemory = length * 2;
-            uint256[] memory newArray = _allocate(newMemory);
+            uint256[] memory newArray = _allocateUints(newMemory);
             _copy(newArray, self.array);
             self.array = newArray;
             self.allocatedMemory = newMemory;
@@ -186,14 +181,17 @@ library DynamicArray {
     }
 
     function push(AddressArray memory self, address item) internal pure {
-        UintArray memory tempArray;
-        uint256 tempItem;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            tempArray := self
-            tempItem := item
+        uint256 length = self.array.length;
+        uint256 allocLength = self.allocatedMemory;
+        if (length >= allocLength) {
+            require(length == allocLength, "Array length exceeds allocation");
+            uint256 newMemory = length * 2;
+            address[] memory newArray = _allocateAddresses(newMemory);
+            _copy(newArray, self.array);
+            self.array = newArray;
+            self.allocatedMemory = newMemory;
         }
-        push(tempArray, tempItem);
+        _push(self.array, item);
     }
 
     /// @notice Pop the last item from the dynamic array,
@@ -225,7 +223,9 @@ library DynamicArray {
     /// The answer is: dragons.
     /// But do not worry,
     /// for `Array.allocatedMemory` protects your EVM from them.
-    function _allocate(uint256 length) private pure returns (uint256[] memory array) {
+    function _allocateUints(uint256 length)
+        private pure returns (uint256[] memory array)
+    {
         // Calculate the size of the allocated block.
         // Solidity arrays without a specified constant length
         // (i.e. `uint256[]` instead of `uint256[8]`)
@@ -243,6 +243,19 @@ library DynamicArray {
             mstore(array, 0)
             // Move the free memory pointer
             // to the end of the allocated block.
+            mstore(0x40, add(array, inMemorySize))
+        }
+        return array;
+    }
+
+    function _allocateAddresses(uint256 length)
+        private pure returns (address[] memory array)
+    {
+        uint256 inMemorySize = (length + 1) * 0x20;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            array := mload(0x40)
+            mstore(array, 0)
             mstore(0x40, add(array, inMemorySize))
         }
         return array;
@@ -287,6 +300,26 @@ library DynamicArray {
         }
     }
 
+    function _copy(address[] memory dest, address[] memory src) private pure {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            let length := mload(src)
+            let byteLength := mul(length, 0x20)
+            mstore(dest, length)
+            let writePtr := add(dest, 0x20)
+            let end := add(writePtr, byteLength)
+
+            for {
+                let readPtr := add(src, 0x20)
+            } lt(writePtr, end) {
+                writePtr := add(writePtr, 0x20)
+                readPtr := add(readPtr, 0x20)
+            } {
+                mstore(writePtr, mload(readPtr))
+            }
+        }
+    }
+
     /// @notice Unsafe function to push past the limit of an array.
     /// Only use with preallocated free memory.
     function _push(uint256[] memory array, uint256 item) private pure {
@@ -304,6 +337,18 @@ library DynamicArray {
             // Store the item in the available position
             mstore(nextPosition, item)
             // Increment array length
+            mstore(array, newLength)
+        }
+    }
+
+    function _push(address[] memory array, address item) private pure {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            let length := mload(array)
+            let newLength := add(length, 1)
+            let arraySize := mul(0x20, newLength)
+            let nextPosition := add(array, arraySize)
+            mstore(nextPosition, item)
             mstore(array, newLength)
         }
     }
@@ -326,11 +371,8 @@ library DynamicArray {
         uint256 length = array.length;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
-            // Calculate the memory position of the last element
             let lastPosition := add(array, mul(length, 0x20))
-            // Retrieve the last item
             item := mload(lastPosition)
-            // Decrement array length
             mstore(array, sub(length, 1))
         }
         return item;
