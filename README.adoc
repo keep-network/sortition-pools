@@ -57,32 +57,34 @@ so the full capacity of each storage field can be used for content data.
 KEEP tokens have 18 decimals and the total supply is 1,000,000,000 KEEP.
 A precise token amount would require roughly 96 bits/12 bytes to store.
 However, the minimum stake required to participate
-is expected to be in the region of 1/100,000 of the total KEEP supply.
+is expected to be in the region of 1,000~100,000 KEEP.
 
 Instead of using the exact token amount,
 each operator's sortition weight should use their staker weight
 as in the Random Beacon group selection.
-Because a staker weight exceeding 65,535
-would represent catastrophic centralization in the network,
-16 bits is sufficient for all practical purposes
-even if the minimum stake is somewhat less than 10,000 KEEP.
+32 bits is sufficient for all practical purposes.
 
-A storage field can hold 16 values of 16 bits.
-This gives a theoretical ceiling of 1,048,560 possible virtual stakers
-for a node containing the weights of its 16 children. 
-With a pessimal distribution of child nodes' weights,
-524,288 virtual stakers can be accommodated.
-The maximum permitted staker weight of 65,535
-represents approximately 13% of all tokens in the pessimal distribution.
-Assuming each staker divides their staked tokens
-equally between two different operators
-as recommended for smooth upgrades,
-a single actor following best practices would need to hold 25% of all KEEP
-to be affected by the staker weight cap of 16 bits.
-Such an actor would already be a threat to the Keep network
-and we have no need to accommodate them,
-so all child nodes can be capped to 16 bits without issues.
+A storage field can hold 8 values of 32 bits.
+This gives a theoretical ceiling of 4 billion possible virtual stakers
+without concern for the exact distribution of weights.
 
+The actual sortition tree has 8 levels,
+including root and leaves,
+with the following number of nodes on each level:
+
+- root: 1
+- level 2: 8
+- level 3: 64
+- level 4: 512
+- level 5: 4ki
+- level 6: 32ki
+- level 7: 256ki
+- leaves: 2Mi
+
+This means that we can store up to 2 mibioperators (a bit over 2 million)
+in the sortition tree.
+If the minimum stake is at least `TOKEN_SUPPLY / 2**21`, 
+the pool will always be able to accommodate all possible operators.
 
 ## Usage
 
