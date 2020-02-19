@@ -4,6 +4,7 @@ import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
 import "./api/IStaking.sol";
 import "./api/IBonding.sol";
+import "./DynamicArray.sol";
 
 /// @title Bonded Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -17,6 +18,9 @@ import "./api/IBonding.sol";
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
 contract BondedSortitionPool is AbstractSortitionPool {
+    using DynamicArray for DynamicArray.UintArray;
+    using DynamicArray for DynamicArray.AddressArray;
+    using RNG for RNG.State;
     // The pool should specify a reasonable minimum bond
     // for operators trying to join the pool,
     // to prevent griefing by operators joining without enough bondable value.
@@ -27,13 +31,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 _minimumBondableValue;
     }
 
-    struct PoolParams {
+    struct SelectionParams {
         StakingParams _staking;
         BondingParams _bonding;
-        address _poolOwner;
-        uint256 _root;
-        uint256 _poolWeight;
-        bool _rootChanged;
+        PoolParams _pool;
     }
 
     BondingParams bonding;
@@ -49,7 +50,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         staking = StakingParams(_stakingContract, _minimumStake);
         bonding = BondingParams(_bondingContract, _minimumBondableValue);
-        poolOwner = _poolOwner;
+        poolParams = PoolParams(_poolOwner);
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -67,143 +68,95 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        require(msg.sender == poolOwner, "Only owner may select groups");
-
-        uint256 selectedTotalWeight = root;
-        PoolParams memory params = PoolParams(
-            staking,
-            bonding,
-            poolOwner,
-            selectedTotalWeight,
-            selectedTotalWeight.sumWeight(),
-            false
+        SelectionParams memory params = initializeSelectionParams(
+            bondValue
         );
+        require(
+            msg.sender == params._pool._owner,
+            "Only owner may select groups"
+        );
+        uint256 paramsPtr;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            paramsPtr := params
+        }
+        return generalizedSelectGroup(
+            groupSize,
+            seed,
+            paramsPtr,
+            true
+        );
+    }
 
-        if (params._bonding._minimumBondableValue != bondValue) {
-            params._bonding._minimumBondableValue = bondValue;
+    function initializeSelectionParams(
+        uint256 bondValue
+    ) internal returns (SelectionParams memory params) {
+        StakingParams memory _staking = staking;
+        BondingParams memory _bonding = bonding;
+        PoolParams memory _pool = poolParams;
+
+        if (_bonding._minimumBondableValue != bondValue) {
+            _bonding._minimumBondableValue = bondValue;
             bonding._minimumBondableValue = bondValue;
         }
 
-        address[] memory selected = new address[](groupSize);
-
-        RNG.IndexWeight[] memory selectedLeaves = new RNG.IndexWeight[](
-            groupSize
+        params = SelectionParams(
+            _staking,
+            _bonding,
+            _pool
         );
-
-        selectedTotalWeight = 0;
-        uint256 selectedCount = 0;
-
-        uint256 leafPosition;
-        uint256 uniqueIndex;
-
-        bytes32 rngState = seed;
-
-        /* loop */
-        while (selectedCount < groupSize) {
-            require(
-                params._poolWeight > selectedTotalWeight,
-                "Not enough operators in pool"
-            );
-
-            (uniqueIndex, rngState) = RNG.getUniqueIndex(
-                params._poolWeight,
-                rngState,
-                selectedLeaves,
-                selectedTotalWeight,
-                selectedCount
-            );
-
-            uint256 startingIndex;
-            (leafPosition, startingIndex) = pickWeightedLeafWithIndex(uniqueIndex, params._root);
-
-            uint256 theLeaf = leaves[leafPosition];
-            // Check that the leaf is old enough
-            // FIXME: inefficient, can lead to an infinite loop.
-            if (theLeaf.creationBlock() + INIT_BLOCKS >= block.number) {
-                continue;
-            }
-            address operator = theLeaf.operator();
-            uint256 leafWeight = theLeaf.weight();
-
-            // Good operators go into the group and the list to skip,
-            // naughty operators get deleted
-            if (queryEligibleWeight(operator, params) >= leafWeight) {
-                // We insert the new index and weight into the lists,
-                // keeping them both ordered by the starting indices.
-                // To do this, we start by holding the new element outside the list.
-
-                RNG.IndexWeight memory tempIW = RNG.IndexWeight(
-                    startingIndex,
-                    leafWeight
-                );
-
-                for (uint256 i = 0; i < selectedCount; i++) {
-                    RNG.IndexWeight memory thisIW = selectedLeaves[i];
-                    // With each element of the list,
-                    // we check if the outside element should go before it.
-                    // If true, we swap that element and the outside element.
-                    if (tempIW.index < thisIW.index) {
-                        selectedLeaves[i] = tempIW;
-                        tempIW = thisIW;
-                    }
-                }
-
-                // Now the outside element is the last one,
-                // so we push it to the end of the list.
-                selectedLeaves[selectedCount] = tempIW;
-
-                // And increase the skipped weight,
-                selectedTotalWeight += leafWeight;
-
-                selected[selectedCount] = operator;
-                selectedCount += 1;
-            } else {
-                params._root = removeLeaf(leafPosition, params._root);
-                removeOperatorLeaf(operator);
-                releaseGas(operator);
-                // subtract the weight of the operator from the pool weight
-                params._poolWeight -= leafWeight;
-                params._rootChanged = true;
-
-                selectedLeaves = RNG.remapIndices(
-                    startingIndex,
-                    leafWeight,
-                    selectedLeaves
-                );
-            }
-        }
-        /* pool */
-
-        if (params._rootChanged) {
-            root = params._root;
-        }
-
-        // If nothing has exploded by now,
-        // we should have the correct size of group.
-
-        return selected;
+        return params;
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        PoolParams memory params = PoolParams(
-            staking,
-            bonding,
-            poolOwner,
-            0,
-            0, // the pool weight doesn't matter here
-            false
+        address ownerAddress = poolParams._owner;
+        // Get the amount of bondable value available for this pool.
+        // We only care that this covers one single bond
+        // regardless of the weight of the operator in the pool.
+        uint256 bondableValue = bonding._contract.availableUnbondedValue(
+            operator,
+            ownerAddress,
+            address(this)
         );
-        return queryEligibleWeight(operator, params);
+
+        // Don't query stake if bond is insufficient.
+        if (bondableValue < bonding._minimumBondableValue) {
+            return 0;
+        }
+
+        uint256 eligibleStake = staking._contract.eligibleStake(
+            operator,
+            ownerAddress
+        );
+
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        // If eligibleStake < minimumStake, return 0 = ineligible.
+        return (eligibleStake / staking._minimum);
     }
 
-    function queryEligibleWeight(
-        address operator,
-        PoolParams memory params
-    ) internal view returns (uint256) {
-        address ownerAddress = params._poolOwner;
+    function decideFate(
+        uint256 leaf,
+        DynamicArray.AddressArray memory, // `selected`, for future use
+        uint256 paramsPtr
+    ) internal view returns (Decision) {
+        SelectionParams memory params;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            params := paramsPtr
+        }
+        address operator = leaf.operator();
+        uint256 createdAt = leaf.creationBlock();
+        uint256 leafWeight = leaf.weight();
+
+        if (createdAt + INIT_BLOCKS >= block.number) {
+            return Decision.Skip;
+        }
+
+        address ownerAddress = params._pool._owner;
 
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond
@@ -216,7 +169,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         // Don't query stake if bond is insufficient.
         if (bondableValue < params._bonding._minimumBondableValue) {
-            return 0;
+            return Decision.Delete;
         }
 
         uint256 eligibleStake = params._staking._contract.eligibleStake(
@@ -226,7 +179,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
-        // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / params._staking._minimum);
+        uint256 eligibleWeight = eligibleStake / params._staking._minimum;
+
+        if (eligibleWeight < leafWeight) {
+            return Decision.Delete;
+        }
+        return Decision.Select;
     }
 }

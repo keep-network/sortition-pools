@@ -22,7 +22,12 @@ contract SortitionPool is AbstractSortitionPool {
         address _poolOwner
     ) public {
         staking = StakingParams(_stakingContract, _minimumStake);
-        poolOwner = _poolOwner;
+        poolParams = PoolParams(_poolOwner);
+    }
+
+    struct SelectionParams {
+        StakingParams _staking;
+        PoolParams _pool;
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -35,79 +40,90 @@ contract SortitionPool is AbstractSortitionPool {
     function selectGroup(
         uint256 groupSize, bytes32 seed
     ) public returns (address[] memory)  {
-        require(msg.sender == poolOwner, "Only owner may select groups");
+        SelectionParams memory params = initializeSelectionParams();
+        require(
+            msg.sender == params._pool._owner,
+            "Only owner may select groups"
+        );
+        uint256 paramsPtr;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            paramsPtr := params
+        }
+        return generalizedSelectGroup(
+            groupSize,
+            seed,
+            paramsPtr,
+            false
+        );
+    }
 
-        uint256 _root = root;
-        bool _rootChanged = false;
-        uint256 poolWeight = _root.sumWeight();
-        require(poolWeight > 0, "No operators in pool");
-
+    function initializeSelectionParams()
+        internal view returns (SelectionParams memory params)
+    {
         StakingParams memory _staking = staking;
-        address _poolOwner = poolOwner;
+        PoolParams memory _pool = poolParams;
 
-        address[] memory selected = new address[](groupSize);
-        uint256 nSelected = 0;
-
-        uint256 index;
-        uint256 leaf;
-        address operator;
-        uint256 weight;
-
-        bytes32 rngState = seed;
-
-        while (nSelected < groupSize) {
-            require(poolWeight > 0, "No eligible operators");
-
-            (index, rngState) = RNG.getIndex(poolWeight, rngState);
-            uint256 leafPosition = pickWeightedLeaf(index, _root);
-            leaf = leaves[leafPosition];
-
-            // Check that the leaf is old enough
-            // FIXME: inefficient, can lead to an infinite loop.
-            if (leaf.creationBlock() + INIT_BLOCKS >= block.number) {
-                continue;
-            }
-
-            operator = leaf.operator();
-            weight = leaf.weight();
-
-            if (queryEligibleWeight(operator, _staking, _poolOwner) >= weight) {
-                selected[nSelected] = operator;
-                nSelected += 1;
-            } else {
-                _root = removeLeaf(leafPosition, _root);
-                removeOperatorLeaf(operator);
-                releaseGas(operator);
-                poolWeight -= weight;
-                _rootChanged = true;
-            }
-        }
-
-        if (_rootChanged) {
-            root = _root;
-        }
-
-        return selected;
+        params = SelectionParams(
+            _staking,
+            _pool
+        );
+        return params;
     }
 
     // Return the eligible weight of the operator,
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        return queryEligibleWeight(operator, staking, poolOwner);
+        return queryEligibleWeight(operator, staking, poolParams);
     }
 
     function queryEligibleWeight(
         address operator,
         StakingParams memory _staking,
-        address _poolOwner
+        PoolParams memory _pool
     ) internal view returns (uint256) {
         uint256 operatorStake = _staking._contract.eligibleStake(
             operator,
-            _poolOwner
+            _pool._owner
         );
         uint256 operatorWeight = operatorStake / _staking._minimum;
 
         return operatorWeight;
+    }
+
+    function decideFate(
+        uint256 leaf,
+        DynamicArray.AddressArray memory, // `selected`, for future use
+        uint256 paramsPtr
+    ) internal view returns (Decision) {
+        SelectionParams memory params;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            params := paramsPtr
+        }
+        address operator = leaf.operator();
+        uint256 createdAt = leaf.creationBlock();
+        uint256 leafWeight = leaf.weight();
+
+        if (createdAt + INIT_BLOCKS >= block.number) {
+            return Decision.Skip;
+        }
+
+        address ownerAddress = params._pool._owner;
+
+        uint256 eligibleStake = params._staking._contract.eligibleStake(
+            operator,
+            ownerAddress
+        );
+
+        // Weight = floor(eligibleStake / mimimumStake)
+        // Ethereum uint256 division performs implicit floor
+        uint256 eligibleWeight = eligibleStake / params._staking._minimum;
+
+        if (eligibleWeight < leafWeight) {
+            return Decision.Delete;
+        }
+        return Decision.Select;
     }
 }

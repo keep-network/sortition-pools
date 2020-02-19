@@ -1,7 +1,5 @@
 pragma solidity ^0.5.10;
 
-import "solidity-bytes-utils/contracts/BytesLib.sol";
-
 library Leaf {
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
@@ -40,7 +38,7 @@ library Leaf {
         uint256 cb = (creationBlock & BLOCKHEIGHT_MAX) << WEIGHT_WIDTH;
         // Bitwise OR them all together to get
         // [address operator || uint64 creationBlock || uint32 weight]
-        return (uint256(bytes32(op)) | cb | wt);
+        return (op | cb | wt);
     }
 
     function operator(uint256 leaf) internal pure returns (address) {
