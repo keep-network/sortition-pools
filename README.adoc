@@ -24,13 +24,16 @@ so proactive maintenance is also helpful.
 
 == Overview
 
-An operator enters a sortition pool by opting in. The pool checks their eligible tokens
+An operator enters a sortition pool by opting in.
+The pool checks their eligible tokens stake
 (including operator status and authorization to slash stakes),
-and optionally available bonding currency (including authorization to seize bonds).
+and optionally available bonding value
+(including authorization to seize bonds).
 The operator pays the transaction fees for the pool update.
 
-Keeping these pools up to date cannot be done eagerly as proliferation of privileged 
-customers could be used to perform DOS attacks by increasing the cost of such updates.
+Keeping these pools up to date cannot be done eagerly
+as proliferation of privileged customers could be used
+to perform DOS attacks by increasing the cost of such updates.
 When a sortition pool prospectively selects an operator,
 the selected operator's eligibility status and weight are checked.
 If the information is out of date
