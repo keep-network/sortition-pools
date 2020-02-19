@@ -1,11 +1,15 @@
 = Sortition Pools
 
-Sortition pool is a logarithmic data structure used to store the pool of eligible 
-operators weighted by their stakes. It allows to select a group of operators
-based on the provided pseudo-random seed and optional bonding requirements.
+Sortition pool is a logarithmic data structure
+used to store the pool of eligible operators weighted by their stakes.
+In the Keep network the stake consists of staked KEEP tokens.
+It allows to select a group of operators
+based on the provided pseudo-random seed
+and optional bonding requirements.
 
-Each privileged application has its own sortition pool and eligibility is checked 
-when an operator is selected, rejecting and removing ineligible operators from the pool.
+Each privileged application has its own sortition pool
+and eligibility is checked when an operator is selected,
+rejecting and removing ineligible operators from the pool.
 
 A sortition pool provides instant selection results
 and is less affected by censorship that the ticket selection,
