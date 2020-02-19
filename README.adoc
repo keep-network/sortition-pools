@@ -1,4 +1,4 @@
-# Sortition Pools
+= Sortition Pools
 
 Sortition pool is a logarithmic data structure used to store the pool of eligible 
 operators weighted by their stakes. It allows to select a group of operators
@@ -22,7 +22,7 @@ The fewer outdated operators there are in the pool,
 the less attack surface the pool presents,
 so proactive maintenance is also helpful.
 
-## Overview
+== Overview
 
 An operator enters a sortition pool by opting in. The pool checks their eligible tokens
 (including operator status and authorization to slash stakes),
@@ -47,7 +47,7 @@ roughly 2% of ECDSA keeps would require 12 or more operator selections,
 and more than 20 selections would be extremely rare.
 Sortition pools that are used more often would be less outdated.
 
-## Optimized higher arity trees
+== Optimized higher arity trees
 
 Even though logarithmic data structures are well-known,
 the particular characteristics of Ethereum smart contracts
@@ -101,12 +101,12 @@ in the sortition tree.
 If the minimum stake is at least `TOKEN_SUPPLY / 2**21`, 
 the pool will always be able to accommodate all possible operators.
 
-## Usage
+== Usage
 
-### Bonded Sortition Pool
+=== Bonded Sortition Pool
 
-#### Creating a pool
-```
+==== Creating a pool
+----
 import "@keep-network/sortition-pools/contracts/api/IStaking.sol";
 import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
 import "@keep-network/sortition-pools/contracts/BondedSortitionPool.sol";
@@ -124,39 +124,39 @@ address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
   minimumStake,
   minimumBond
 );
-```
+----
 
-#### Joining the pool
+==== Joining the pool
 
-```
+----
 if (!pool.isOperatorInPool(operator)) {
   pool.joinPool(operator);
 }
-```
+----
 
-#### Updating status
+==== Updating status
 
-```
+----
 if (!pool.isOperatorUpToDate(operator)) {
   pool.updateOperatorStatus(operator);
 }
-```
+----
 
-#### Selecting unique signers
+==== Selecting unique signers
 
-```
+----
 address[] memory members = pool.selectSetGroup(
   groupSize,
   bytes32(groupSelectionSeed),
   memberBond
 );
-```        
+----        
 
-### Sortition Pool with no bonding
+=== Sortition Pool with no bonding
 
-#### Creating a pool
+==== Creating a pool
 
-```
+----
 import "@keep-network/sortition-pools/contracts/SortitionPool.sol";
 import "@keep-network/sortition-pools/contracts/SortitionPoolFactory.sol";
 
@@ -170,30 +170,30 @@ address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
   IStaking(keepStakingContract),
   minimumStake,
 );
-```
+----
 
-#### Joining the pool
+==== Joining the pool
 
-```
+----
 if (!pool.isOperatorInPool(operator)) {
   pool.joinPool(operator);
 }
-```
+----
 
-#### Updating status
+==== Updating status
 
-```
+----
 if (!pool.isOperatorUpToDate(operator)) {
   pool.updateOperatorStatus(operator);
 }
-```
+----
 
-#### Selecting non-unique signers
+==== Selecting non-unique signers
 
-```
+----
 address[] memory members = pool.selectGroup(
   groupSize,
   bytes32(groupSelectionSeed),
 );
-```  
+----  
 
