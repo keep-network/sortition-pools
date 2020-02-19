@@ -140,7 +140,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     function decideFate(
         uint256 leaf,
-        DynamicArray.AddressArray memory selected,
+        DynamicArray.AddressArray memory, // `selected`, for future use
         uint256 paramsPtr
     ) internal view returns (Decision) {
         SelectionParams memory params;
