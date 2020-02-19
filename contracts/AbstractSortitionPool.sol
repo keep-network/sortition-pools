@@ -124,6 +124,14 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     function generalizedSelectGroup(
         uint256 groupSize,
         bytes32 seed,
+        // This uint256 is actually a void pointer.
+        // Whatever SelectionParams struct is used by the concrete contract
+        // should be created in the `selectGroup`/`selectSetGroup` function,
+        // then coerced into a uint256 to be passed into this function.
+        // The paramsPtr is then passed to the `decideFate` implementation
+        // which can coerce it back into the concrete SelectionParams.
+        // This allows `generalizedSelectGroup`
+        // to work with any desired eligibility logic.
         uint256 paramsPtr,
         bool noDuplicates
     ) internal returns (address[] memory) {
