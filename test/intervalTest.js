@@ -1,18 +1,18 @@
-const Operator = artifacts.require('./contracts/Operator.sol')
-const OperatorStub = artifacts.require('OperatorStub.sol')
+const Interval = artifacts.require('./contracts/Interval.sol')
+const IntervalStub = artifacts.require('IntervalStub.sol')
 
 const utils = require('./utils')
 
 const DEPLOY = [
-  { name: 'Operator', contract: Operator },
-  { name: 'OperatorStub', contract: OperatorStub }]
+  { name: 'Interval', contract: Interval },
+  { name: 'IntervalStub', contract: IntervalStub }]
 
-contract('Operator', (accounts) => {
-  let operator
+contract('Interval', (accounts) => {
+  let interval
 
   before(async () => {
     deployed = await utils.deploySystem(DEPLOY)
-    operator = deployed.OperatorStub
+    interval = deployed.IntervalStub
 
     indices = [451, 2945, 3017, 3120]
     weights = [1997, 72, 35, 1984]
@@ -47,7 +47,7 @@ contract('Operator', (accounts) => {
     it('returns the truncated index unchanged when applicable', async () => {
       // alice's last index
       t = 450
-      i = await operator.skip(t, indices, weights)
+      i = await interval.skip(t, indices, weights)
 
       assert.equal(i, t)
     }),
@@ -55,7 +55,7 @@ contract('Operator', (accounts) => {
     it('maps the truncated index to a free index', async () => {
       // first index after alice -> phyllis' first index
       t = 451
-      i = await operator.skip(t, indices, weights)
+      i = await interval.skip(t, indices, weights)
 
       assert.equal(i, 2448)
     })
@@ -63,7 +63,7 @@ contract('Operator', (accounts) => {
     it('skips as many previous leaves as is required', async () => {
       // this should return rocky's first index
       t = 948
-      i = await operator.skip(t, indices, weights)
+      i = await interval.skip(t, indices, weights)
 
       assert.equal(i, 3052)
     })
@@ -71,7 +71,7 @@ contract('Operator', (accounts) => {
     it('skips all previous leaves if required', async () => {
       // this should return william's first index
       t = 1016
-      i = await operator.skip(t, indices, weights)
+      i = await interval.skip(t, indices, weights)
 
       assert.equal(i, 5104)
     })

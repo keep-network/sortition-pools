@@ -1,9 +1,9 @@
 pragma solidity ^0.5.10;
 
-import '../../contracts/Operator.sol';
+import '../../contracts/Interval.sol';
 import '../../contracts/DynamicArray.sol';
 
-contract OperatorStub {
+contract IntervalStub {
     function skip(
         uint truncatedIndex,
         uint[] memory previousLeafStartingIndices,
@@ -20,12 +20,12 @@ contract OperatorStub {
         for (uint256 i = 0; i < nPreviousLeaves; i++) {
             uint256 index = previousLeafStartingIndices[i];
             uint256 weight = previousLeafWeights[i];
-            previousLeaves[i] = Operator.make(
+            previousLeaves[i] = Interval.make(
                 index,
                 weight
             );
         }
 
-        return Operator.skip(truncatedIndex, DynamicArray.convert(previousLeaves));
+        return Interval.skip(truncatedIndex, DynamicArray.convert(previousLeaves));
     }
 }

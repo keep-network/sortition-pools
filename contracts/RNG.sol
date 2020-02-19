@@ -1,7 +1,7 @@
 pragma solidity ^0.5.10;
 
 import "./Leaf.sol";
-import "./Operator.sol";
+import "./Interval.sol";
 import "./DynamicArray.sol";
 
 library RNG {
@@ -56,7 +56,7 @@ library RNG {
     function retryIndex(State memory self) internal view {
         uint256 truncatedIndex = self.currentTruncatedIndex;
         if (self.currentTruncatedIndex < self.truncatedRange) {
-            self.currentMappedIndex = Operator.skip(
+            self.currentMappedIndex = Interval.skip(
                 truncatedIndex,
                 self.skippedIntervals
             );
@@ -71,9 +71,9 @@ library RNG {
         uint256 weight
     ) internal pure {
         self.truncatedRange -= weight;
-        Operator.insert(
+        Interval.insert(
             self.skippedIntervals,
-            Operator.make(startIndex, weight)
+            Interval.make(startIndex, weight)
         );
     }
 
@@ -84,7 +84,7 @@ library RNG {
     ) internal pure {
         self.truncatedRange -= weight;
         self.fullRange -= weight;
-        Operator.remapIndices(
+        Interval.remapIndices(
             startIndex,
             weight,
             self.skippedIntervals
@@ -103,7 +103,7 @@ library RNG {
             truncatedIndex = truncate(bits, uint256(self.currentSeed));
         }
         self.currentTruncatedIndex = truncatedIndex;
-        self.currentMappedIndex = Operator.skip(
+        self.currentMappedIndex = Interval.skip(
             truncatedIndex,
             self.skippedIntervals
         );
@@ -238,7 +238,7 @@ library RNG {
         (truncatedIndex, newState) = getIndex(truncatedRange, state);
 
         // Map the truncated index to the available unique indices.
-        uniqueIndex = Operator.skip(
+        uniqueIndex = Interval.skip(
             truncatedIndex,
             DynamicArray.convert(previousLeaves)
         );

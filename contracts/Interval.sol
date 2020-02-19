@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 import "./Leaf.sol";
 import "./DynamicArray.sol";
 
-library Operator {
+library Interval {
     using DynamicArray for DynamicArray.UintArray;
     ////////////////////////////////////////////////////////////////////////////
     // Parameters for configuration
