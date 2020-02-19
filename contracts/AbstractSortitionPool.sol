@@ -125,6 +125,10 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 groupSize,
         bytes32 seed,
         // This uint256 is actually a void pointer.
+        // We can't pass a SelectionParams,
+        // because the implementation of the SelectionParams struct
+        // can vary between different concrete sortition pool implementations.
+        //
         // Whatever SelectionParams struct is used by the concrete contract
         // should be created in the `selectGroup`/`selectSetGroup` function,
         // then coerced into a uint256 to be passed into this function.
