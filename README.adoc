@@ -109,6 +109,7 @@ the pool will always be able to accommodate all possible operators.
 === Bonded Sortition Pool
 
 ==== Creating a pool
+
 ----
 import "@keep-network/sortition-pools/contracts/api/IStaking.sol";
 import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
@@ -121,7 +122,7 @@ BondedSortitionPoolFactory sortitionPoolFactory;
 
 (...)
 
-address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
+address pool = sortitionPoolFactory.createSortitionPool(
   IStaking(keepStakingContract),
   IBonding(keepBondingContract),
   minimumStake,
@@ -169,7 +170,7 @@ SortitionPoolFactory sortitionPoolFactory;
 
 (...)
 
-address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
+address pool = sortitionPoolFactory.createSortitionPool(
   IStaking(keepStakingContract),
   minimumStake,
 );
