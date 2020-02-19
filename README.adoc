@@ -120,9 +120,47 @@ if (!pool.isOperatorInPool(operator)) {
 #### Selecting unique signers
 
 ```
-address[] memory members = BondedSortitionPool(pool).selectSetGroup(
+address[] memory members = pool.selectSetGroup(
   _groupSize,
   bytes32(groupSelectionSeed),
   _memberBond
 );
 ```        
+
+### Sortition Pool with no bonding
+
+#### Creating a pool
+
+```
+import "@keep-network/sortition-pools/contracts/SortitionPool.sol";
+import "@keep-network/sortition-pools/contracts/SortitionPoolFactory.sol";
+
+(...)
+
+SortitionPoolFactory sortitionPoolFactory;
+
+(...)
+
+address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
+  IStaking(keepStakingContract),
+  minimumStake,
+);
+```
+
+#### Joining the pool
+
+```
+if (!pool.isOperatorInPool(operator)) {
+  pool.joinPool(operator);
+}
+```
+
+#### Selecting non-unique signers
+
+```
+address[] memory members = pool.selectGroup(
+  _groupSize,
+  bytes32(groupSelectionSeed),
+);
+```  
+
