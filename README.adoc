@@ -19,10 +19,13 @@ The operator pays the transaction fees for the pool update.
 
 Keeping these pools up to date cannot be done eagerly as proliferation of privileged 
 customers could be used to perform DOS attacks by increasing the cost of such updates.
-When a sortition pool prospectively selects an operator, the selected operator's 
-eligibility status and weight are checked and, if necessary, updated in the sortition pool.
-If the changes would be detrimental to the operator, the operator selection is performed 
-again with the updated input to ensure correctness.
+When a sortition pool prospectively selects an operator,
+the selected operator's eligibility status and weight are checked.
+If the information is out of date
+in a way that updating it would be detrimental to the operator,
+the operator is removed from the pool
+and a new operator is selected from the updated pool.
+This is to incentivize operators to keep their information up to date.
 
 The number of operator selections required to get _n_ valid non-unique members
 averages _n / (1 - e)_ where _e_ equals the fraction of weight in the pool
