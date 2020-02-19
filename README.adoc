@@ -117,13 +117,21 @@ if (!pool.isOperatorInPool(operator)) {
 }
 ```
 
+#### Updating status
+
+```
+if (!pool.isOperatorUpToDate(operator)) {
+  pool.updateOperatorStatus(operator);
+}
+```
+
 #### Selecting unique signers
 
 ```
 address[] memory members = pool.selectSetGroup(
-  _groupSize,
+  groupSize,
   bytes32(groupSelectionSeed),
-  _memberBond
+  memberBond
 );
 ```        
 
@@ -155,11 +163,19 @@ if (!pool.isOperatorInPool(operator)) {
 }
 ```
 
+#### Updating status
+
+```
+if (!pool.isOperatorUpToDate(operator)) {
+  pool.updateOperatorStatus(operator);
+}
+```
+
 #### Selecting non-unique signers
 
 ```
 address[] memory members = pool.selectGroup(
-  _groupSize,
+  groupSize,
   bytes32(groupSelectionSeed),
 );
 ```  
