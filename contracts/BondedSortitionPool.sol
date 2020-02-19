@@ -182,11 +182,10 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         uint256 eligibleWeight = eligibleStake / params._staking._minimum;
-        // If eligibleStake < minimumStake, return 0 = ineligible.
+
         if (eligibleWeight < leafWeight) {
             return Decision.Delete;
-        } else {
-            return Decision.Select;
         }
+        return Decision.Select;
     }
 }
