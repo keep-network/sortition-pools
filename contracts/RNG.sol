@@ -41,7 +41,7 @@ library RNG {
         bytes32 seed,
         uint256 range,
         uint256 expectedSkippedCount
-    ) internal pure returns (State memory self) {
+    ) internal view returns (State memory self) {
         self = State(
             0,
             0,
@@ -50,7 +50,18 @@ library RNG {
             range,
             DynamicArray.uintArray(expectedSkippedCount)
         );
+        reseed(self, seed, 0);
         return self;
+    }
+
+    function reseed(
+        State memory self,
+        bytes32 seed,
+        uint256 nonce
+    ) internal view {
+        self.currentSeed = keccak256(
+            abi.encodePacked(seed, nonce, address(this), "reseed")
+        );
     }
 
     function retryIndex(State memory self) internal view {
@@ -91,6 +102,10 @@ library RNG {
         );
     }
 
+    /// @notice Generate a new index based on the current seed,
+    /// without reseeding first.
+    /// This will result in the same truncated index as before
+    /// if it still fits in the current truncated range.
     function generateNewIndex(State memory self) internal view {
         uint256 _truncatedRange = self.truncatedRange;
         require(_truncatedRange > 0, "Not enough operators in pool");
@@ -98,7 +113,7 @@ library RNG {
         uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
         while (truncatedIndex >= _truncatedRange) {
             self.currentSeed = keccak256(
-                abi.encodePacked(self.currentSeed, address(this), "RNG_generate")
+                abi.encodePacked(self.currentSeed, address(this), "generate")
             );
             truncatedIndex = truncate(bits, uint256(self.currentSeed));
         }
