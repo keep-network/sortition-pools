@@ -83,3 +83,46 @@ Such an actor would already be a threat to the Keep network
 and we have no need to accommodate them,
 so all child nodes can be capped to 16 bits without issues.
 
+
+## Usage
+
+### Bonded Sortition Pool
+
+#### Creating a pool
+```
+import "@keep-network/sortition-pools/contracts/api/IStaking.sol";
+import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
+import "@keep-network/sortition-pools/contracts/BondedSortitionPool.sol";
+import "@keep-network/sortition-pools/contracts/BondedSortitionPoolFactory.sol";
+
+(...)
+
+BondedSortitionPoolFactory sortitionPoolFactory;
+
+(...)
+
+address sortitionPoolAddress = sortitionPoolFactory.createSortitionPool(
+  IStaking(keepStakingContract),
+  IBonding(keepBondingContract),
+  minimumStake,
+  minimumBond
+);
+```
+
+#### Joining the pool
+
+```
+if (!pool.isOperatorInPool(operator)) {
+  pool.joinPool(operator);
+}
+```
+
+#### Selecting unique signers
+
+```
+address[] memory members = BondedSortitionPool(pool).selectSetGroup(
+  _groupSize,
+  bytes32(groupSelectionSeed),
+  _memberBond
+);
+```        
