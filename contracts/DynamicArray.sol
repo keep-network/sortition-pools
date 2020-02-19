@@ -240,6 +240,8 @@ library DynamicArray {
             // Write a zero in the length field;
             // we set the length elsewhere
             // if we store anything in the array immediately.
+            // When we allocate we only know how many words we reserve,
+            // not how many actually get written.
             mstore(array, 0)
             // Move the free memory pointer
             // to the end of the allocated block.
