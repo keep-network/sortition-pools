@@ -1,8 +1,6 @@
 const Operator = artifacts.require('./contracts/Operator.sol')
 const OperatorStub = artifacts.require('OperatorStub.sol')
 
-// const toHex = web3.utils.numberToHex
-// const toNum = web3.utils.hexToNumber
 const utils = require('./utils')
 
 const DEPLOY = [
