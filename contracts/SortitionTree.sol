@@ -42,7 +42,7 @@ contract SortitionTree {
 
     // the flagged (see setFlag() and unsetFlag() in Position.sol) positions
     // of all operators present in the pool
-    mapping(address => uint256) operatorLeaves;
+    mapping(address => uint256) flaggedLeafPosition;
 
     // the leaf after the rightmost occupied leaf of each stack
     uint256 rightmostLeaf;
@@ -88,7 +88,7 @@ contract SortitionTree {
 
         // Without position flags,
         // the position 0x000000 would be treated as empty
-        operatorLeaves[operator] = position.setFlag();
+        flaggedLeafPosition[operator] = position.setFlag();
     }
 
     function removeOperator(address operator) internal {
@@ -114,7 +114,7 @@ contract SortitionTree {
     }
 
     function removeOperatorLeaf(address operator) internal {
-        operatorLeaves[operator] = 0;
+        flaggedLeafPosition[operator] = 0;
     }
 
     function getFlaggedOperatorLeaf(address operator)
@@ -122,7 +122,7 @@ contract SortitionTree {
         view
         returns (uint256)
     {
-        return operatorLeaves[operator];
+        return flaggedLeafPosition[operator];
     }
 
     function removeLeaf(uint256 position, uint256 _root)
