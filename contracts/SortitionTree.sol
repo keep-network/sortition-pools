@@ -92,13 +92,13 @@ contract SortitionTree {
     }
 
     function removeOperator(address operator) internal {
-        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
         require(
-            flaggedLeaf != 0,
+            flaggedPosition != 0,
             "Operator is not registered in the pool"
         );
-        uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        root = removeLeaf(unflaggedLeaf, root);
+        uint256 unflaggedPosition = flaggedPosition.unsetFlag();
+        root = removeLeaf(unflaggedPosition, root);
         removeLeafPositionRecord(operator);
     }
 
@@ -108,9 +108,9 @@ contract SortitionTree {
             "Operator is not registered in the pool"
         );
 
-        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
-        uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        updateLeaf(unflaggedLeaf, weight);
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+        uint256 unflaggedPosition = flaggedPosition.unsetFlag();
+        updateLeaf(unflaggedPosition, weight);
     }
 
     function removeLeafPositionRecord(address operator) internal {

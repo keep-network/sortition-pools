@@ -76,11 +76,11 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // Return the weight of the operator in the pool,
     // which may or may not be out of date.
     function getPoolWeight(address operator) public view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
-        if (flaggedLeaf == 0) {
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+        if (flaggedPosition == 0) {
             return 0;
         } else {
-            uint256 leafPosition = flaggedLeaf.unsetFlag();
+            uint256 leafPosition = flaggedPosition.unsetFlag();
             uint256 leafWeight = leaves[leafPosition].weight();
             return leafWeight;
         }
