@@ -99,7 +99,7 @@ contract SortitionTree {
         );
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
         root = removeLeaf(unflaggedLeaf, root);
-        removeOperatorLeaf(operator);
+        removeLeafPositionRecord(operator);
     }
 
     function updateOperator(address operator, uint256 weight) internal {
@@ -113,7 +113,7 @@ contract SortitionTree {
         updateLeaf(unflaggedLeaf, weight);
     }
 
-    function removeOperatorLeaf(address operator) internal {
+    function removeLeafPositionRecord(address operator) internal {
         flaggedLeafPosition[operator] = 0;
     }
 

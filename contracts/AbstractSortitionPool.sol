@@ -184,7 +184,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                 _root = removeLeaf(leafPosition, _root);
                 rootChanged = true;
                 // Remove the record of the operator's leaf and release gas
-                removeOperatorLeaf(operator);
+                removeLeafPositionRecord(operator);
                 releaseGas(operator);
                 continue;
             }
