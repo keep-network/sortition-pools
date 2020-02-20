@@ -80,7 +80,7 @@ contract SortitionTree {
             "Operator is already registered in the pool"
         );
 
-        uint256 position = getEmptyLeaf();
+        uint256 position = getEmptyLeafPosition();
         // Record the block the operator was inserted in
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
@@ -212,7 +212,7 @@ contract SortitionTree {
         leafFirstIndex = index - currentIndex;
     }
 
-    function getEmptyLeaf()
+    function getEmptyLeafPosition()
         internal returns (uint256)
     {
         uint256 rLeaf = rightmostLeaf;
