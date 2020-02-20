@@ -57,7 +57,7 @@ contract SortitionTree {
 
     // checks if operator is already registered in the pool
     function isOperatorRegistered(address operator) public view returns (bool) {
-        return getFlaggedOperatorLeaf(operator) != 0;
+        return getFlaggedLeafPosition(operator) != 0;
     }
 
     // Sum the number of operators in each trunk
@@ -92,7 +92,7 @@ contract SortitionTree {
     }
 
     function removeOperator(address operator) internal {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
         require(
             flaggedLeaf != 0,
             "Operator is not registered in the pool"
@@ -108,7 +108,7 @@ contract SortitionTree {
             "Operator is not registered in the pool"
         );
 
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
         uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
         updateLeaf(unflaggedLeaf, weight);
     }
@@ -117,7 +117,7 @@ contract SortitionTree {
         flaggedLeafPosition[operator] = 0;
     }
 
-    function getFlaggedOperatorLeaf(address operator)
+    function getFlaggedLeafPosition(address operator)
         internal
         view
         returns (uint256)

@@ -96,7 +96,7 @@ contract('SortitionTree', (accounts) => {
 
       assert.equal(toHex(root), '0x0')
 
-      const aliceLeaf = await sortition.publicGetFlaggedOperatorLeaf.call(alice)
+      const aliceLeaf = await sortition.publicGetFlaggedLeafPosition.call(alice)
 
       assert.equal(aliceLeaf, 0)
     })

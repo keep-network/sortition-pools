@@ -64,7 +64,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     // Return whether the operator is present in the pool.
     function isOperatorInPool(address operator) public view returns (bool) {
-        return getFlaggedOperatorLeaf(operator) != 0;
+        return getFlaggedLeafPosition(operator) != 0;
     }
 
     // Return whether the operator's weight in the pool
@@ -76,7 +76,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // Return the weight of the operator in the pool,
     // which may or may not be out of date.
     function getPoolWeight(address operator) public view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        uint256 flaggedLeaf = getFlaggedLeafPosition(operator);
         if (flaggedLeaf == 0) {
             return 0;
         } else {
