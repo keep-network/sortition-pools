@@ -44,7 +44,11 @@ contract SortitionTreeStub is SortitionTree {
     }
 
     function publicPickWeightedLeaf(uint256 index) public view returns (uint256) {
-        return pickWeightedLeaf(index, root);
+        (uint256 leafPosition, ) = pickWeightedLeaf(
+            index,
+            root
+        );
+        return leafPosition;
     }
 
     function toLeaf(address op, uint256 wt) public view returns (uint256) {
