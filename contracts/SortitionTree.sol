@@ -42,7 +42,7 @@ contract SortitionTree {
 
     // the flagged (see setFlag() and unsetFlag() in Position.sol) positions
     // of all operators present in the pool
-    mapping(address => uint256) operatorLeaves;
+    mapping(address => uint256) flaggedLeafPosition;
 
     // the leaf after the rightmost occupied leaf of each stack
     uint256 rightmostLeaf;
@@ -57,7 +57,7 @@ contract SortitionTree {
 
     // checks if operator is already registered in the pool
     function isOperatorRegistered(address operator) public view returns (bool) {
-        return getFlaggedOperatorLeaf(operator) != 0;
+        return getFlaggedLeafPosition(operator) != 0;
     }
 
     // Sum the number of operators in each trunk
@@ -80,7 +80,7 @@ contract SortitionTree {
             "Operator is already registered in the pool"
         );
 
-        uint256 position = getEmptyLeaf();
+        uint256 position = getEmptyLeafPosition();
         // Record the block the operator was inserted in
         uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
@@ -88,18 +88,18 @@ contract SortitionTree {
 
         // Without position flags,
         // the position 0x000000 would be treated as empty
-        operatorLeaves[operator] = position.setFlag();
+        flaggedLeafPosition[operator] = position.setFlag();
     }
 
     function removeOperator(address operator) internal {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
         require(
-            flaggedLeaf != 0,
+            flaggedPosition != 0,
             "Operator is not registered in the pool"
         );
-        uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        root = removeLeaf(unflaggedLeaf, root);
-        removeOperatorLeaf(operator);
+        uint256 unflaggedPosition = flaggedPosition.unsetFlag();
+        root = removeLeaf(unflaggedPosition, root);
+        removeLeafPositionRecord(operator);
     }
 
     function updateOperator(address operator, uint256 weight) internal {
@@ -108,21 +108,21 @@ contract SortitionTree {
             "Operator is not registered in the pool"
         );
 
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        uint256 unflaggedLeaf = flaggedLeaf.unsetFlag();
-        updateLeaf(unflaggedLeaf, weight);
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+        uint256 unflaggedPosition = flaggedPosition.unsetFlag();
+        updateLeaf(unflaggedPosition, weight);
     }
 
-    function removeOperatorLeaf(address operator) internal {
-        operatorLeaves[operator] = 0;
+    function removeLeafPositionRecord(address operator) internal {
+        flaggedLeafPosition[operator] = 0;
     }
 
-    function getFlaggedOperatorLeaf(address operator)
+    function getFlaggedLeafPosition(address operator)
         internal
         view
         returns (uint256)
     {
-        return operatorLeaves[operator];
+        return flaggedLeafPosition[operator];
     }
 
     function removeLeaf(uint256 position, uint256 _root)
@@ -176,11 +176,13 @@ contract SortitionTree {
         return _root.setSlot(childSlot, nodeWeight);
     }
 
-    function pickWeightedLeafWithIndex(uint256 index, uint256 _root)
-        internal
-        view
-        returns (uint256 leafPosition, uint256 leafFirstIndex)
-    {
+    function pickWeightedLeaf(
+        uint256 index,
+        uint256 _root
+    ) internal view returns (
+        uint256 leafPosition,
+        uint256 leafFirstIndex
+    ) {
         uint256 currentIndex = index;
         uint256 currentNode = _root;
         uint256 currentPosition = 0;
@@ -210,14 +212,7 @@ contract SortitionTree {
         leafFirstIndex = index - currentIndex;
     }
 
-    function pickWeightedLeaf(uint256 index, uint256 _root) internal view returns (uint256) {
-        uint256 leafPosition;
-        uint256 _ignoredIndex;
-        (leafPosition, _ignoredIndex) = pickWeightedLeafWithIndex(index, _root);
-        return leafPosition;
-    }
-
-    function getEmptyLeaf()
+    function getEmptyLeafPosition()
         internal returns (uint256)
     {
         uint256 rLeaf = rightmostLeaf;

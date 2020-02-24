@@ -64,7 +64,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     // Return whether the operator is present in the pool.
     function isOperatorInPool(address operator) public view returns (bool) {
-        return getFlaggedOperatorLeaf(operator) != 0;
+        return getFlaggedLeafPosition(operator) != 0;
     }
 
     // Return whether the operator's weight in the pool
@@ -76,11 +76,11 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // Return the weight of the operator in the pool,
     // which may or may not be out of date.
     function getPoolWeight(address operator) public view returns (uint256) {
-        uint256 flaggedLeaf = getFlaggedOperatorLeaf(operator);
-        if (flaggedLeaf == 0) {
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+        if (flaggedPosition == 0) {
             return 0;
         } else {
-            uint256 leafPosition = flaggedLeaf.unsetFlag();
+            uint256 leafPosition = flaggedPosition.unsetFlag();
             uint256 leafWeight = leaves[leafPosition].weight();
             return leafWeight;
         }
@@ -152,8 +152,10 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         while (selected.array.length < groupSize) {
             rng.generateNewIndex();
 
-            (uint256 leafPosition, uint256 startingIndex) =
-                pickWeightedLeafWithIndex(rng.currentMappedIndex, _root);
+            (uint256 leafPosition, uint256 startingIndex) = pickWeightedLeaf(
+                rng.currentMappedIndex,
+                _root
+            );
 
             uint256 leaf = leaves[leafPosition];
             address operator = leaf.operator();
@@ -184,7 +186,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                 _root = removeLeaf(leafPosition, _root);
                 rootChanged = true;
                 // Remove the record of the operator's leaf and release gas
-                removeOperatorLeaf(operator);
+                removeLeafPositionRecord(operator);
                 releaseGas(operator);
                 continue;
             }

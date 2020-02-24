@@ -35,16 +35,20 @@ contract SortitionTreeStub is SortitionTree {
         return root;
     }
 
-    function publicGetFlaggedOperatorLeaf(address operator)
+    function publicGetFlaggedLeafPosition(address operator)
         public
         view
         returns (uint256)
     {
-        return SortitionTree.getFlaggedOperatorLeaf(operator);
+        return SortitionTree.getFlaggedLeafPosition(operator);
     }
 
     function publicPickWeightedLeaf(uint256 index) public view returns (uint256) {
-        return pickWeightedLeaf(index, root);
+        (uint256 leafPosition, ) = pickWeightedLeaf(
+            index,
+            root
+        );
+        return leafPosition;
     }
 
     function toLeaf(address op, uint256 wt) public view returns (uint256) {
