@@ -73,6 +73,24 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         return getEligibleWeight(operator) == getPoolWeight(operator);
     }
 
+    // Returns whether the operator has passed the initialization blocks period
+    // to be eligible for the work selection. Reverts if the operator is not in
+    // the pool.
+    function isOperatorInitialized(address operator)
+        public
+        view
+        returns (bool)
+    {
+        require(isOperatorInPool(operator), "Operator is not in the pool");
+
+        uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+        uint256 leafPosition = flaggedPosition.unsetFlag();
+        uint256 leaf = leaves[leafPosition];
+        uint256 createdAt = leaf.creationBlock();
+
+        return block.number > (createdAt + operatorInitBlocks());
+    }
+
     // Return the weight of the operator in the pool,
     // which may or may not be out of date.
     function getPoolWeight(address operator) public view returns (uint256) {
