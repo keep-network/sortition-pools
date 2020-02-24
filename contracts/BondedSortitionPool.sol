@@ -149,10 +149,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
             params := paramsPtr
         }
         address operator = leaf.operator();
-        uint256 createdAt = leaf.creationBlock();
         uint256 leafWeight = leaf.weight();
 
-        if (createdAt + INIT_BLOCKS >= block.number) {
+        if (!isOperatorInitialized(operator)) {
             return Decision.Skip;
         }
 
