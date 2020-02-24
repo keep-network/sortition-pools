@@ -86,9 +86,8 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 flaggedPosition = getFlaggedLeafPosition(operator);
         uint256 leafPosition = flaggedPosition.unsetFlag();
         uint256 leaf = leaves[leafPosition];
-        uint256 createdAt = leaf.creationBlock();
 
-        return block.number > (createdAt + operatorInitBlocks());
+        return isLeafInitialized(leaf);
     }
 
     // Return the weight of the operator in the pool,
@@ -213,6 +212,16 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
             root = _root;
         }
         return selected.array;
+    }
+
+    function isLeafInitialized(uint256 leaf)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 createdAt = leaf.creationBlock();
+
+        return block.number > (createdAt + operatorInitBlocks());
     }
 
     // Return the eligible weight of the operator,

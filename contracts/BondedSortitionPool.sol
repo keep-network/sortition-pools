@@ -151,7 +151,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         address operator = leaf.operator();
         uint256 leafWeight = leaf.weight();
 
-        if (!isOperatorInitialized(operator)) {
+        if (!isLeafInitialized(leaf)) {
             return Decision.Skip;
         }
 
