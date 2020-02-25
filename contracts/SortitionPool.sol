@@ -21,14 +21,20 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 _minimumStake,
         address _poolOwner
     ) public {
-        staking = StakingParams(_stakingContract, _minimumStake);
-        poolParams = PoolParams(_poolOwner);
+        poolParams = PoolParams(
+            _stakingContract,
+            _minimumStake,
+            _poolOwner
+        );
     }
 
-    struct SelectionParams {
-        StakingParams _staking;
-        PoolParams _pool;
+    struct PoolParams {
+        IStaking stakingContract;
+        uint256 minimumStake;
+        address owner;
     }
+
+    PoolParams poolParams;
 
     /// @notice Selects a new group of operators of the provided size based on
     /// the provided pseudo-random seed. At least one operator has to be
@@ -40,9 +46,9 @@ contract SortitionPool is AbstractSortitionPool {
     function selectGroup(
         uint256 groupSize, bytes32 seed
     ) public returns (address[] memory)  {
-        SelectionParams memory params = initializeSelectionParams();
+        PoolParams memory params = initializeSelectionParams();
         require(
-            msg.sender == params._pool._owner,
+            msg.sender == params.owner,
             "Only owner may select groups"
         );
         uint256 paramsPtr;
@@ -59,15 +65,9 @@ contract SortitionPool is AbstractSortitionPool {
     }
 
     function initializeSelectionParams()
-        internal view returns (SelectionParams memory params)
+        internal view returns (PoolParams memory params)
     {
-        StakingParams memory _staking = staking;
-        PoolParams memory _pool = poolParams;
-
-        params = SelectionParams(
-            _staking,
-            _pool
-        );
+        params = poolParams;
         return params;
     }
 
@@ -75,19 +75,18 @@ contract SortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        return queryEligibleWeight(operator, staking, poolParams);
+        return queryEligibleWeight(operator, poolParams);
     }
 
     function queryEligibleWeight(
         address operator,
-        StakingParams memory _staking,
-        PoolParams memory _pool
+        PoolParams memory params
     ) internal view returns (uint256) {
-        uint256 operatorStake = _staking._contract.eligibleStake(
+        uint256 operatorStake = params.stakingContract.eligibleStake(
             operator,
-            _pool._owner
+            params.owner
         );
-        uint256 operatorWeight = operatorStake / _staking._minimum;
+        uint256 operatorWeight = operatorStake / params.minimumStake;
 
         return operatorWeight;
     }
@@ -97,7 +96,7 @@ contract SortitionPool is AbstractSortitionPool {
         DynamicArray.AddressArray memory, // `selected`, for future use
         uint256 paramsPtr
     ) internal view returns (Fate memory) {
-        SelectionParams memory params;
+        PoolParams memory params;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             params := paramsPtr
@@ -109,16 +108,16 @@ contract SortitionPool is AbstractSortitionPool {
             return Fate(Decision.Skip, 0);
         }
 
-        address ownerAddress = params._pool._owner;
+        address ownerAddress = params.owner;
 
-        uint256 eligibleStake = params._staking._contract.eligibleStake(
+        uint256 eligibleStake = params.stakingContract.eligibleStake(
             operator,
             ownerAddress
         );
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
-        uint256 eligibleWeight = eligibleStake / params._staking._minimum;
+        uint256 eligibleWeight = eligibleStake / params.minimumStake;
 
         if (eligibleWeight < leafWeight) {
             return Fate(Decision.Delete, 0);

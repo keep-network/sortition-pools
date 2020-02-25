@@ -26,18 +26,16 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // to prevent griefing by operators joining without enough bondable value.
     // After we start selecting groups
     // this value can be set to equal the most recent request's bondValue.
-    struct BondingParams {
-        IBonding _contract;
-        uint256 _minimumBondableValue;
+
+    struct PoolParams {
+        IStaking stakingContract;
+        uint256 minimumStake;
+        IBonding bondingContract;
+        uint256 minimumBondableValue;
+        address owner;
     }
 
-    struct SelectionParams {
-        StakingParams _staking;
-        BondingParams _bonding;
-        PoolParams _pool;
-    }
-
-    BondingParams bonding;
+    PoolParams poolParams;
 
     constructor(
         IStaking _stakingContract,
@@ -48,9 +46,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) public {
         require(_minimumStake > 0, "Minimum stake cannot be zero");
 
-        staking = StakingParams(_stakingContract, _minimumStake);
-        bonding = BondingParams(_bondingContract, _minimumBondableValue);
-        poolParams = PoolParams(_poolOwner);
+        poolParams = PoolParams(
+            _stakingContract,
+            _minimumStake,
+            _bondingContract,
+            _minimumBondableValue,
+            _poolOwner
+        );
     }
 
     /// @notice Selects a new group of operators of the provided size based on
@@ -68,11 +70,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
         bytes32 seed,
         uint256 bondValue
     ) public returns (address[] memory) {
-        SelectionParams memory params = initializeSelectionParams(
+        PoolParams memory params = initializeSelectionParams(
             bondValue
         );
         require(
-            msg.sender == params._pool._owner,
+            msg.sender == params.owner,
             "Only owner may select groups"
         );
         uint256 paramsPtr;
@@ -90,21 +92,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     function initializeSelectionParams(
         uint256 bondValue
-    ) internal returns (SelectionParams memory params) {
-        StakingParams memory _staking = staking;
-        BondingParams memory _bonding = bonding;
-        PoolParams memory _pool = poolParams;
+    ) internal returns (PoolParams memory params) {
+        params = poolParams;
 
-        if (_bonding._minimumBondableValue != bondValue) {
-            _bonding._minimumBondableValue = bondValue;
-            bonding._minimumBondableValue = bondValue;
+        if (params.minimumBondableValue != bondValue) {
+            params.minimumBondableValue = bondValue;
+            poolParams.minimumBondableValue = bondValue;
         }
 
-        params = SelectionParams(
-            _staking,
-            _bonding,
-            _pool
-        );
         return params;
     }
 
@@ -112,22 +107,22 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // which may differ from the weight in the pool.
     // Return 0 if ineligible.
     function getEligibleWeight(address operator) internal view returns (uint256) {
-        address ownerAddress = poolParams._owner;
+        address ownerAddress = poolParams.owner;
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond
         // regardless of the weight of the operator in the pool.
-        uint256 bondableValue = bonding._contract.availableUnbondedValue(
+        uint256 bondableValue = poolParams.bondingContract.availableUnbondedValue(
             operator,
             ownerAddress,
             address(this)
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < bonding._minimumBondableValue) {
+        if (bondableValue < poolParams.minimumBondableValue) {
             return 0;
         }
 
-        uint256 eligibleStake = staking._contract.eligibleStake(
+        uint256 eligibleStake = poolParams.stakingContract.eligibleStake(
             operator,
             ownerAddress
         );
@@ -135,7 +130,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / staking._minimum);
+        return (eligibleStake / poolParams.minimumStake);
     }
 
     function decideFate(
@@ -143,7 +138,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         DynamicArray.AddressArray memory, // `selected`, for future use
         uint256 paramsPtr
     ) internal view returns (Fate memory) {
-        SelectionParams memory params;
+        PoolParams memory params;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             params := paramsPtr
@@ -155,30 +150,30 @@ contract BondedSortitionPool is AbstractSortitionPool {
             return Fate(Decision.Skip, 0);
         }
 
-        address ownerAddress = params._pool._owner;
+        address ownerAddress = params.owner;
 
         // Get the amount of bondable value available for this pool.
         // We only care that this covers one single bond
         // regardless of the weight of the operator in the pool.
-        uint256 bondableValue = params._bonding._contract.availableUnbondedValue(
+        uint256 bondableValue = params.bondingContract.availableUnbondedValue(
             operator,
             ownerAddress,
             address(this)
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < params._bonding._minimumBondableValue) {
+        if (bondableValue < params.minimumBondableValue) {
             return Fate(Decision.Delete, 0);
         }
 
-        uint256 eligibleStake = params._staking._contract.eligibleStake(
+        uint256 eligibleStake = params.stakingContract.eligibleStake(
             operator,
             ownerAddress
         );
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
-        uint256 eligibleWeight = eligibleStake / params._staking._minimum;
+        uint256 eligibleWeight = eligibleStake / params.minimumStake;
 
         if (eligibleWeight < leafWeight) {
             return Fate(Decision.Delete, 0);

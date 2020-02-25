@@ -30,17 +30,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         uint256 maybeWeight;
     }
 
-    struct StakingParams {
-        IStaking _contract;
-        uint256 _minimum;
-    }
-
-    struct PoolParams {
-        // The contract (e.g. Keep factory) this specific pool serves.
-        // Only the pool owner can request groups.
-        address _owner;
-    }
-
     // Require 10 blocks after joining before the operator can be selected for
     // a group. This reduces the degrees of freedom miners and other
     // front-runners have in conducting pool-bumping attacks.
@@ -58,9 +47,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     uint256 constant INIT_BLOCKS = 10;
 
     uint256 constant GAS_DEPOSIT_SIZE = 1;
-
-    StakingParams staking;
-    PoolParams poolParams;
 
     /// @notice The number of blocks that must be mined before the operator who
     // joined the pool is eligible for work selection.
