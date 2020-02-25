@@ -96,7 +96,7 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 leaf,
         DynamicArray.AddressArray memory, // `selected`, for future use
         uint256 paramsPtr
-    ) internal view returns (Decision) {
+    ) internal view returns (Fate memory) {
         SelectionParams memory params;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
@@ -106,7 +106,7 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 leafWeight = leaf.weight();
 
         if (!isLeafInitialized(leaf)) {
-            return Decision.Skip;
+            return Fate(Decision.Skip, 0);
         }
 
         address ownerAddress = params._pool._owner;
@@ -121,8 +121,8 @@ contract SortitionPool is AbstractSortitionPool {
         uint256 eligibleWeight = eligibleStake / params._staking._minimum;
 
         if (eligibleWeight < leafWeight) {
-            return Decision.Delete;
+            return Fate(Decision.Delete, 0);
         }
-        return Decision.Select;
+        return Fate(Decision.Select, 0);
     }
 }

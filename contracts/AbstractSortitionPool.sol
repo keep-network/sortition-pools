@@ -17,7 +17,18 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     using DynamicArray for DynamicArray.AddressArray;
     using RNG for RNG.State;
 
-    enum Decision { Select, Skip, Delete }
+    enum Decision {
+        Select, // Add to the group, and use new seed
+        Skip,   // Retry with same seed, skip this leaf
+        Delete, // Retry with same seed, delete this leaf
+        UpdateRetry, // Retry with same seed, update this leaf
+        UpdateSelect // Select, but also update this leaf
+    }
+
+    struct Fate {
+        Decision decision;
+        uint256 maybeWeight;
+    }
 
     struct StakingParams {
         IStaking _contract;
@@ -178,13 +189,13 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
             address operator = leaf.operator();
             uint256 leafWeight = leaf.weight();
 
-            Decision decision = decideFate(
+            Fate memory fate = decideFate(
                 leaf,
                 selected,
                 paramsPtr
             );
 
-            if (decision == Decision.Select) {
+            if (fate.decision == Decision.Select) {
                 selected.arrayPush(operator);
                 if (noDuplicates) {
                     rng.addSkippedInterval(startingIndex, leafWeight);
@@ -192,11 +203,11 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                 rng.reseed(seed, selected.array.length);
                 continue;
             }
-            if (decision == Decision.Skip) {
+            if (fate.decision == Decision.Skip) {
                 rng.addSkippedInterval(startingIndex, leafWeight);
                 continue;
             }
-            if (decision == Decision.Delete) {
+            if (fate.decision == Decision.Delete) {
                 // Update the RNG
                 rng.removeInterval(startingIndex, leafWeight);
                 // Remove the leaf and update root
@@ -206,6 +217,30 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                 removeLeafPositionRecord(operator);
                 releaseGas(operator);
                 continue;
+            }
+            if (fate.decision == Decision.UpdateRetry) {
+                _root = setLeaf(
+                    leafPosition,
+                    leaf.setWeight(fate.maybeWeight),
+                    _root
+                );
+                rootChanged = true;
+                continue;
+            }
+            if (fate.decision == Decision.UpdateSelect) {
+                _root = setLeaf(
+                    leafPosition,
+                    leaf.setWeight(fate.maybeWeight),
+                    _root
+                );
+                rootChanged = true;
+                selected.arrayPush(operator);
+                if (noDuplicates) {
+                    rng.addSkippedInterval(startingIndex, leafWeight);
+                }
+                rng.reseed(seed, selected.array.length);
+                continue;
+
             }
         }
         if (rootChanged) {
@@ -232,7 +267,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     function decideFate(
         uint256 leaf,
         DynamicArray.AddressArray memory selected,
-        uint256 paramsPtr) internal view returns (Decision);
+        uint256 paramsPtr) internal view returns (Fate memory);
 
     function gasDepositSize() internal pure returns (uint256) {
         return GAS_DEPOSIT_SIZE;
