@@ -9,6 +9,8 @@ const BondingContractStub = artifacts.require('BondingContractStub.sol')
 
 const { mineBlocks } = require('./mineBlocks')
 
+const { expectRevert } = require('@openzeppelin/test-helpers')
+
 contract('BondedSortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
   const bond = 100000000
@@ -34,6 +36,46 @@ contract('BondedSortitionPool', (accounts) => {
     }
 
     pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, bond, owner)
+  })
+
+  describe('isOperatorInitialized', async () => {
+    it('reverts if operator is not in the pool', async () => {
+      const operator = accounts[0]
+
+      expectRevert(
+        pool.isOperatorInitialized(operator),
+        'Operator is not in the pool',
+      )
+    })
+
+    it('returns false when initialization period not passed', async () => {
+      const operator = accounts[0]
+
+      await prepareOperator(operator, 10)
+
+      assert.isFalse(await pool.isOperatorInitialized(operator))
+
+      assert.isFalse(
+        await pool.isOperatorInitialized(operator),
+        'incorrect result at the beginning of the period',
+      )
+
+      await mineBlocks((await pool.operatorInitBlocks()))
+
+      assert.isFalse(
+        await pool.isOperatorInitialized(operator),
+        'incorrect result when period almost passed',
+      )
+    })
+
+    it('returns true when initialization period passed', async () => {
+      const operator = accounts[0]
+      await prepareOperator(operator, 10)
+
+      await mineBlocks((await pool.operatorInitBlocks()).addn(1))
+
+      assert.isTrue(await pool.isOperatorInitialized(operator))
+    })
   })
 
   describe('selectSetGroup', async () => {
