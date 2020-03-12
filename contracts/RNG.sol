@@ -60,8 +60,7 @@ library RNG {
         uint256 nonce
     ) internal view {
         self.currentSeed = keccak256(
-            // abi.encodePacked(seed, nonce, address(this), "reseed")
-            abi.encodePacked(seed, nonce, "reseed")
+            abi.encodePacked(seed, nonce, address(this), "reseed")
         );
     }
 
@@ -114,8 +113,7 @@ library RNG {
         uint256 truncatedIndex = truncate(bits, uint256(self.currentSeed));
         while (truncatedIndex >= _truncatedRange) {
             self.currentSeed = keccak256(
-                // abi.encodePacked(self.currentSeed, address(this), "generate")
-                abi.encodePacked(self.currentSeed, "generate")
+                abi.encodePacked(self.currentSeed, address(this), "generate")
             );
             truncatedIndex = truncate(bits, uint256(self.currentSeed));
         }
