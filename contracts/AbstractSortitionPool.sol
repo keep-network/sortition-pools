@@ -22,7 +22,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         Skip,   // Retry with same seed, skip this leaf
         Delete, // Retry with same seed, delete this leaf
         UpdateRetry, // Retry with same seed, update this leaf
-        UpdateSelect // Select, but also update this leaf
+        UpdateSelect // Select and reseed, but also update this leaf
     }
 
     struct Fate {
