@@ -6,18 +6,25 @@ import "./api/IStaking.sol";
 import "./api/IBonding.sol";
 import "./DynamicArray.sol";
 
-/// @title Bonded Sortition Pool
-/// @notice A logarithmic data structure used to store the pool of eligible
-/// operators weighted by their stakes. It allows to select a group of operators
+/// @title Fully Backed Sortition Pool
+/// @notice A logarithmic data structure
+/// used to store the pool of eligible operators weighted by their stakes.
+/// It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
-/// @dev Keeping pool up to date cannot be done eagerly as proliferation of
-/// privileged customers could be used to perform DOS attacks by increasing the
-/// cost of such updates. When a sortition pool prospectively selects an
-/// operator, the selected operator’s eligibility status and weight needs to be
-/// checked and, if necessary, updated in the sortition pool. If the changes
-/// would be detrimental to the operator, the operator selection is performed
-/// again with the updated input to ensure correctness.
-contract BondedSortitionPool is AbstractSortitionPool {
+/// The fully backed pool uses bonds instead of stakes
+/// to determine the eligibility and weight of operators.
+/// When operators are selected,
+/// the pool updates their weight to reflect their lower available bonds.
+/// @dev Keeping pool up to date cannot be done eagerly
+/// as proliferation of privileged customers could be used
+/// to perform DOS attacks by increasing the cost of such updates.
+/// When a sortition pool prospectively selects an operator,
+/// the selected operator’s eligibility status and weight needs to be checked
+/// and, if necessary, updated in the sortition pool.
+/// If the changes would be detrimental to the operator,
+/// the operator selection is performed again with the updated input
+/// to ensure correctness.
+contract FullyBackedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.UintArray;
     using DynamicArray for DynamicArray.AddressArray;
     using RNG for RNG.State;
@@ -28,29 +35,31 @@ contract BondedSortitionPool is AbstractSortitionPool {
     // this value can be set to equal the most recent request's bondValue.
 
     struct PoolParams {
-        IStaking stakingContract;
-        uint256 minimumStake;
         IBonding bondingContract;
-        uint256 minimumBondableValue;
+        uint256 minimumAvailableBond;
+        // Because the minimum available bond may fluctuate,
+        // we use a constant pool weight divisor.
+        // When we receive the available bond,
+        // we divide it by the constant bondWeightDivisor
+        // to get the applicable weight.
+        uint256 bondWeightDivisor;
         address owner;
     }
 
     PoolParams poolParams;
 
     constructor(
-        IStaking _stakingContract,
         IBonding _bondingContract,
-        uint256 _minimumStake,
-        uint256 _minimumBondableValue,
+        uint256 _initialMinimumStake,
+        uint256 _bondWeightDivisor,
         address _poolOwner
     ) public {
-        require(_minimumStake > 0, "Minimum stake cannot be zero");
+        require(_bondWeightDivisor > 0, "Weight divisor must be nonzero");
 
         poolParams = PoolParams(
-            _stakingContract,
-            _minimumStake,
             _bondingContract,
-            _minimumBondableValue,
+            _initialMinimumStake,
+            _bondWeightDivisor,
             _poolOwner
         );
     }
@@ -95,9 +104,9 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) internal returns (PoolParams memory params) {
         params = poolParams;
 
-        if (params.minimumBondableValue != bondValue) {
-            params.minimumBondableValue = bondValue;
-            poolParams.minimumBondableValue = bondValue;
+        if (params.minimumAvailableBond != bondValue) {
+            params.minimumAvailableBond = bondValue;
+            poolParams.minimumAvailableBond = bondValue;
         }
 
         return params;
@@ -118,19 +127,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < poolParams.minimumBondableValue) {
+        if (bondableValue < poolParams.minimumAvailableBond) {
             return 0;
         }
-
-        uint256 eligibleStake = poolParams.stakingContract.eligibleStake(
-            operator,
-            ownerAddress
-        );
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / poolParams.minimumStake);
+        return (bondableValue / poolParams.bondWeightDivisor);
     }
 
     function decideFate(
@@ -152,32 +156,46 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
         address ownerAddress = params.owner;
 
-        // Get the amount of bondable value available for this pool.
-        // We only care that this covers one single bond
-        // regardless of the weight of the operator in the pool.
-        uint256 bondableValue = params.bondingContract.availableUnbondedValue(
+        // Get the bond-stake available for this selection,
+        // before accounting for the bond created if the operator is selected.
+        uint256 preStake = params.bondingContract.availableUnbondedValue(
             operator,
             ownerAddress,
             address(this)
         );
 
-        // Don't query stake if bond is insufficient.
-        if (bondableValue < params.minimumBondableValue) {
+
+        // Don't proceed further if bond is insufficient.
+        if (preStake < params.minimumAvailableBond) {
             return Fate(Decision.Delete, 0);
         }
 
-        uint256 eligibleStake = params.stakingContract.eligibleStake(
-            operator,
-            ownerAddress
-        );
+        // Calculate the bond-stake that would be left after selection
+        // Doesn't underflow because preStake >= minimum
+        uint256 postStake = preStake - params.minimumAvailableBond;
 
-        // Weight = floor(eligibleStake / mimimumStake)
-        // Ethereum uint256 division performs implicit floor
-        uint256 eligibleWeight = eligibleStake / params.minimumStake;
+        // Calculate the eligible pre-selection weight
+        // based on the constant weight divisor.
+        uint256 preWeight = preStake / params.bondWeightDivisor;
 
-        if (eligibleWeight < leafWeight) {
-            return Fate(Decision.Delete, 0);
+        // The operator is detrimentally out of date,
+        // but still eligible.
+        // Because the bond-stake may be shared with other pools,
+        // we don't punish this case.
+        // Instead, update and retry.
+        if (preWeight < leafWeight) {
+            return Fate(Decision.UpdateRetry, preWeight);
         }
-        return Fate(Decision.Select, 0);
+
+        // Calculate the post-selection weight
+        // based on the constant weight divisor
+        uint256 postWeight = postStake / params.bondWeightDivisor;
+
+        // This can result in zero weight,
+        // in which case the operator is still in the pool
+        // and can return to eligibility after adding more bond.
+        // Not sure if we want to do this exact thing,
+        // but reasonable to begin with.
+        return Fate(Decision.UpdateSelect, postWeight);
     }
 }
