@@ -76,6 +76,23 @@ library RNG {
         }
     }
 
+    function updateInterval(
+        State memory self,
+        uint256 startIndex,
+        uint256 oldWeight,
+        uint256 newWeight
+    ) internal pure {
+        int256 weightDiff = int256(newWeight) - int256(oldWeight);
+        uint256 effectiveStartIndex = startIndex + newWeight;
+        self.truncatedRange = uint256(int256(self.truncatedRange) + weightDiff);
+        self.fullRange = uint256(int256(self.fullRange) + weightDiff);
+        Interval.remapIndices(
+            effectiveStartIndex,
+            weightDiff,
+            self.skippedIntervals
+        );
+    }
+
     function addSkippedInterval(
         State memory self,
         uint256 startIndex,
@@ -85,20 +102,6 @@ library RNG {
         Interval.insert(
             self.skippedIntervals,
             Interval.make(startIndex, weight)
-        );
-    }
-
-    function removeInterval(
-        State memory self,
-        uint256 startIndex,
-        uint256 weight
-    ) internal pure {
-        self.truncatedRange -= weight;
-        self.fullRange -= weight;
-        Interval.remapIndices(
-            startIndex,
-            weight,
-            self.skippedIntervals
         );
     }
 

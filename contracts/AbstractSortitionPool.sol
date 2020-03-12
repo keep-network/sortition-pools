@@ -196,7 +196,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
             }
             if (fate.decision == Decision.Delete) {
                 // Update the RNG
-                rng.removeInterval(startingIndex, leafWeight);
+                rng.updateInterval(startingIndex, leafWeight, 0);
                 // Remove the leaf and update root
                 _root = removeLeaf(leafPosition, _root);
                 rootChanged = true;
@@ -212,6 +212,11 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                     _root
                 );
                 rootChanged = true;
+                rng.updateInterval(
+                    startingIndex,
+                    leafWeight,
+                    fate.maybeWeight
+                );
                 continue;
             }
             if (fate.decision == Decision.UpdateSelect) {
@@ -222,8 +227,13 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
                 );
                 rootChanged = true;
                 selected.arrayPush(operator);
+                rng.updateInterval(
+                    startingIndex,
+                    leafWeight,
+                    fate.maybeWeight
+                );
                 if (noDuplicates) {
-                    rng.addSkippedInterval(startingIndex, leafWeight);
+                    rng.addSkippedInterval(startingIndex, fate.maybeWeight);
                 }
                 rng.reseed(seed, selected.array.length);
                 continue;
