@@ -27,6 +27,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     struct Fate {
         Decision decision;
+        // The new weight of the leaf if Decision is Update*, otherwise 0
         uint256 maybeWeight;
     }
 
