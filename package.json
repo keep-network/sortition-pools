@@ -1,6 +1,6 @@
 {
   "name": "@keep-network/sortition-pools",
-  "version": "0.1.2-pre.2",
+  "version": "0.1.2-pre.3",
   "description": "",
   "main": "truffle-config.js",
   "directories": {
@@ -35,8 +35,7 @@
   },
   "homepage": "https://github.com/keep-network/sortition-pools#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0",
-    "solidity-bytes-utils": "0.0.7"
+    "@openzeppelin/contracts": "^2.4.0"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.4",
