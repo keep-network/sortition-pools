@@ -7,16 +7,23 @@ import "./api/IBonding.sol";
 import "./DynamicArray.sol";
 
 /// @title Fully Backed Sortition Pool
-/// @notice A logarithmic data structure used to store the pool of eligible
-/// operators weighted by their stakes. It allows to select a group of operators
+/// @notice A logarithmic data structure
+/// used to store the pool of eligible operators weighted by their stakes.
+/// It allows to select a group of operators
 /// based on the provided pseudo-random seed and bonding requirements.
-/// @dev Keeping pool up to date cannot be done eagerly as proliferation of
-/// privileged customers could be used to perform DOS attacks by increasing the
-/// cost of such updates. When a sortition pool prospectively selects an
-/// operator, the selected operator’s eligibility status and weight needs to be
-/// checked and, if necessary, updated in the sortition pool. If the changes
-/// would be detrimental to the operator, the operator selection is performed
-/// again with the updated input to ensure correctness.
+/// The fully backed pool uses bonds instead of stakes
+/// to determine the eligibility and weight of operators.
+/// When operators are selected,
+/// the pool updates their weight to reflect their lower available bonds.
+/// @dev Keeping pool up to date cannot be done eagerly
+/// as proliferation of privileged customers could be used
+/// to perform DOS attacks by increasing the cost of such updates.
+/// When a sortition pool prospectively selects an operator,
+/// the selected operator’s eligibility status and weight needs to be checked
+/// and, if necessary, updated in the sortition pool.
+/// If the changes would be detrimental to the operator,
+/// the operator selection is performed again with the updated input
+/// to ensure correctness.
 contract FullyBackedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.UintArray;
     using DynamicArray for DynamicArray.AddressArray;
@@ -30,12 +37,12 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     struct PoolParams {
         IBonding bondingContract;
         uint256 minimumAvailableBond;
-        // Because the minimum available stake may fluctuate,
+        // Because the minimum available bond may fluctuate,
         // we use a constant pool weight divisor.
-        // When we receive the available stake,
-        // we divide it by the constant poolWeightDivisor
+        // When we receive the available bond,
+        // we divide it by the constant bondWeightDivisor
         // to get the applicable weight.
-        uint256 poolWeightDivisor;
+        uint256 bondWeightDivisor;
         address owner;
     }
 
@@ -44,15 +51,15 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     constructor(
         IBonding _bondingContract,
         uint256 _initialMinimumStake,
-        uint256 _poolWeightDivisor,
+        uint256 _bondWeightDivisor,
         address _poolOwner
     ) public {
-        require(_poolWeightDivisor > 0, "Weight divisor must be nonzero");
+        require(_bondWeightDivisor > 0, "Weight divisor must be nonzero");
 
         poolParams = PoolParams(
             _bondingContract,
             _initialMinimumStake,
-            _poolWeightDivisor,
+            _bondWeightDivisor,
             _poolOwner
         );
     }
@@ -127,7 +134,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (bondableValue / poolParams.poolWeightDivisor);
+        return (bondableValue / poolParams.bondWeightDivisor);
     }
 
     function decideFate(
@@ -169,7 +176,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
 
         // Calculate the eligible pre-selection weight
         // based on the constant weight divisor.
-        uint256 preWeight = preStake / params.poolWeightDivisor;
+        uint256 preWeight = preStake / params.bondWeightDivisor;
 
         // The operator is detrimentally out of date,
         // but still eligible.
@@ -182,7 +189,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
 
         // Calculate the post-selection weight
         // based on the constant weight divisor
-        uint256 postWeight = postStake / params.poolWeightDivisor;
+        uint256 postWeight = postStake / params.bondWeightDivisor;
 
         // This can result in zero weight,
         // in which case the operator is still in the pool
