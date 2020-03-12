@@ -47,15 +47,17 @@ contract('FullyBackedSortitionPool', (accounts) => {
       )
     })
 
-    it('returns false when initialization period not passed', async () => {
+    it('returns false at the beginning of the initialization period', async () => {
       await prepareOperator(alice, 10)
-
-      assert.isFalse(await pool.isOperatorInitialized(alice))
 
       assert.isFalse(
         await pool.isOperatorInitialized(alice),
         'incorrect result at the beginning of the period',
       )
+    })
+
+    it('returns false when the initialization period is almost passed', async () => {
+      await prepareOperator(alice, 10)
 
       await mineBlocks((await pool.operatorInitBlocks()))
 
@@ -104,13 +106,15 @@ contract('FullyBackedSortitionPool', (accounts) => {
 
       await mineBlocks(11)
 
-      const preWeight = await pool.getPoolWeight(alice)
-      assert.equal(preWeight, 10)
+      assert.equal(await pool.getPoolWeight(alice), 10)
+      assert.equal(await pool.getPoolWeight(bob), 11)
+      assert.equal(await pool.getPoolWeight(carol), 12)
 
       await pool.selectSetGroup(3, seed, bond, { from: owner })
 
-      const postWeight = await pool.getPoolWeight(alice)
-      assert.equal(postWeight, 8)
+      assert.equal(await pool.getPoolWeight(alice), 8)
+      assert.equal(await pool.getPoolWeight(bob), 9)
+      assert.equal(await pool.getPoolWeight(carol), 10)
     })
 
     function hasDuplicates(array) {
