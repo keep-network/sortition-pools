@@ -49,7 +49,26 @@ async function deployBondedSortitionPoolFactory(artifacts, deployer) {
   await deployer.deploy(BondedSortitionPoolFactory)
 };
 
+async function deployFullyBackedSortitionPoolFactory(artifacts, deployer) {
+  await deployLibraries(artifacts, deployer)
+
+  const Branch = artifacts.require('Branch')
+  const Position = artifacts.require('Position')
+  const StackLib = artifacts.require('StackLib')
+  const Leaf = artifacts.require('Leaf')
+
+  const FullyBackedSortitionPoolFactory = artifacts.require('FullyBackedSortitionPoolFactory')
+
+  // Fully Backed Sortition Pool Factory
+  await deployer.link(Branch, FullyBackedSortitionPoolFactory)
+  await deployer.link(Position, FullyBackedSortitionPoolFactory)
+  await deployer.link(StackLib, FullyBackedSortitionPoolFactory)
+  await deployer.link(Leaf, FullyBackedSortitionPoolFactory)
+  await deployer.deploy(FullyBackedSortitionPoolFactory)
+}
+
 module.exports = {
   deploySortitionPoolFactory,
   deployBondedSortitionPoolFactory,
+  deployFullyBackedSortitionPoolFactory,
 }

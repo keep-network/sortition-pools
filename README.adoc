@@ -209,3 +209,52 @@ address[] memory members = pool.selectGroup(
 );
 ----  
 
+=== Fully Backed Sortition Pool
+
+==== Creating a pool
+
+----
+import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
+import "@keep-network/sortition-pools/contracts/FullyBackedSortitionPool.sol";
+import "@keep-network/sortition-pools/contracts/FullyBackedSortitionPoolFactory.sol";
+
+(...)
+
+FullyBackedSortitionPoolFactory sortitionPoolFactory;
+
+(...)
+
+address poolAddress = sortitionPoolFactory.createSortitionPool(
+  IBonding(keepBondingContract),
+  minimumStake,
+  bondWeightDivisor
+);
+
+FullyBackedSortitionPool pool = FullyBackedSortitionPool(poolAddress);
+----
+
+==== Joining the pool
+
+----
+if (!pool.isOperatorInPool(operator)) {
+  pool.joinPool(operator);
+}
+----
+
+==== Updating status
+
+----
+if (!pool.isOperatorUpToDate(operator)) {
+  pool.updateOperatorStatus(operator);
+}
+----
+
+==== Selecting unique signers
+
+----
+address[] memory members = pool.selectSetGroup(
+  groupSize,
+  bytes32(groupSelectionSeed),
+  memberBond
+);
+----      

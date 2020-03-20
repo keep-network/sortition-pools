@@ -40,7 +40,7 @@
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.4",
     "eslint": "^6.8.0",
-    "eslint-config-keep": "github:keep-network/eslint-config-keep",
+    "eslint-config-keep": "github:keep-network/eslint-config-keep#0.2.0",
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
     "solc": "^0.6.1",
