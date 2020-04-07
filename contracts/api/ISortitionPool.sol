@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 interface ISortitionPool {
     /// @notice Selects a new group of operators of the provided size based on

@@ -43,7 +43,7 @@
     "eslint-config-keep": "github:keep-network/eslint-config-keep#0.2.0",
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
-    "solc": "^0.6.1",
+    "solc": "0.5.17",
     "solium": "^1.2.5",
     "solium-config-keep": "github:keep-network/solium-config-keep",
     "truffle": "^5.1.0"

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 library StackLib {
     function stackPeek(uint256[] storage _array)

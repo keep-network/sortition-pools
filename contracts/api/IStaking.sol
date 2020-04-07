@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 interface IStaking {
     // Gives the amount of KEEP tokens staked by the `operator`
