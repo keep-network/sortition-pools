@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 import "./Leaf.sol";
 import "./Interval.sol";

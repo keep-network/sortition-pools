@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 contract StakingContractStub {
     mapping(address => uint256) stakedTokens;
