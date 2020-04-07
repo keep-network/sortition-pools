@@ -15,6 +15,7 @@ contract('BondedSortitionPool', (accounts) => {
   const seed = '0xff39d6cca87853892d2854566e883008bc'
   const bond = 100000000
   const minStake = 2000
+  const poolWeightDivisor = 2000
   const owner = accounts[9]
   let pool
   let bonding
@@ -36,7 +37,14 @@ contract('BondedSortitionPool', (accounts) => {
       await pool.joinPool(address)
     }
 
-    pool = await BondedSortitionPool.new(staking.address, bonding.address, minStake, bond, owner)
+    pool = await BondedSortitionPool.new(
+      staking.address,
+      bonding.address,
+      minStake,
+      bond,
+      poolWeightDivisor,
+      owner,
+    )
   })
 
   describe('isOperatorInitialized', async () => {
@@ -91,13 +99,13 @@ contract('BondedSortitionPool', (accounts) => {
 
       let group
 
-      group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
-      await pool.selectSetGroup(3, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+      await pool.selectSetGroup(3, seed, minStake, bond, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
 
-      group = await pool.selectSetGroup.call(5, seed, bond, { from: owner })
-      await pool.selectSetGroup(5, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(5, seed, minStake, bond, { from: owner })
+      await pool.selectSetGroup(5, seed, minStake, bond, { from: owner })
       assert.equal(group.length, 5)
       assert.isFalse(hasDuplicates(group))
     })
@@ -114,7 +122,7 @@ contract('BondedSortitionPool', (accounts) => {
       await mineBlocks(11)
 
       try {
-        await pool.selectSetGroup(3, seed, bond, { from: accounts[0] })
+        await pool.selectSetGroup(3, seed, minStake, bond, { from: accounts[0] })
       } catch (error) {
         assert.include(error.message, 'Only owner may select groups')
         return
@@ -125,7 +133,7 @@ contract('BondedSortitionPool', (accounts) => {
 
     it('reverts when there are no operators in pool', async () => {
       try {
-        await pool.selectSetGroup(3, seed, bond, { from: owner })
+        await pool.selectSetGroup(3, seed, minStake, bond, { from: owner })
       } catch (error) {
         assert.include(error.message, 'Not enough operators in pool')
         return
@@ -141,7 +149,7 @@ contract('BondedSortitionPool', (accounts) => {
       await mineBlocks(11)
 
       try {
-        await pool.selectSetGroup(3, seed, bond, { from: owner })
+        await pool.selectSetGroup(3, seed, minStake, bond, { from: owner })
       } catch (error) {
         assert.include(error.message, 'Not enough operators in pool')
         return
@@ -161,11 +169,11 @@ contract('BondedSortitionPool', (accounts) => {
       await staking.setStake(accounts[2], 1 * minStake)
 
       try {
-        await pool.selectSetGroup(4, seed, bond, { from: owner })
+        await pool.selectSetGroup(4, seed, minStake, bond, { from: owner })
       } catch (error) {
         assert.include(error.message, 'Not enough operators in pool')
 
-        group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
+        group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
 
         assert.equal(group.length, 3)
         assert.isFalse(hasDuplicates(group))
@@ -185,7 +193,7 @@ contract('BondedSortitionPool', (accounts) => {
 
       await staking.setStake(accounts[2], 15 * minStake)
 
-      group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
     })
@@ -212,13 +220,13 @@ contract('BondedSortitionPool', (accounts) => {
       await staking.setStake(accounts[7], 1 * minStake)
       await staking.setStake(accounts[9], 1 * minStake)
 
-      group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
-      await pool.selectSetGroup(3, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+      await pool.selectSetGroup(3, seed, minStake, bond, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
 
       try {
-        await pool.selectSetGroup(4, seed, bond, { from: owner })
+        await pool.selectSetGroup(4, seed, minStake, bond, { from: owner })
       } catch (error) {
         assert.include(error.message, 'Not enough operators in pool')
         return
@@ -241,8 +249,8 @@ contract('BondedSortitionPool', (accounts) => {
 
       await mineBlocks(11)
 
-      group = await pool.selectSetGroup.call(3, seed, bond, { from: owner })
-      await pool.selectSetGroup(3, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+      await pool.selectSetGroup(3, seed, minStake, bond, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
     })
@@ -265,8 +273,8 @@ contract('BondedSortitionPool', (accounts) => {
 
       await mineBlocks(10)
 
-      group = await pool.selectSetGroup.call(9, seed, bond, { from: owner })
-      await pool.selectSetGroup(9, seed, bond, { from: owner })
+      group = await pool.selectSetGroup.call(9, seed, minStake, bond, { from: owner })
+      await pool.selectSetGroup(9, seed, minStake, bond, { from: owner })
 
       assert.equal(group.length, 9)
       assert.isFalse(hasDuplicates(group))
@@ -280,18 +288,18 @@ contract('BondedSortitionPool', (accounts) => {
 
       await mineBlocks(11)
 
-      group = await pool.selectSetGroup.call(3, seed, bond * 10, { from: owner })
-      await pool.selectSetGroup(3, seed, bond * 10, { from: owner })
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond * 10, { from: owner })
+      await pool.selectSetGroup(3, seed, minStake, bond * 10, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
 
-      group = await pool.selectSetGroup.call(2, seed, bond * 20, { from: owner })
-      await pool.selectSetGroup(2, seed, bond * 20, { from: owner })
+      group = await pool.selectSetGroup.call(2, seed, minStake, bond * 20, { from: owner })
+      await pool.selectSetGroup(2, seed, minStake, bond * 20, { from: owner })
       assert.equal(group.length, 2)
       assert.isFalse(hasDuplicates(group))
 
       try {
-        await pool.selectSetGroup(3, seed, bond * 20, { from: owner })
+        await pool.selectSetGroup(3, seed, minStake, bond * 20, { from: owner })
       } catch (error) {
         assert.include(error.message, 'Not enough operators in pool')
         return

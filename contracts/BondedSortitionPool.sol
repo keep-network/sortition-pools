@@ -32,6 +32,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         uint256 minimumStake;
         IBonding bondingContract;
         uint256 minimumBondableValue;
+        // The weight divisor in the pool can differ from the minimum stake
+        uint256 poolWeightDivisor;
         address owner;
     }
 
@@ -42,6 +44,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         IBonding _bondingContract,
         uint256 _minimumStake,
         uint256 _minimumBondableValue,
+        uint256 _poolWeightDivisor,
         address _poolOwner
     ) public {
         require(_minimumStake > 0, "Minimum stake cannot be zero");
@@ -51,6 +54,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             _minimumStake,
             _bondingContract,
             _minimumBondableValue,
+            _poolWeightDivisor,
             _poolOwner
         );
     }
@@ -68,9 +72,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
     function selectSetGroup(
         uint256 groupSize,
         bytes32 seed,
+        uint256 minimumStake,
         uint256 bondValue
     ) public returns (address[] memory) {
         PoolParams memory params = initializeSelectionParams(
+            minimumStake,
             bondValue
         );
         require(
@@ -91,6 +97,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     }
 
     function initializeSelectionParams(
+        uint256 currentMinimumStake,
         uint256 bondValue
     ) internal returns (PoolParams memory params) {
         params = poolParams;
@@ -100,7 +107,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
             poolParams.minimumBondableValue = bondValue;
         }
 
-        uint256 currentMinimumStake = params.stakingContract.minimumStake();
         if (params.minimumStake != currentMinimumStake) {
             params.minimumStake = currentMinimumStake;
             poolParams.minimumStake = currentMinimumStake;
@@ -128,16 +134,17 @@ contract BondedSortitionPool is AbstractSortitionPool {
             return 0;
         }
 
-        uint256 minimumStake = poolParams.stakingContract.minimumStake();
         uint256 eligibleStake = poolParams.stakingContract.eligibleStake(
             operator,
             ownerAddress
         );
 
+        if (eligibleStake < poolParams.minimumStake) { return 0; }
+
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / minimumStake);
+        return (eligibleStake / poolParams.poolWeightDivisor);
     }
 
     function decideFate(
@@ -178,11 +185,11 @@ contract BondedSortitionPool is AbstractSortitionPool {
             ownerAddress
         );
 
-        // Weight = floor(eligibleStake / mimimumStake)
+        // Weight = floor(eligibleStake / poolWeightDivisor)
         // Ethereum uint256 division performs implicit floor
-        uint256 eligibleWeight = eligibleStake / params.minimumStake;
+        uint256 eligibleWeight = eligibleStake / params.poolWeightDivisor;
 
-        if (eligibleWeight < leafWeight) {
+        if (eligibleWeight < leafWeight || eligibleStake < params.minimumStake) {
             return Fate(Decision.Delete, 0);
         }
         return Fate(Decision.Select, 0);
