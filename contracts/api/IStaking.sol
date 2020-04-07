@@ -12,7 +12,7 @@ interface IStaking {
         address operatorContract
     ) external view returns (uint256);
 
-    // Gives the current minimum amount of KEEP that has to be staked by 
+    // Gives the current minimum amount of KEEP that has to be staked by
     // operator so that it can join the pool.
     function minimumStake() external view returns (uint256);
 }
