@@ -24,7 +24,6 @@ contract('SortitionPool', (accounts) => {
     SortitionPool.link(StackLib)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
-    await staking.setMinimumStake(minStake)
     pool = await SortitionPool.new(
       staking.address,
       minStake,

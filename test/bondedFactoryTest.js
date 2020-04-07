@@ -15,8 +15,6 @@ contract('BondedSortitionPoolFactory', (accounts) => {
     bondedSortitionPoolFactory = await BondedSortitionPoolFactory.deployed()
     stakingContract = await StakingContractStub.new()
     bondingContract = await BondingContractStub.new()
-
-    await stakingContract.setMinimumStake(minimumStake)
   })
 
   describe('createSortitionPool()', async () => {

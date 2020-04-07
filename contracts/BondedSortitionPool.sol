@@ -68,6 +68,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     /// requirements, the function fails.
     /// @param groupSize Size of the requested group
     /// @param seed Pseudo-random number used to select operators to group
+    /// @param minimumStake The current minimum stake value
     /// @param bondValue Size of the requested bond per operator
     function selectSetGroup(
         uint256 groupSize,

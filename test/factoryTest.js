@@ -16,7 +16,6 @@ contract('SortitionPoolFactory', (accounts) => {
 
   before(async () => {
     staking = await StakingContractStub.new()
-    await staking.setMinimumStake(minStake)
     factory = await SortitionPoolFactory.new()
   })
 

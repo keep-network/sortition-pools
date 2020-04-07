@@ -28,7 +28,6 @@ contract('BondedSortitionPool', (accounts) => {
     BondedSortitionPool.link(StackLib)
     BondedSortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
-    await staking.setMinimumStake(minStake)
     bonding = await BondingContractStub.new()
 
     prepareOperator = async (address, weight) => {
