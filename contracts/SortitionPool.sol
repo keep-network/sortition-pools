@@ -19,11 +19,13 @@ contract SortitionPool is AbstractSortitionPool {
     constructor(
         IStaking _stakingContract,
         uint256 _minimumStake,
+        uint256 _poolWeightDivisor,
         address _poolOwner
     ) public {
         poolParams = PoolParams(
             _stakingContract,
             _minimumStake,
+            _poolWeightDivisor,
             _poolOwner
         );
     }
@@ -31,6 +33,7 @@ contract SortitionPool is AbstractSortitionPool {
     struct PoolParams {
         IStaking stakingContract;
         uint256 minimumStake;
+        uint256 poolWeightDivisor;
         address owner;
     }
 
@@ -44,9 +47,9 @@ contract SortitionPool is AbstractSortitionPool {
     /// @param seed Pseudo-random number used to select operators to group
     /// @return selected Members of the selected group
     function selectGroup(
-        uint256 groupSize, bytes32 seed
+        uint256 groupSize, bytes32 seed, uint256 minimumStake
     ) public returns (address[] memory)  {
-        PoolParams memory params = initializeSelectionParams();
+        PoolParams memory params = initializeSelectionParams(minimumStake);
         require(
             msg.sender == params.owner,
             "Only owner may select groups"
@@ -64,10 +67,16 @@ contract SortitionPool is AbstractSortitionPool {
         );
     }
 
-    function initializeSelectionParams()
-        internal view returns (PoolParams memory params)
-    {
+    function initializeSelectionParams(
+        uint256 currentMinimumStake
+    ) internal returns (PoolParams memory params) {
         params = poolParams;
+
+        if (params.minimumStake != currentMinimumStake) {
+            params.minimumStake = currentMinimumStake;
+            poolParams.minimumStake = currentMinimumStake;
+        }
+
         return params;
     }
 
@@ -86,9 +95,8 @@ contract SortitionPool is AbstractSortitionPool {
             operator,
             params.owner
         );
-        uint256 operatorWeight = operatorStake / params.minimumStake;
-
-        return operatorWeight;
+        if (operatorStake < params.minimumStake) { return 0; }
+        return operatorStake / params.poolWeightDivisor;
     }
 
     function decideFate(
@@ -117,9 +125,9 @@ contract SortitionPool is AbstractSortitionPool {
 
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
-        uint256 eligibleWeight = eligibleStake / params.minimumStake;
+        uint256 eligibleWeight = eligibleStake / params.poolWeightDivisor;
 
-        if (eligibleWeight < leafWeight) {
+        if (eligibleWeight < leafWeight || eligibleStake < params.minimumStake) {
             return Fate(Decision.Delete, 0);
         }
         return Fate(Decision.Select, 0);

@@ -9,6 +9,7 @@ contract('BondedSortitionPoolFactory', (accounts) => {
   let bondingContract
   const minimumStake = 1
   const initialMinimumBond = 1
+  const poolWeightDivisor = 1
 
   before(async () => {
     bondedSortitionPoolFactory = await BondedSortitionPoolFactory.deployed()
@@ -23,12 +24,14 @@ contract('BondedSortitionPoolFactory', (accounts) => {
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        poolWeightDivisor,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        poolWeightDivisor,
       )
       const pool1 = await BondedSortitionPool.at(pool1Address)
 
@@ -37,21 +40,23 @@ contract('BondedSortitionPoolFactory', (accounts) => {
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        poolWeightDivisor,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
         minimumStake,
         initialMinimumBond,
+        poolWeightDivisor,
       )
       const pool2 = await BondedSortitionPool.at(pool2Address)
 
       assert.notEqual(pool1Address, pool2Address)
 
-      stakingContract.setStake(accounts[1], 11)
-      stakingContract.setStake(accounts[2], 12)
-      bondingContract.setBondableValue(accounts[1], 11)
-      bondingContract.setBondableValue(accounts[2], 12)
+      await stakingContract.setStake(accounts[1], 11)
+      await stakingContract.setStake(accounts[2], 12)
+      await bondingContract.setBondableValue(accounts[1], 11)
+      await bondingContract.setBondableValue(accounts[2], 12)
 
       assert.equal(await pool1.operatorsInPool(), 0)
       assert.equal(await pool2.operatorsInPool(), 0)
