@@ -14,6 +14,8 @@ contract('BondedSortitionPoolFactory', (accounts) => {
     bondedSortitionPoolFactory = await BondedSortitionPoolFactory.deployed()
     stakingContract = await StakingContractStub.new()
     bondingContract = await BondingContractStub.new()
+
+    await stakingContract.setMinimumStake(minimumStake)
   })
 
   describe('createSortitionPool()', async () => {
@@ -21,13 +23,11 @@ contract('BondedSortitionPoolFactory', (accounts) => {
       const pool1Address = await bondedSortitionPoolFactory.createSortitionPool.call(
         stakingContract.address,
         bondingContract.address,
-        minimumStake,
         initialMinimumBond,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
-        minimumStake,
         initialMinimumBond,
       )
       const pool1 = await BondedSortitionPool.at(pool1Address)
@@ -35,23 +35,21 @@ contract('BondedSortitionPoolFactory', (accounts) => {
       const pool2Address = await bondedSortitionPoolFactory.createSortitionPool.call(
         stakingContract.address,
         bondingContract.address,
-        minimumStake,
         initialMinimumBond,
       )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
-        minimumStake,
         initialMinimumBond,
       )
       const pool2 = await BondedSortitionPool.at(pool2Address)
 
       assert.notEqual(pool1Address, pool2Address)
 
-      stakingContract.setStake(accounts[1], 11)
-      stakingContract.setStake(accounts[2], 12)
-      bondingContract.setBondableValue(accounts[1], 11)
-      bondingContract.setBondableValue(accounts[2], 12)
+      await stakingContract.setStake(accounts[1], 11)
+      await stakingContract.setStake(accounts[2], 12)
+      await bondingContract.setBondableValue(accounts[1], 11)
+      await bondingContract.setBondableValue(accounts[2], 12)
 
       assert.equal(await pool1.operatorsInPool(), 0)
       assert.equal(await pool2.operatorsInPool(), 0)

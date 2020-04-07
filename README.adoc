@@ -129,7 +129,6 @@ BondedSortitionPoolFactory sortitionPoolFactory;
 address poolAddress = sortitionPoolFactory.createSortitionPool(
   IStaking(keepStakingContract),
   IBonding(keepBondingContract),
-  minimumStake,
   minimumBond
 );
 
@@ -177,8 +176,7 @@ SortitionPoolFactory sortitionPoolFactory;
 (...)
 
 address poolAddress = sortitionPoolFactory.createSortitionPool(
-  IStaking(keepStakingContract),
-  minimumStake,
+  IStaking(keepStakingContract)
 );
 
 SortitionPool pool = SortitionPool(poolAddress);

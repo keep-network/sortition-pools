@@ -15,17 +15,18 @@ contract('SortitionPoolFactory', (accounts) => {
 
   before(async () => {
     staking = await StakingContractStub.new()
+    await staking.setMinimumStake(minStake)
     sortitionPoolFactory = await SortitionPoolFactory.new()
   })
 
   describe('createSortitionPool()', async () => {
     it('creates independent clones', async () => {
-      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
-      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
+      const sortitionPool1Address = await sortitionPoolFactory.createSortitionPool.call(staking.address)
+      await sortitionPoolFactory.createSortitionPool(staking.address)
       const sortitionPool1 = await SortitionPool.at(sortitionPool1Address)
 
-      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call(staking.address, minStake)
-      await sortitionPoolFactory.createSortitionPool(staking.address, minStake)
+      const sortitionPool2Address = await sortitionPoolFactory.createSortitionPool.call(staking.address)
+      await sortitionPoolFactory.createSortitionPool(staking.address)
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
       await staking.setStake(alice, 22000)

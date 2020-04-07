@@ -13,9 +13,9 @@ contract BondedSortitionPoolFactory {
     function createSortitionPool(
         IStaking stakingContract,
         IBonding bondingContract,
-        uint256 minimumStake,
         uint256 initialMinimumBond
     ) public returns (address) {
+        uint256 minimumStake = stakingContract.minimumStake();
         return address(
             new BondedSortitionPool(
                 stakingContract,

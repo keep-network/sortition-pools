@@ -9,9 +9,9 @@ contract SortitionPoolFactory {
     /// @notice Creates a new sortition pool instance.
     /// @return Address of the new sortition pool contract instance.
     function createSortitionPool(
-        IStaking stakingContract,
-        uint256 minimumStake
+        IStaking stakingContract
     ) public returns (address) {
+        uint256 minimumStake = stakingContract.minimumStake();
         return address(
             new SortitionPool(
                 stakingContract,
