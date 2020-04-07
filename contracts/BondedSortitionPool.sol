@@ -100,6 +100,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
             poolParams.minimumBondableValue = bondValue;
         }
 
+        uint256 currentMinimumStake = params.stakingContract.minimumStake();
+        if (params.minimumStake != currentMinimumStake) {
+            params.minimumStake = currentMinimumStake;
+            poolParams.minimumStake = currentMinimumStake;
+        }
+
         return params;
     }
 
@@ -122,6 +128,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             return 0;
         }
 
+        uint256 minimumStake = poolParams.stakingContract.minimumStake();
         uint256 eligibleStake = poolParams.stakingContract.eligibleStake(
             operator,
             ownerAddress
@@ -130,7 +137,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Weight = floor(eligibleStake / mimimumStake)
         // Ethereum uint256 division performs implicit floor
         // If eligibleStake < minimumStake, return 0 = ineligible.
-        return (eligibleStake / poolParams.minimumStake);
+        return (eligibleStake / minimumStake);
     }
 
     function decideFate(

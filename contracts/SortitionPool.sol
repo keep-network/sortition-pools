@@ -65,9 +65,16 @@ contract SortitionPool is AbstractSortitionPool {
     }
 
     function initializeSelectionParams()
-        internal view returns (PoolParams memory params)
+        internal returns (PoolParams memory params)
     {
         params = poolParams;
+
+        uint256 currentMinimumStake = params.stakingContract.minimumStake();
+        if (params.minimumStake != currentMinimumStake) {
+            params.minimumStake = currentMinimumStake;
+            poolParams.minimumStake = currentMinimumStake;
+        }
+
         return params;
     }
 
@@ -82,11 +89,12 @@ contract SortitionPool is AbstractSortitionPool {
         address operator,
         PoolParams memory params
     ) internal view returns (uint256) {
+        uint256 minimumStake = poolParams.stakingContract.minimumStake();
         uint256 operatorStake = params.stakingContract.eligibleStake(
             operator,
             params.owner
         );
-        uint256 operatorWeight = operatorStake / params.minimumStake;
+        uint256 operatorWeight = operatorStake / minimumStake;
 
         return operatorWeight;
     }
