@@ -130,7 +130,8 @@ address poolAddress = sortitionPoolFactory.createSortitionPool(
   IStaking(keepStakingContract),
   IBonding(keepBondingContract),
   minimumStake,
-  minimumBond
+  minimumBond,
+  poolWeightDivisor
 );
 
 BondedSortitionPool pool = BondedSortitionPool(poolAddress);
@@ -158,8 +159,8 @@ if (!pool.isOperatorUpToDate(operator)) {
 address[] memory members = pool.selectSetGroup(
   groupSize,
   bytes32(groupSelectionSeed),
-  memberBond,
-  minimumStake
+  minimumStake,
+  memberBond
 );
 ----        
 
