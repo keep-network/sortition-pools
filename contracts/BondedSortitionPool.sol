@@ -140,7 +140,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             ownerAddress
         );
 
-        if (eligibleStake < poolParams.minimumStake) { return 0; }
+        if (eligibleStake < poolParams.minimumStake) {return 0;}
 
         // Weight = floor(eligibleStake / poolWeightDivisor)
         // Ethereum uint256 division performs implicit floor
