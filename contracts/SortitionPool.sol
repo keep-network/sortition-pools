@@ -95,7 +95,7 @@ contract SortitionPool is AbstractSortitionPool {
             operator,
             params.owner
         );
-        if (operatorStake < params.minimumStake) { return 0; }
+        if (operatorStake < params.minimumStake) {return 0;}
         return operatorStake / params.poolWeightDivisor;
     }
 
