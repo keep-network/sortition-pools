@@ -231,7 +231,7 @@ contract SortitionTree {
         return emptyLeaves.getSize() > 0;
     }
 
-    function totalWeight() internal view returns (uint256) {
+    function totalWeight() public view returns (uint256) {
         return root.sumWeight();
     }
 }
