@@ -31,4 +31,7 @@ interface ISortitionPool {
     // Update the operator's weight if present and eligible,
     // or remove from the pool if present and ineligible.
     function updateOperatorStatus(address operator) external;
+
+    // Returns the total weight of the pool.
+    function totalWeight() external view returns (uint256);
 }
