@@ -74,6 +74,10 @@ contract SortitionTree {
         return (nPossiblyUsedLeaves - nEmptyLeaves);
     }
 
+    function totalWeight() public view returns (uint256) {
+        return root.sumWeight();
+    }
+
     function insertOperator(address operator, uint256 weight) internal {
         require(
             !isOperatorRegistered(operator),
@@ -229,9 +233,5 @@ contract SortitionTree {
 
     function leavesInStack() internal view returns (bool) {
         return emptyLeaves.getSize() > 0;
-    }
-
-    function totalWeight() public view returns (uint256) {
-        return root.sumWeight();
     }
 }
