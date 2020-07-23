@@ -157,30 +157,78 @@ contract('BondedSortitionPool', (accounts) => {
       assert.fail('Expected throw not received')
     })
 
-    it('removes ineligible operators and still works afterwards', async () => {
-      await prepareOperator(accounts[0], 10)
-      await prepareOperator(accounts[1], 11)
-      await prepareOperator(accounts[2], 12)
-      await prepareOperator(accounts[3], 5)
+    it('removes stake-ineligible operators and still works afterwards', async () => {
+      await prepareOperator(accounts[0], 2)
+      await prepareOperator(accounts[1], 2)
+      await prepareOperator(accounts[2], 200)
+      await prepareOperator(accounts[3], 2)
 
       await mineBlocks(11)
 
       await staking.setStake(accounts[2], 1 * minStake)
 
-      try {
-        await pool.selectSetGroup(4, seed, minStake, bond, { from: owner })
-      } catch (error) {
-        assert.include(error.message, 'Not enough operators in pool')
+      // all 4 operators in the pool
+      assert.equal(await pool.operatorsInPool(), 4)
 
-        group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+      // should select group and remove accounts[2]
+      await pool.selectSetGroup(3, seed, 2 * minStake, bond, { from: owner })
 
-        assert.equal(group.length, 3)
-        assert.isFalse(hasDuplicates(group))
+      // should have only 3 operators in the pool now
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
 
-        return
-      }
+      assert.equal(group.length, 3)
+      assert.isFalse(hasDuplicates(group))
+      assert.equal(await pool.operatorsInPool(), 3) // accounts[2] removed
+    })
 
-      assert.fail('Expected throw not received')
+    it('removes minimum-bond-ineligible operators and still works afterwards', async () => {
+      await prepareOperator(accounts[0], 2)
+      await prepareOperator(accounts[1], 200)
+      await prepareOperator(accounts[2], 2)
+      await prepareOperator(accounts[3], 2)
+
+      await mineBlocks(11)
+
+      await pool.setMinimumBondableValue(2*bond, { from: owner })
+      await bonding.setBondableValue(accounts[1], 1 * bond)
+
+      // all 4 operators in the pool
+      assert.equal(await pool.operatorsInPool(), 4)
+
+      // should select group and remove accounts[1]
+      await pool.selectSetGroup(3, seed, minStake, 2 * bond, { from: owner })
+
+      // should have only 3 operators in the pool now
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+
+      assert.equal(group.length, 3)
+      assert.isFalse(hasDuplicates(group))
+      assert.equal(await pool.operatorsInPool(), 3) // accounts[1] removed
+    })
+
+    it('skips selection-bond-ineligible operators and still works afterwards', async () => {
+      await prepareOperator(accounts[0], 2)
+      await prepareOperator(accounts[1], 200)
+      await prepareOperator(accounts[2], 2)
+      await prepareOperator(accounts[3], 2)
+
+      await mineBlocks(11)
+
+      await pool.setMinimumBondableValue(1 * bond, { from: owner })
+      await bonding.setBondableValue(accounts[1], 1 * bond)
+
+      // all 4 operators in the pool
+      assert.equal(await pool.operatorsInPool(), 4)
+
+      // should select group and skip accounts[1] (do not remove it!)
+      await pool.selectSetGroup(3, seed, minStake, 2*bond, { from: owner })
+
+      // should still have 4 operators in the pool
+      group = await pool.selectSetGroup.call(3, seed, minStake, bond, { from: owner })
+
+      assert.equal(group.length, 3)
+      assert.isFalse(hasDuplicates(group))
+      assert.equal(await pool.operatorsInPool(), 4)
     })
 
     it('doesn\'t mind operators whose weight has increased', async () => {
@@ -305,6 +353,25 @@ contract('BondedSortitionPool', (accounts) => {
       }
 
       assert.fail('Expected throw not received')
+    })
+  })
+
+  describe('setMinimumBondableValue', async () => {
+    it('can only be called by the owner', async () => {
+      try {
+        await pool.setMinimumBondableValue(1, { from: accounts[0] })
+        assert.fail('Expected throw not received')
+      } catch (error) {
+        assert.include(error.message, 'Only owner may update minimum bond value')
+      }
+    })
+
+    it('updates the minimum bondable value', async () => {
+      await pool.setMinimumBondableValue(1, { from: owner })
+      assert.equal(await pool.getMinimumBondableValue(), 1)
+
+      await pool.setMinimumBondableValue(6, { from: owner })
+      assert.equal(await pool.getMinimumBondableValue(), 6)
     })
   })
 })
