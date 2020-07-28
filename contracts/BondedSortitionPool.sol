@@ -59,7 +59,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             _minimumStake,
             _bondingContract,
             _minimumBondableValue,
-            _minimumBondableValue,
+            0,
             _poolWeightDivisor,
             _poolOwner
         );
