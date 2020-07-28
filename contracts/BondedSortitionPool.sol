@@ -17,9 +17,8 @@ import "./DynamicArray.sol";
 /// checked and, if necessary, updated in the sortition pool. If the changes
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
-/// The pool should specify a reasonable minimum bond for operators trying to
-/// join the pool, to prevent griefing by operators joining without enough
-/// bondable value.
+/// The pool should specify a reasonable minimum bondable value for operators
+/// trying to join the pool, to prevent griefing the selection.
 contract BondedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.UintArray;
     using DynamicArray for DynamicArray.AddressArray;
@@ -32,8 +31,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
         IBonding bondingContract;
         // Defines the minimum unbounded value the operator needs to have to be
         // eligible to join and stay in the sortition pool. Operators not
-        // satisfying minimum bond value are removed from the poool.
-        uint256 minimumBond;
+        // satisfying minimum bondable value are removed from the pool.
+        uint256 minimumBondableValue;
         // Bond required from each operator for the currently pending group
         // selection. If operator does not have at least this unbounded value,
         // it is skipped during the selection.
@@ -106,22 +105,23 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
     /// @notice Sets the minimum bondable value required from the operator
     /// so that it is eligible to be in the pool. The pool should specify
-    /// a reasonable minimum bond for operators trying to join the pool to
-    /// prevent griefing by operators joining without enough bondable value.
-    /// @param bondValue The minimum bond value required from the operator.
-    function setMinimumBondableValue(uint256 bondValue) public {
+    /// a reasonable minimum requirement for operators trying to join the pool 
+    /// to prevent griefing group selection.
+    /// @param minimumBondableValue The minimum bondable value required from the
+    /// operator.
+    function setMinimumBondableValue(uint256 minimumBondableValue) public {
         require(
             msg.sender == poolParams.owner,
             "Only owner may update minimum bond value"
         );
 
-        poolParams.minimumBond = bondValue;
+        poolParams.minimumBondableValue = minimumBondableValue;
     }
 
     /// @notice Returns the minimum bondable value required from the operator
     /// so that it is eligible to be in the pool.
     function getMinimumBondableValue() public view returns (uint256) {
-        return poolParams.minimumBond;
+        return poolParams.minimumBondableValue;
     }
 
     function initializeSelectionParams(
@@ -157,7 +157,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
 
         // Don't query stake if bond is insufficient.
-        if (bondableValue < poolParams.minimumBond) {
+        if (bondableValue < poolParams.minimumBondableValue) {
             return 0;
         }
 
@@ -202,13 +202,13 @@ contract BondedSortitionPool is AbstractSortitionPool {
             address(this)
         );
 
-        // If bond is insufficient for the operator to be in the pool, delete
-        // the operator.
-        if (bondableValue < params.minimumBond) {
+        // If unbonded value is insufficient for the operator to be in the pool,
+        // delete the operator.
+        if (bondableValue < params.minimumBondableValue) {
             return Fate(Decision.Delete, 0);
         }
-        // If bond is sufficient for the operator to be in the pool but it is
-        // not sufficient for the current selection, skip the operator.
+        // If unbonded value is sufficient for the operator to be in the pool
+        // but it is not sufficient for the current selection, skip the operator.
         if (bondableValue < params.selectionBond) {
             return Fate(Decision.Skip, 0);
         }
