@@ -36,7 +36,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         // Bond required from each operator for the currently pending group
         // selection. If operator does not have at least this unbounded value,
         // it is skipped during the selection.
-        uint256 selectionBond;
+        uint256 requestedBond;
         // The weight divisor in the pool can differ from the minimum stake
         uint256 poolWeightDivisor;
         address owner;
@@ -130,8 +130,8 @@ contract BondedSortitionPool is AbstractSortitionPool {
     ) internal returns (PoolParams memory params) {
         params = poolParams;
 
-        if (params.selectionBond != bondValue) {
-            params.selectionBond = bondValue;
+        if (params.requestedBond != bondValue) {
+            params.requestedBond = bondValue;
         }
 
         if (params.minimumStake != minimumStake) {
@@ -209,7 +209,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
         }
         // If unbonded value is sufficient for the operator to be in the pool
         // but it is not sufficient for the current selection, skip the operator.
-        if (bondableValue < params.selectionBond) {
+        if (bondableValue < params.requestedBond) {
             return Fate(Decision.Skip, 0);
         }
 
