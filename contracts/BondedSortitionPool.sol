@@ -17,21 +17,26 @@ import "./DynamicArray.sol";
 /// checked and, if necessary, updated in the sortition pool. If the changes
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
+/// The pool should specify a reasonable minimum bondable value for operators
+/// trying to join the pool, to prevent griefing the selection.
 contract BondedSortitionPool is AbstractSortitionPool {
     using DynamicArray for DynamicArray.UintArray;
     using DynamicArray for DynamicArray.AddressArray;
     using RNG for RNG.State;
-    // The pool should specify a reasonable minimum bond
-    // for operators trying to join the pool,
-    // to prevent griefing by operators joining without enough bondable value.
-    // After we start selecting groups
-    // this value can be set to equal the most recent request's bondValue.
+
 
     struct PoolParams {
         IStaking stakingContract;
         uint256 minimumStake;
         IBonding bondingContract;
+        // Defines the minimum unbounded value the operator needs to have to be
+        // eligible to join and stay in the sortition pool. Operators not
+        // satisfying minimum bondable value are removed from the pool.
         uint256 minimumBondableValue;
+        // Bond required from each operator for the currently pending group
+        // selection. If operator does not have at least this unbounded value,
+        // it is skipped during the selection.
+        uint256 requestedBond;
         // The weight divisor in the pool can differ from the minimum stake
         uint256 poolWeightDivisor;
         address owner;
@@ -54,6 +59,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
             _minimumStake,
             _bondingContract,
             _minimumBondableValue,
+            0,
             _poolWeightDivisor,
             _poolOwner
         );
@@ -97,20 +103,40 @@ contract BondedSortitionPool is AbstractSortitionPool {
         );
     }
 
+    /// @notice Sets the minimum bondable value required from the operator
+    /// so that it is eligible to be in the pool. The pool should specify
+    /// a reasonable minimum requirement for operators trying to join the pool 
+    /// to prevent griefing group selection.
+    /// @param minimumBondableValue The minimum bondable value required from the
+    /// operator.
+    function setMinimumBondableValue(uint256 minimumBondableValue) public {
+        require(
+            msg.sender == poolParams.owner,
+            "Only owner may update minimum bond value"
+        );
+
+        poolParams.minimumBondableValue = minimumBondableValue;
+    }
+
+    /// @notice Returns the minimum bondable value required from the operator
+    /// so that it is eligible to be in the pool.
+    function getMinimumBondableValue() public view returns (uint256) {
+        return poolParams.minimumBondableValue;
+    }
+
     function initializeSelectionParams(
-        uint256 currentMinimumStake,
+        uint256 minimumStake,
         uint256 bondValue
     ) internal returns (PoolParams memory params) {
         params = poolParams;
 
-        if (params.minimumBondableValue != bondValue) {
-            params.minimumBondableValue = bondValue;
-            poolParams.minimumBondableValue = bondValue;
+        if (params.requestedBond != bondValue) {
+            params.requestedBond = bondValue;
         }
 
-        if (params.minimumStake != currentMinimumStake) {
-            params.minimumStake = currentMinimumStake;
-            poolParams.minimumStake = currentMinimumStake;
+        if (params.minimumStake != minimumStake) {
+            params.minimumStake = minimumStake;
+            poolParams.minimumStake = minimumStake;
         }
 
         return params;
@@ -176,9 +202,15 @@ contract BondedSortitionPool is AbstractSortitionPool {
             address(this)
         );
 
-        // Don't query stake if bond is insufficient.
+        // If unbonded value is insufficient for the operator to be in the pool,
+        // delete the operator.
         if (bondableValue < params.minimumBondableValue) {
             return Fate(Decision.Delete, 0);
+        }
+        // If unbonded value is sufficient for the operator to be in the pool
+        // but it is not sufficient for the current selection, skip the operator.
+        if (bondableValue < params.requestedBond) {
+            return Fate(Decision.Skip, 0);
         }
 
         uint256 eligibleStake = params.stakingContract.eligibleStake(
