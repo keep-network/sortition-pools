@@ -1,8 +1,12 @@
-const FullyBackedSortitionPoolFactory = artifacts.require('./contracts/FullyBackedSortitionPoolFactory.sol')
-const FullyBackedSortitionPool = artifacts.require('./contracts/FullyBackedSortitionPool.sol')
-const BondingContractStub = artifacts.require('BondingContractStub.sol')
+const FullyBackedSortitionPoolFactory = artifacts.require(
+  "./contracts/FullyBackedSortitionPoolFactory.sol",
+)
+const FullyBackedSortitionPool = artifacts.require(
+  "./contracts/FullyBackedSortitionPool.sol",
+)
+const BondingContractStub = artifacts.require("BondingContractStub.sol")
 
-contract('FullyBackedSortitionPoolFactory', (accounts) => {
+contract("FullyBackedSortitionPoolFactory", (accounts) => {
   let bondingContract
   let factory
 
@@ -14,8 +18,8 @@ contract('FullyBackedSortitionPoolFactory', (accounts) => {
     bondingContract = await BondingContractStub.new()
   })
 
-  describe('createSortitionPool()', async () => {
-    it('creates independent pools', async () => {
+  describe("createSortitionPool()", async () => {
+    it("creates independent pools", async () => {
       const pool1Address = await factory.createSortitionPool.call(
         bondingContract.address,
         minimumStake,

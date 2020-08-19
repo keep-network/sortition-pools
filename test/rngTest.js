@@ -1,15 +1,16 @@
-const RNG = artifacts.require('./contracts/RNG.sol')
-const RNGStub = artifacts.require('RNGStub.sol')
+const RNG = artifacts.require("./contracts/RNG.sol")
+const RNGStub = artifacts.require("RNGStub.sol")
 
 const toHex = web3.utils.numberToHex
 const toNum = web3.utils.hexToNumber
-const utils = require('./utils')
+const utils = require("./utils")
 
 const DEPLOY = [
-  { name: 'RNG', contract: RNG },
-  { name: 'RNGStub', contract: RNGStub }]
+  {name: "RNG", contract: RNG},
+  {name: "RNGStub", contract: RNGStub},
+]
 
-contract('RNG', (accounts) => {
+contract("RNG", (accounts) => {
   let rngInstance
 
   before(async () => {
@@ -21,8 +22,8 @@ contract('RNG', (accounts) => {
     weightSum = 4088
   })
 
-  describe('bitsRequired()', async () => {
-    it('Returns the number of bits required', async () => {
+  describe("bitsRequired()", async () => {
+    it("Returns the number of bits required", async () => {
       a = 2 ** 19 - 1
       b = 2 ** 16
       c = 2 ** 10 + 1
@@ -40,8 +41,8 @@ contract('RNG', (accounts) => {
     })
   })
 
-  describe('truncate()', async () => {
-    it('Truncates a number to the correct number of bits', async () => {
+  describe("truncate()", async () => {
+    it("Truncates a number to the correct number of bits", async () => {
       a = 0xffffffff
 
       b = await rngInstance.truncate.call(1, a)
@@ -60,8 +61,8 @@ contract('RNG', (accounts) => {
     })
   })
 
-  describe('getIndex()', async () => {
-    it('Returns an index smaller than the range', async () => {
+  describe("getIndex()", async () => {
+    it("Returns an index smaller than the range", async () => {
       r = 0x12345
       s = 0x0deadbeef
 

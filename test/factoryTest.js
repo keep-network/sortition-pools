@@ -1,11 +1,13 @@
-const SortitionPoolFactory = artifacts.require('./contracts/SortitionPoolFactory.sol')
-const SortitionPool = artifacts.require('./contracts/SortitionPool.sol')
-const StakingContractStub = artifacts.require('StakingContractStub.sol')
+const SortitionPoolFactory = artifacts.require(
+  "./contracts/SortitionPoolFactory.sol",
+)
+const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
+const StakingContractStub = artifacts.require("StakingContractStub.sol")
 
-const { mineBlocks } = require('./mineBlocks')
+const {mineBlocks} = require("./mineBlocks")
 
-contract('SortitionPoolFactory', (accounts) => {
-  const seed = '0xff39d6cca87853892d2854566e883008bc'
+contract("SortitionPoolFactory", (accounts) => {
+  const seed = "0xff39d6cca87853892d2854566e883008bc"
   const minStake = 2000
   const poolWeightDivisor = 2000
   let factory
@@ -13,14 +15,13 @@ contract('SortitionPoolFactory', (accounts) => {
   const alice = accounts[0]
   const bob = accounts[1]
 
-
   before(async () => {
     staking = await StakingContractStub.new()
     factory = await SortitionPoolFactory.new()
   })
 
-  describe('createSortitionPool()', async () => {
-    it('creates independent clones', async () => {
+  describe("createSortitionPool()", async () => {
+    it("creates independent clones", async () => {
       const sortitionPool1Address = await factory.createSortitionPool.call(
         staking.address,
         minStake,

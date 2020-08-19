@@ -1,9 +1,13 @@
-const BondedSortitionPoolFactory = artifacts.require('./contracts/BondedSortitionPoolFactory.sol')
-const BondedSortitionPool = artifacts.require('./contracts/BondedSortitionPool.sol')
-const StakingContractStub = artifacts.require('StakingContractStub.sol')
-const BondingContractStub = artifacts.require('BondingContractStub.sol')
+const BondedSortitionPoolFactory = artifacts.require(
+  "./contracts/BondedSortitionPoolFactory.sol",
+)
+const BondedSortitionPool = artifacts.require(
+  "./contracts/BondedSortitionPool.sol",
+)
+const StakingContractStub = artifacts.require("StakingContractStub.sol")
+const BondingContractStub = artifacts.require("BondingContractStub.sol")
 
-contract('BondedSortitionPoolFactory', (accounts) => {
+contract("BondedSortitionPoolFactory", (accounts) => {
   let bondedSortitionPoolFactory
   let stakingContract
   let bondingContract
@@ -17,8 +21,8 @@ contract('BondedSortitionPoolFactory', (accounts) => {
     bondingContract = await BondingContractStub.new()
   })
 
-  describe('createSortitionPool()', async () => {
-    it('creates independent pools', async () => {
+  describe("createSortitionPool()", async () => {
+    it("creates independent pools", async () => {
       const pool1Address = await bondedSortitionPoolFactory.createSortitionPool.call(
         stakingContract.address,
         bondingContract.address,
