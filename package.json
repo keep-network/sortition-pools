@@ -16,10 +16,12 @@
   "scripts": {
     "ganache": "ganache-cli -q",
     "test": "NODE_ENV=test truffle test",
-    "js:lint": "eslint ${npm_package_config_eslintPaths}",
-    "js:lint:fix": "eslint --fix ${npm_package_config_eslintPaths}",
-    "sol:lint": "solium -d contracts/",
-    "sol:lint:fix": "solium -d contracts/ --fix"
+    "lint": "npm run lint:js && npm run lint:sol",
+    "lint:fix": "npm run lint:fix:js && npm run lint:fix:sol",
+    "lint:js": "eslint ${npm_package_config_eslintPaths}",
+    "lint:fix:js": "eslint --fix ${npm_package_config_eslintPaths}",
+    "lint:sol": "solium -d contracts/ && prettier --list-different **/*.sol",
+    "lint:fix:sol": "solium -d contracts/ --fix && prettier --write **/*.sol"
   },
   "config": {
     "eslintPaths": "test/ migrations/"
@@ -40,12 +42,15 @@
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.4",
     "eslint": "^6.8.0",
-    "eslint-config-keep": "github:keep-network/eslint-config-keep#0.2.0",
+    "eslint-config-keep": "github:keep-network/eslint-config-keep#0.3.0",
+    "ethlint": "^1.2.5",
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
     "solc": "0.5.17",
     "solium": "^1.2.5",
-    "solium-config-keep": "github:keep-network/solium-config-keep",
-    "truffle": "^5.1.0"
+    "solium-config-keep": "github:keep-network/solium-config-keep#0.1.2",
+    "truffle": "^5.1.0",
+    "prettier": "^2.0.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.47"
   }
 }
