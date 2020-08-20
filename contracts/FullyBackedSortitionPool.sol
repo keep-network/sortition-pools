@@ -151,6 +151,17 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
       return 0;
     }
 
+    // Check if a bonding delegation is initialized.
+    bool isBondingInitialized = poolParams.bondingContract.isInitialized(
+      operator,
+      ownerAddress
+    );
+
+    // If a delegation is not yet initialized return 0 = ineligible.
+    if (!isBondingInitialized) {
+      return 0;
+    }
+
     // Weight = floor(eligibleStake / mimimumStake)
     // Ethereum uint256 division performs implicit floor
     return (bondableValue / poolParams.bondWeightDivisor);
