@@ -46,6 +46,8 @@
     "ethlint": "^1.2.5",
     "eth-gas-reporter": "^0.1.12",
     "ganache-cli": "^6.4.3",
+    "bn-chai": "^1.0.1",
+    "chai": "^4.2.0",
     "solc": "0.5.17",
     "solium": "^1.2.5",
     "solium-config-keep": "github:keep-network/solium-config-keep#0.1.2",
