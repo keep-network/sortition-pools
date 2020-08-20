@@ -1,10 +1,10 @@
 // Deploys contracts using truffle artifacts and deployer.
 
 async function deployLibraries(artifacts, deployer) {
-  const Branch = artifacts.require('Branch')
-  const Position = artifacts.require('Position')
-  const StackLib = artifacts.require('StackLib')
-  const Leaf = artifacts.require('Leaf')
+  const Branch = artifacts.require("Branch")
+  const Position = artifacts.require("Position")
+  const StackLib = artifacts.require("StackLib")
+  const Leaf = artifacts.require("Leaf")
 
   await deployer.deploy(Branch)
   await deployer.deploy(Position)
@@ -16,12 +16,12 @@ async function deployLibraries(artifacts, deployer) {
 async function deploySortitionPoolFactory(artifacts, deployer) {
   await deployLibraries(artifacts, deployer)
 
-  const Branch = artifacts.require('Branch')
-  const Position = artifacts.require('Position')
-  const StackLib = artifacts.require('StackLib')
-  const Leaf = artifacts.require('Leaf')
+  const Branch = artifacts.require("Branch")
+  const Position = artifacts.require("Position")
+  const StackLib = artifacts.require("StackLib")
+  const Leaf = artifacts.require("Leaf")
 
-  const SortitionPoolFactory = artifacts.require('SortitionPoolFactory')
+  const SortitionPoolFactory = artifacts.require("SortitionPoolFactory")
 
   // Sortition Pool Factory
   await deployer.link(Branch, SortitionPoolFactory)
@@ -29,17 +29,19 @@ async function deploySortitionPoolFactory(artifacts, deployer) {
   await deployer.link(StackLib, SortitionPoolFactory)
   await deployer.link(Leaf, SortitionPoolFactory)
   await deployer.deploy(SortitionPoolFactory)
-};
+}
 
 async function deployBondedSortitionPoolFactory(artifacts, deployer) {
   await deployLibraries(artifacts, deployer)
 
-  const Branch = artifacts.require('Branch')
-  const Position = artifacts.require('Position')
-  const StackLib = artifacts.require('StackLib')
-  const Leaf = artifacts.require('Leaf')
+  const Branch = artifacts.require("Branch")
+  const Position = artifacts.require("Position")
+  const StackLib = artifacts.require("StackLib")
+  const Leaf = artifacts.require("Leaf")
 
-  const BondedSortitionPoolFactory = artifacts.require('BondedSortitionPoolFactory')
+  const BondedSortitionPoolFactory = artifacts.require(
+    "BondedSortitionPoolFactory",
+  )
 
   // Bonded Sortition Pool Factory
   await deployer.link(Branch, BondedSortitionPoolFactory)
@@ -47,17 +49,19 @@ async function deployBondedSortitionPoolFactory(artifacts, deployer) {
   await deployer.link(StackLib, BondedSortitionPoolFactory)
   await deployer.link(Leaf, BondedSortitionPoolFactory)
   await deployer.deploy(BondedSortitionPoolFactory)
-};
+}
 
 async function deployFullyBackedSortitionPoolFactory(artifacts, deployer) {
   await deployLibraries(artifacts, deployer)
 
-  const Branch = artifacts.require('Branch')
-  const Position = artifacts.require('Position')
-  const StackLib = artifacts.require('StackLib')
-  const Leaf = artifacts.require('Leaf')
+  const Branch = artifacts.require("Branch")
+  const Position = artifacts.require("Position")
+  const StackLib = artifacts.require("StackLib")
+  const Leaf = artifacts.require("Leaf")
 
-  const FullyBackedSortitionPoolFactory = artifacts.require('FullyBackedSortitionPoolFactory')
+  const FullyBackedSortitionPoolFactory = artifacts.require(
+    "FullyBackedSortitionPoolFactory",
+  )
 
   // Fully Backed Sortition Pool Factory
   await deployer.link(Branch, FullyBackedSortitionPoolFactory)

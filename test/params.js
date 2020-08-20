@@ -8,11 +8,11 @@ const levels = 7
 const slotCount = 2 ** slotBits
 const slotWidth = 2 ** (8 - slotBits)
 const lastSlot = slotCount - 1
-const slotMax = (2 ** slotWidth) - 1
+const slotMax = 2 ** slotWidth - 1
 
-const slotPointerMax = (2 ** slotBits) - 1
+const slotPointerMax = 2 ** slotBits - 1
 const positionBits = levels * slotBits
-const positionMax = (2 ** positionBits) - 1
+const positionMax = 2 ** positionBits - 1
 const leafFlag = 1 << positionBits
 
 module.exports = {
