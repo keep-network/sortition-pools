@@ -24,6 +24,8 @@ import "./DynamicArray.sol";
 /// If the changes would be detrimental to the operator,
 /// the operator selection is performed again with the updated input
 /// to ensure correctness.
+/// The pool should specify a reasonable minimum bondable value for operators
+/// trying to join the pool, to prevent griefing the selection.
 contract FullyBackedSortitionPool is AbstractSortitionPool {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
@@ -35,8 +37,14 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   // this value can be set to equal the most recent request's bondValue.
 
   struct PoolParams {
-    IBonding bondingContract;
-    uint256 minimumAvailableBond;
+    // Defines the minimum unbounded value the operator needs to have to be
+    // eligible to join and stay in the sortition pool. Operators not
+    // satisfying minimum bondable value are removed from the pool.
+    uint256 minimumBondableValue;
+    // Bond required from each operator for the currently pending group
+    // selection. If operator does not have at least this unbounded value,
+    // it is skipped during the selection.
+    uint256 requestedBond;
     // Because the minimum available bond may fluctuate,
     // we use a constant pool weight divisor.
     // When we receive the available bond,
@@ -49,8 +57,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   PoolParams poolParams;
 
   constructor(
-    IBonding _bondingContract,
-    uint256 _initialMinimumStake,
+    uint256 _initialMinimumBondableValue,
     uint256 _bondWeightDivisor,
     address _poolOwner
   ) public {
@@ -58,7 +65,8 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
 
     poolParams = PoolParams(
       _bondingContract,
-      _initialMinimumStake,
+      _initialMinimumBondableValue,
+      0,
       _bondWeightDivisor,
       _poolOwner
     );
@@ -89,15 +97,35 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     return generalizedSelectGroup(groupSize, seed, paramsPtr, true);
   }
 
+  /// @notice Sets the minimum bondable value required from the operator
+  /// so that it is eligible to be in the pool. The pool should specify
+  /// a reasonable minimum requirement for operators trying to join the pool
+  /// to prevent griefing group selection.
+  /// @param minimumBondableValue The minimum bondable value required from the
+  /// operator.
+  function setMinimumBondableValue(uint256 minimumBondableValue) public {
+    require(
+      msg.sender == poolParams.owner,
+      "Only owner may update minimum bond value"
+    );
+
+    poolParams.minimumBondableValue = minimumBondableValue;
+  }
+
+  /// @notice Returns the minimum bondable value required from the operator
+  /// so that it is eligible to be in the pool.
+  function getMinimumBondableValue() public view returns (uint256) {
+    return poolParams.minimumBondableValue;
+  }
+
   function initializeSelectionParams(uint256 bondValue)
     internal
     returns (PoolParams memory params)
   {
     params = poolParams;
 
-    if (params.minimumAvailableBond != bondValue) {
-      params.minimumAvailableBond = bondValue;
-      poolParams.minimumAvailableBond = bondValue;
+    if (params.requestedBond != bondValue) {
+      params.requestedBond = bondValue;
     }
 
     return params;
@@ -118,13 +146,12 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     );
 
     // Don't query stake if bond is insufficient.
-    if (bondableValue < poolParams.minimumAvailableBond) {
+    if (bondableValue < poolParams.minimumBondableValue) {
       return 0;
     }
 
     // Weight = floor(eligibleStake / mimimumStake)
     // Ethereum uint256 division performs implicit floor
-    // If eligibleStake < minimumStake, return 0 = ineligible.
     return (bondableValue / poolParams.bondWeightDivisor);
   }
 
@@ -155,14 +182,21 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
       address(this)
     );
 
-    // Don't proceed further if bond is insufficient.
-    if (preStake < params.minimumAvailableBond) {
+    // If unbonded value is insufficient for the operator to be in the pool,
+    // delete the operator.
+    if (preStake < params.minimumBondableValue) {
       return Fate(Decision.Delete, 0);
+    }
+
+    // If unbonded value is sufficient for the operator to be in the pool
+    // but it is not sufficient for the current selection, skip the operator.
+    if (preStake < params.requestedBond) {
+      return Fate(Decision.Skip, 0);
     }
 
     // Calculate the bond-stake that would be left after selection
     // Doesn't underflow because preStake >= minimum
-    uint256 postStake = preStake - params.minimumAvailableBond;
+    uint256 postStake = preStake - params.minimumBondableValue;
 
     // Calculate the eligible pre-selection weight
     // based on the constant weight divisor.
