@@ -2,9 +2,8 @@ pragma solidity 0.5.17;
 
 import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
-import "./api/IStaking.sol";
-import "./api/IBonding.sol";
 import "./DynamicArray.sol";
+import "./api/IFullyBackedBonding.sol";
 
 /// @title Fully Backed Sortition Pool
 /// @notice A logarithmic data structure
@@ -37,6 +36,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   // this value can be set to equal the most recent request's bondValue.
 
   struct PoolParams {
+    IFullyBackedBonding bondingContract;
     // Defines the minimum unbounded value the operator needs to have to be
     // eligible to join and stay in the sortition pool. Operators not
     // satisfying minimum bondable value are removed from the pool.
@@ -57,6 +57,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   PoolParams poolParams;
 
   constructor(
+    IFullyBackedBonding _bondingContract,
     uint256 _initialMinimumBondableValue,
     uint256 _bondWeightDivisor,
     address _poolOwner
