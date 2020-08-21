@@ -197,7 +197,7 @@ library RNG {
   {
     uint256 bits = bitsRequired(range);
     bool found = false;
-    uint256 index;
+    uint256 index = 0;
     bytes32 newState = state;
     while (!found) {
       index = truncate(bits, uint256(newState));
