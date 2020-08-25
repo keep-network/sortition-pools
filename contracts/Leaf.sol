@@ -24,19 +24,19 @@ library Leaf {
   ////////////////////////////////////////////////////////////////////////////
 
   function make(
-    address operator,
-    uint256 creationBlock,
-    uint256 weight
+    address _operator,
+    uint256 _creationBlock,
+    uint256 _weight
   ) internal pure returns (uint256) {
     // Converting a bytesX type into a larger type
     // adds zero bytes on the right.
-    uint256 op = uint256(bytes32(bytes20(operator)));
+    uint256 op = uint256(bytes32(bytes20(_operator)));
     // Bitwise AND the weight to erase
     // all but the 32 least significant bits
-    uint256 wt = weight & WEIGHT_MAX;
+    uint256 wt = _weight & WEIGHT_MAX;
     // Erase all but the 64 least significant bits,
     // then shift left by 32 bits to make room for the weight
-    uint256 cb = (creationBlock & BLOCKHEIGHT_MAX) << WEIGHT_WIDTH;
+    uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << WEIGHT_WIDTH;
     // Bitwise OR them all together to get
     // [address operator || uint64 creationBlock || uint32 weight]
     return (op | cb | wt);
