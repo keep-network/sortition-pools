@@ -12,12 +12,12 @@ library RNG {
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
   uint256 constant SLOT_BITS = 3;
-  uint256 constant LEVELS = 7;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
+  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
+  uint256 constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
   ////////////////////////////////////////////////////////////////////////////
 
   struct State {
@@ -136,7 +136,7 @@ library RNG {
   /// that can contain the number `range-1`.
   function bitsRequired(uint256 range) internal pure returns (uint256) {
     // Start at 19 to be faster for large ranges
-    uint256 bits = POSITION_BITS - 1;
+    uint256 bits = WEIGHT_WIDTH - 1;
 
     // Left shift by `bits`,
     // so we have a 1 in the (bits + 1)th least significant bit
