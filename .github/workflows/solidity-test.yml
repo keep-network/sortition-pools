@@ -16,7 +16,7 @@ jobs:
       - name: Run tests
         # Runs ganache in background
         run: |
-          npm run ganache & 
+          npm run buidler-vm & 
           npm test
         env:
           CI: true

@@ -14,7 +14,9 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
-    "ganache": "ganache-cli -q",
+    "ganache": "echo 'GANACHE IS NO LONGER USED; use buidler-vm script instead'",
+    "buidler-vm": "buidler node",
+    "buidler-vm:log": "buidler node | grep '^    \\|console.log'",
     "test": "NODE_ENV=test truffle test",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:fix": "npm run lint:fix:js && npm run lint:fix:sol",
@@ -40,17 +42,17 @@
     "@openzeppelin/contracts": "^2.4.0"
   },
   "devDependencies": {
+    "@nomiclabs/buidler": "^1.4.5",
     "@openzeppelin/test-helpers": "^0.5.4",
     "eslint": "^6.8.0",
     "eslint-config-keep": "github:keep-network/eslint-config-keep#0.3.0",
-    "ethlint": "^1.2.5",
     "eth-gas-reporter": "^0.1.12",
-    "ganache-cli": "^6.4.3",
+    "ethlint": "^1.2.5",
+    "prettier": "^2.0.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.47",
     "solc": "0.5.17",
     "solium": "^1.2.5",
     "solium-config-keep": "github:keep-network/solium-config-keep#0.1.2",
-    "truffle": "^5.1.0",
-    "prettier": "^2.0.2",
-    "prettier-plugin-solidity": "^1.0.0-alpha.47"
+    "truffle": "^5.1.0"
   }
 }
