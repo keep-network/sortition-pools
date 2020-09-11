@@ -127,15 +127,11 @@ library RNG {
   /// @notice Calculate how many bits are required
   /// for an index in the range `[0 .. range-1]`.
   ///
-  /// @dev Our sortition pool can support up to 2^21 virtual stakers,
-  /// therefore we calculate how many bits we need from 1 to 21.
-  ///
   /// @param range The upper bound of the desired range, exclusive.
   ///
   /// @return uint The smallest number of bits
   /// that can contain the number `range-1`.
   function bitsRequired(uint256 range) internal pure returns (uint256) {
-    // Start at 19 to be faster for large ranges
     uint256 bits = WEIGHT_WIDTH - 1;
 
     // Left shift by `bits`,
