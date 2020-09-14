@@ -10,34 +10,33 @@ const DEPLOY = [
   {name: "RNGStub", contract: RNGStub},
 ]
 
-contract("RNG", (accounts) => {
+contract("RNG", () => {
   let rngInstance
 
   before(async () => {
     deployed = await utils.deploySystem(DEPLOY)
     rngInstance = deployed.RNGStub
-
-    indices = [451, 2945, 3017, 3120]
-    weights = [1997, 72, 35, 1984]
-    weightSum = 4088
   })
 
   describe("bitsRequired()", async () => {
     it("Returns the number of bits required", async () => {
-      a = 2 ** 19 - 1
-      b = 2 ** 16
-      c = 2 ** 10 + 1
-      d = 2
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 32 + 1), 32)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 32), 32)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 32 - 1), 32)
 
-      ba = await rngInstance.bitsRequired.call(a)
-      bb = await rngInstance.bitsRequired.call(b)
-      bc = await rngInstance.bitsRequired.call(c)
-      bd = await rngInstance.bitsRequired.call(d)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 31 + 1), 32)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 31), 31)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 31 - 1), 31)
 
-      assert.equal(ba, 19)
-      assert.equal(bb, 16)
-      assert.equal(bc, 11)
-      assert.equal(bd, 1)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 16 + 1), 17)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 16), 16)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 16 - 1), 16)
+
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 2 + 1), 3)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 2), 2)
+      assert.equal(await rngInstance.bitsRequired.call(2 ** 2 - 1), 2)
+
+      assert.equal(await rngInstance.bitsRequired.call(2), 1)
     })
   })
 
