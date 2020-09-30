@@ -91,9 +91,9 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 groupSize,
     bytes32 seed,
     uint256 bondValue
-  ) public returns (address[] memory) {
+  ) public onlyOwner() returns (address[] memory) {
     PoolParams memory params = initializeSelectionParams(bondValue);
-    require(msg.sender == params.owner, "Only owner may select groups");
+
     uint256 paramsPtr;
     // solium-disable-next-line security/no-inline-assembly
     assembly {

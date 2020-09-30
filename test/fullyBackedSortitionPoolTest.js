@@ -173,7 +173,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       await expectRevert(
         pool.selectSetGroup(3, seed, minimumBondableValue, {from: alice}),
-        "Only owner may select groups",
+        "Caller is not the owner",
       )
     })
 
