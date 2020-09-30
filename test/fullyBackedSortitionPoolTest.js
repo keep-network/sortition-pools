@@ -94,6 +94,19 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       assert.isTrue(await pool.isOperatorInitialized(alice))
     })
+
+    it("reverts when operator gets banned in the pool", async () => {
+      await prepareOperator(alice, bond)
+
+      await mineBlocks(operatorInitBlocks.addn(1))
+
+      await pool.ban(alice, {from: owner})
+
+      expectRevert(
+        pool.isOperatorInitialized(alice),
+        "Operator is not in the pool",
+      )
+    })
   })
 
   describe("selectSetGroup", async () => {
@@ -219,6 +232,34 @@ contract("FullyBackedSortitionPool", (accounts) => {
       await mineBlocks(operatorInitBlocks.addn(1))
 
       await pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner})
+    })
+
+    it("reverts when operator gets banned in the sortition pool", async () => {
+      // Register three operators.
+      await prepareOperator(alice, bond)
+      await prepareOperator(bob, bond)
+      await prepareOperator(carol, bond)
+
+      assert.equal(await pool.operatorsInPool(), 3)
+
+      // Initialization period passed.
+      await mineBlocks(operatorInitBlocks.addn(1))
+
+      await pool.selectSetGroup(2, seed, minimumBondableValue, {from: owner})
+
+      // Ban an operator.
+      await pool.ban(carol, {from: owner})
+
+      assert.equal(
+        await pool.operatorsInPool(),
+        2,
+        "incorrect number of operators after operator ban",
+      )
+
+      await expectRevert(
+        pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner}),
+        "Not enough operators in pool",
+      )
     })
 
     it("removes minimum-bond-ineligible operators and still works afterwards", async () => {
@@ -380,6 +421,52 @@ contract("FullyBackedSortitionPool", (accounts) => {
       await expectRevert(
         pool.joinPool(alice),
         "Operator is already registered in the pool",
+      )
+    })
+
+    it("fails for banned operator", async () => {
+      await pool.ban(alice, {from: owner})
+
+      await bonding.setBondableValue(alice, minimumBondableValue)
+      await bonding.setInitialized(alice, true)
+
+      await expectRevert(pool.joinPool(alice), "Operator not eligible")
+    })
+  })
+
+  describe("ban", async () => {
+    it("adds operator to banned operators", async () => {
+      expect(await pool.bannedOperators(alice)).to.be.false
+
+      await pool.ban(alice, {from: owner})
+
+      expect(await pool.bannedOperators(alice)).to.be.true
+    })
+
+    it("does not revert when operator is not registered", async () => {
+      expect(await pool.isOperatorRegistered(alice)).to.be.false
+
+      await pool.ban(alice, {from: owner})
+    })
+
+    it("removes operator from the pool", async () => {
+      await bonding.setBondableValue(alice, minimumBondableValue)
+      await bonding.setInitialized(alice, true)
+      await pool.joinPool(alice)
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.true
+
+      await pool.ban(alice, {from: owner})
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.false
+      expect(await pool.isOperatorInPool(alice)).to.be.false
+      expect(await pool.getPoolWeight(alice)).to.eq.BN(0)
+    })
+
+    it("reverts when called by non-owner", async () => {
+      await expectRevert(
+        pool.ban(alice, {from: owner}),
+        "Caller is not the owner",
       )
     })
   })
