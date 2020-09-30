@@ -12,12 +12,12 @@ library RNG {
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
   uint256 constant SLOT_BITS = 3;
-  uint256 constant LEVELS = 7;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant POSITION_BITS = LEVELS * SLOT_BITS;
+  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
+  uint256 constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
   ////////////////////////////////////////////////////////////////////////////
 
   struct State {
@@ -127,30 +127,26 @@ library RNG {
   /// @notice Calculate how many bits are required
   /// for an index in the range `[0 .. range-1]`.
   ///
-  /// @dev Our sortition pool can support up to 2^21 virtual stakers,
-  /// therefore we calculate how many bits we need from 1 to 21.
-  ///
   /// @param range The upper bound of the desired range, exclusive.
   ///
   /// @return uint The smallest number of bits
   /// that can contain the number `range-1`.
   function bitsRequired(uint256 range) internal pure returns (uint256) {
-    uint256 bits;
-    // Start at 19 to be faster for large ranges
-    for (bits = (POSITION_BITS - 1); bits >= 0; bits--) {
-      // Left shift by `bits`,
-      // so we have a 1 in the (bits + 1)th least significant bit
-      // and 0 in other bits.
-      // If this number is equal or greater than `range`,
-      // the range [0, range-1] fits in `bits` bits.
-      //
-      // Because we loop from high bits to low bits,
-      // we find the highest number of bits that doesn't fit the range,
-      // and return that number + 1.
-      if (1 << bits < range) {
-        break;
-      }
+    uint256 bits = WEIGHT_WIDTH - 1;
+
+    // Left shift by `bits`,
+    // so we have a 1 in the (bits + 1)th least significant bit
+    // and 0 in other bits.
+    // If this number is equal or greater than `range`,
+    // the range [0, range-1] fits in `bits` bits.
+    //
+    // Because we loop from high bits to low bits,
+    // we find the highest number of bits that doesn't fit the range,
+    // and return that number + 1.
+    while (1 << bits >= range) {
+      bits--;
     }
+
     return bits + 1;
   }
 
@@ -197,7 +193,7 @@ library RNG {
   {
     uint256 bits = bitsRequired(range);
     bool found = false;
-    uint256 index;
+    uint256 index = 0;
     bytes32 newState = state;
     while (!found) {
       index = truncate(bits, uint256(newState));
