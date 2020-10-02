@@ -173,7 +173,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       await expectRevert(
         pool.selectSetGroup(3, seed, minimumBondableValue, {from: alice}),
-        "Only owner may select groups",
+        "Caller is not the owner",
       )
     })
 
@@ -438,6 +438,15 @@ contract("FullyBackedSortitionPool", (accounts) => {
     it("adds operator to banned operators", async () => {
       expect(await pool.bannedOperators(alice)).to.be.false
 
+      await pool.ban(alice, {from: owner})
+
+      expect(await pool.bannedOperators(alice)).to.be.true
+    })
+
+    it("does not revert when called multiple times", async () => {
+      expect(await pool.bannedOperators(alice)).to.be.false
+
+      await pool.ban(alice, {from: owner})
       await pool.ban(alice, {from: owner})
 
       expect(await pool.bannedOperators(alice)).to.be.true
