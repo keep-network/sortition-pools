@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import '../../contracts/Position.sol';
+import "../../contracts/Position.sol";
 
 contract PositionStub {
   function slot(uint a) public pure returns (uint) {

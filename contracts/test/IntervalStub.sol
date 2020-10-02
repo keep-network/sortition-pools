@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
-import '../../contracts/Interval.sol';
-import '../../contracts/DynamicArray.sol';
+import "../../contracts/Interval.sol";
+import "../../contracts/DynamicArray.sol";
 
 contract IntervalStub {
     function skip(

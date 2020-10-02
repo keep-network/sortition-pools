@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import '../../contracts/SortitionTree.sol';
+import "../../contracts/SortitionTree.sol";
 
 contract SortitionTreeStub is SortitionTree {
     function publicSetLeaf(uint256 position, uint256 leaf) public {
