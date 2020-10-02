@@ -1,12 +1,16 @@
-const SortitionPoolFactory = artifacts.require(
-  "./contracts/SortitionPoolFactory.sol",
-)
-const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
+const {accounts, contract} = require("@openzeppelin/test-environment")
 
-const {mineBlocks} = require("./mineBlocks")
+const SortitionPoolFactory = contract.fromArtifact("SortitionPoolFactory")
+const SortitionPool = contract.fromArtifact("SortitionPool")
+const StakingContractStub = contract.fromArtifact("StakingContractStub")
+const StackLib = contract.fromArtifact("StackLib")
 
-contract("SortitionPoolFactory", (accounts) => {
+const {mineBlocks} = require("./helpers/mineBlocks")
+
+const chai = require("chai")
+const assert = chai.assert
+
+describe("SortitionPoolFactory", () => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"
   const minStake = 2000
   const poolWeightDivisor = 2000
@@ -16,6 +20,9 @@ contract("SortitionPoolFactory", (accounts) => {
   const bob = accounts[1]
 
   before(async () => {
+    await SortitionPoolFactory.detectNetwork()
+    await SortitionPoolFactory.link("StackLib", (await StackLib.new()).address)
+
     staking = await StakingContractStub.new()
     factory = await SortitionPoolFactory.new()
   })

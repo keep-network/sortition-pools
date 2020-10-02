@@ -1,13 +1,18 @@
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const StackLib = artifacts.require("StackLib")
-const Leaf = artifacts.require("Leaf")
-const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
+const {accounts, contract} = require("@openzeppelin/test-environment")
 
-const {mineBlocks} = require("./mineBlocks")
+const Branch = contract.fromArtifact("Branch")
+const Position = contract.fromArtifact("Position")
+const StackLib = contract.fromArtifact("StackLib")
+const Leaf = contract.fromArtifact("Leaf")
+const SortitionPool = contract.fromArtifact("SortitionPool")
+const StakingContractStub = contract.fromArtifact("StakingContractStub")
 
-contract("SortitionPool", (accounts) => {
+const {mineBlocks} = require("./helpers/mineBlocks")
+
+const chai = require("chai")
+const assert = chai.assert
+
+describe("SortitionPool", () => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"
   const minStake = 2000
   const poolWeightDivisor = 2000
@@ -19,10 +24,12 @@ contract("SortitionPool", (accounts) => {
   const owner = accounts[9]
 
   beforeEach(async () => {
-    SortitionPool.link(Branch)
-    SortitionPool.link(Position)
-    SortitionPool.link(StackLib)
-    SortitionPool.link(Leaf)
+    await SortitionPool.detectNetwork()
+    await SortitionPool.link("Branch", (await Branch.new()).address)
+    await SortitionPool.link("Position", (await Position.new()).address)
+    await SortitionPool.link("StackLib", (await StackLib.new()).address)
+    await SortitionPool.link("Leaf", (await Leaf.new()).address)
+
     staking = await StakingContractStub.new()
     pool = await SortitionPool.new(
       staking.address,

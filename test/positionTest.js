@@ -1,14 +1,19 @@
-const Position = artifacts.require("./contracts/Position.sol")
-const PositionStub = artifacts.require("PositionStub.sol")
-const utils = require("./utils")
-const params = require("./params")
+const {contract} = require("@openzeppelin/test-environment")
+
+const Position = contract.fromArtifact("Position")
+const PositionStub = contract.fromArtifact("PositionStub")
+const utils = require("./helpers/utils")
+const params = require("./helpers/params")
 
 const DEPLOY = [
   {name: "Position", contract: Position},
   {name: "PositionStub", contract: PositionStub},
 ]
 
-contract("Position", (accounts) => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("Position", () => {
   let positionInstance
   let childPosition
   let parentPosition

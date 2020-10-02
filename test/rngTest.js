@@ -1,16 +1,21 @@
-const RNG = artifacts.require("./contracts/RNG.sol")
-const RNGStub = artifacts.require("RNGStub.sol")
+const {contract, web3} = require("@openzeppelin/test-environment")
+
+const RNG = contract.fromArtifact("RNG")
+const RNGStub = contract.fromArtifact("RNGStub")
 
 const toHex = web3.utils.numberToHex
 const toNum = web3.utils.hexToNumber
-const utils = require("./utils")
+const utils = require("./helpers/utils")
 
 const DEPLOY = [
   {name: "RNG", contract: RNG},
   {name: "RNGStub", contract: RNGStub},
 ]
 
-contract("RNG", () => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("RNG", () => {
   let rngInstance
 
   before(async () => {

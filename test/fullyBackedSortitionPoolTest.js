@@ -1,18 +1,23 @@
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const StackLib = artifacts.require("StackLib")
-const Leaf = artifacts.require("Leaf")
-const FullyBackedSortitionPool = artifacts.require(
-  "./contracts/FullyBackedSortitionPool.sol",
+const {accounts, contract} = require("@openzeppelin/test-environment")
+
+const Branch = contract.fromArtifact("Branch")
+const Position = contract.fromArtifact("Position")
+const StackLib = contract.fromArtifact("StackLib")
+const Leaf = contract.fromArtifact("Leaf")
+const FullyBackedSortitionPool = contract.fromArtifact(
+  "FullyBackedSortitionPool",
 )
 
-const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const BondingContractStub = contract.fromArtifact("BondingContractStub")
 
-const {mineBlocks} = require("./mineBlocks")
+const {mineBlocks} = require("./helpers/mineBlocks")
 
 const {expectRevert} = require("@openzeppelin/test-helpers")
 
-contract("FullyBackedSortitionPool", (accounts) => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("FullyBackedSortitionPool", () => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"
   const bond = 2000
   const weightDivisor = 1000
@@ -27,10 +32,18 @@ contract("FullyBackedSortitionPool", (accounts) => {
   let prepareOperator
 
   beforeEach(async () => {
-    FullyBackedSortitionPool.link(Branch)
-    FullyBackedSortitionPool.link(Position)
-    FullyBackedSortitionPool.link(StackLib)
-    FullyBackedSortitionPool.link(Leaf)
+    await FullyBackedSortitionPool.detectNetwork()
+    await FullyBackedSortitionPool.link("Branch", (await Branch.new()).address)
+    await FullyBackedSortitionPool.link(
+      "Position",
+      (await Position.new()).address,
+    )
+    await FullyBackedSortitionPool.link(
+      "StackLib",
+      (await StackLib.new()).address,
+    )
+    await FullyBackedSortitionPool.link("Leaf", (await Leaf.new()).address)
+
     bonding = await BondingContractStub.new()
 
     prepareOperator = async (address, weight) => {

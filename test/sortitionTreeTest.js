@@ -1,21 +1,27 @@
-const StackLib = artifacts.require("StackLib")
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const Leaf = artifacts.require("Leaf")
-const SortitionTreeStub = artifacts.require("SortitionTreeStub.sol")
+const {accounts, contract, web3} = require("@openzeppelin/test-environment")
+
+const StackLib = contract.fromArtifact("StackLib")
+const Branch = contract.fromArtifact("Branch")
+const Position = contract.fromArtifact("Position")
+const Leaf = contract.fromArtifact("Leaf")
+const SortitionTreeStub = contract.fromArtifact("SortitionTreeStub")
 
 const toHex = web3.utils.numberToHex
 
-contract("SortitionTree", (accounts) => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("SortitionTree", () => {
   let sortition
   const alice = accounts[0]
   const bob = accounts[1]
 
   before(async () => {
-    SortitionTreeStub.link(StackLib)
-    SortitionTreeStub.link(Branch)
-    SortitionTreeStub.link(Position)
-    SortitionTreeStub.link(Leaf)
+    await SortitionTreeStub.detectNetwork()
+    await SortitionTreeStub.link("Branch", (await Branch.new()).address)
+    await SortitionTreeStub.link("Position", (await Position.new()).address)
+    await SortitionTreeStub.link("StackLib", (await StackLib.new()).address)
+    await SortitionTreeStub.link("Leaf", (await Leaf.new()).address)
   })
 
   beforeEach(async () => {

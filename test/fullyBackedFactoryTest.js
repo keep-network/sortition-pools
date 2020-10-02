@@ -1,12 +1,18 @@
-const FullyBackedSortitionPoolFactory = artifacts.require(
-  "./contracts/FullyBackedSortitionPoolFactory.sol",
-)
-const FullyBackedSortitionPool = artifacts.require(
-  "./contracts/FullyBackedSortitionPool.sol",
-)
-const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const {accounts, contract} = require("@openzeppelin/test-environment")
 
-contract("FullyBackedSortitionPoolFactory", (accounts) => {
+const FullyBackedSortitionPoolFactory = contract.fromArtifact(
+  "FullyBackedSortitionPoolFactory",
+)
+const FullyBackedSortitionPool = contract.fromArtifact(
+  "FullyBackedSortitionPool",
+)
+const BondingContractStub = contract.fromArtifact("BondingContractStub")
+const StackLib = contract.fromArtifact("StackLib")
+
+const chai = require("chai")
+const assert = chai.assert
+
+describe("FullyBackedSortitionPoolFactory", () => {
   let bondingContract
   let factory
 
@@ -14,7 +20,13 @@ contract("FullyBackedSortitionPoolFactory", (accounts) => {
   const bondWeightDivisor = 5
 
   before(async () => {
-    factory = await FullyBackedSortitionPoolFactory.deployed()
+    await FullyBackedSortitionPoolFactory.detectNetwork()
+    await FullyBackedSortitionPoolFactory.link(
+      "StackLib",
+      (await StackLib.new()).address,
+    )
+
+    factory = await FullyBackedSortitionPoolFactory.new()
     bondingContract = await BondingContractStub.new()
   })
 

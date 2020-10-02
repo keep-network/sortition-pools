@@ -1,10 +1,12 @@
-const StackStub = artifacts.require("StackStub.sol")
-const StackLib = artifacts.require("StackLib.sol")
-const Branch = artifacts.require("Branch.sol")
-const Position = artifacts.require("Position.sol")
-const Leaf = artifacts.require("Leaf.sol")
+const {contract, web3} = require("@openzeppelin/test-environment")
+
+const StackStub = contract.fromArtifact("StackStub")
+const StackLib = contract.fromArtifact("StackLib")
+const Branch = contract.fromArtifact("Branch")
+const Position = contract.fromArtifact("Position")
+const Leaf = contract.fromArtifact("Leaf")
 const BN = web3.utils.BN
-const utils = require("./utils")
+const utils = require("./helpers/utils")
 
 const DEPLOY = [
   {name: "StackLib", contract: StackLib},
@@ -14,7 +16,10 @@ const DEPLOY = [
   {name: "StackStub", contract: StackStub},
 ]
 
-contract("Stack", (accounts) => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("Stack", () => {
   let deployed
 
   before(async () => {

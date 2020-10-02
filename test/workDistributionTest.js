@@ -1,18 +1,22 @@
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const StackLib = artifacts.require("StackLib")
-const Leaf = artifacts.require("Leaf")
-const BondedSortitionPool = artifacts.require(
-  "./contracts/BondedSortitionPool.sol",
-)
-const FullyBackedSortitionPool = artifacts.require(
-  "./contracts/FullyBackedSortitionPool.sol",
+const {accounts, contract, web3} = require("@openzeppelin/test-environment")
+
+const Branch = contract.fromArtifact("Branch")
+const Position = contract.fromArtifact("Position")
+const StackLib = contract.fromArtifact("StackLib")
+const Leaf = contract.fromArtifact("Leaf")
+const BondedSortitionPool = contract.fromArtifact("BondedSortitionPool")
+const FullyBackedSortitionPool = contract.fromArtifact(
+  "FullyBackedSortitionPool",
 )
 
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
-const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const StakingContractStub = contract.fromArtifact("StakingContractStub")
+const BondingContractStub = contract.fromArtifact("BondingContractStub")
 
-const {mineBlocks} = require("./mineBlocks")
+const {mineBlocks} = require("./helpers/mineBlocks")
+const {createSnapshot, restoreSnapshot} = require("./helpers/snapshot")
+
+const chai = require("chai")
+const assert = chai.assert
 
 const initialSeed =
   "0xe1df17bc605ccc488fc59e3a69f8101a36094a4d250dd48b5d730c50d6dfdc74"
@@ -35,7 +39,7 @@ function reduceResults(operators, selectionResults) {
   }, accumulator)
 }
 
-contract("BondedSortitionPool", (accounts) => {
+describe("BondedSortitionPool", () => {
   const owner = accounts[0]
 
   const minimumStake = web3.utils.toBN("10000").mul(tokenDecimalMultiplier) // 10k KEEP
@@ -47,11 +51,13 @@ contract("BondedSortitionPool", (accounts) => {
 
   let operators
 
-  beforeEach(async () => {
-    BondedSortitionPool.link(Branch)
-    BondedSortitionPool.link(Position)
-    BondedSortitionPool.link(StackLib)
-    BondedSortitionPool.link(Leaf)
+  before(async () => {
+    await BondedSortitionPool.detectNetwork()
+    await BondedSortitionPool.link("Branch", (await Branch.new()).address)
+    await BondedSortitionPool.link("Position", (await Position.new()).address)
+    await BondedSortitionPool.link("StackLib", (await StackLib.new()).address)
+    await BondedSortitionPool.link("Leaf", (await Leaf.new()).address)
+
     keepStaking = await StakingContractStub.new()
     keepBonding = await BondingContractStub.new()
 
@@ -68,6 +74,14 @@ contract("BondedSortitionPool", (accounts) => {
     for (let i = 0; i < 100; i++) {
       operators.push(web3.eth.accounts.create().address)
     }
+  })
+
+  beforeEach(async () => {
+    await createSnapshot()
+  })
+
+  afterEach(async () => {
+    await restoreSnapshot()
   })
 
   describe("selectSetGroup result distribution", async () => {
@@ -164,6 +178,15 @@ contract("BondedSortitionPool", (accounts) => {
         minimumBondableValue,
         {from: owner},
       )
+
+      await pool.selectSetGroup.call(
+        groupSize,
+        seed,
+        minimumStake,
+        minimumBondableValue,
+        {from: owner},
+      )
+
       allSelections = allSelections.concat(group)
       seed = web3.utils.soliditySha3(seed)
     }
@@ -204,7 +227,7 @@ contract("BondedSortitionPool", (accounts) => {
   }
 })
 
-contract("FullyBackedSortitionPool", (accounts) => {
+describe("FullyBackedSortitionPool", () => {
   const owner = accounts[0]
 
   const minimumBondableValue = web3.utils.toBN("20").mul(tokenDecimalMultiplier) // 20 ETH
@@ -214,11 +237,19 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
   let operators
 
-  beforeEach(async () => {
-    FullyBackedSortitionPool.link(Branch)
-    FullyBackedSortitionPool.link(Position)
-    FullyBackedSortitionPool.link(StackLib)
-    FullyBackedSortitionPool.link(Leaf)
+  before(async () => {
+    await FullyBackedSortitionPool.detectNetwork()
+    await FullyBackedSortitionPool.link("Branch", (await Branch.new()).address)
+    await FullyBackedSortitionPool.link(
+      "Position",
+      (await Position.new()).address,
+    )
+    await FullyBackedSortitionPool.link(
+      "StackLib",
+      (await StackLib.new()).address,
+    )
+    await FullyBackedSortitionPool.link("Leaf", (await Leaf.new()).address)
+
     keepBonding = await BondingContractStub.new()
 
     pool = await FullyBackedSortitionPool.new(
@@ -232,6 +263,14 @@ contract("FullyBackedSortitionPool", (accounts) => {
     for (let i = 0; i < 100; i++) {
       operators.push(web3.eth.accounts.create().address)
     }
+  })
+
+  beforeEach(async () => {
+    await createSnapshot()
+  })
+
+  afterEach(async () => {
+    await restoreSnapshot()
   })
 
   describe("selectSetGroup result distribution", async () => {

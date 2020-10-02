@@ -1,9 +1,15 @@
-const Branch = artifacts.require("./contracts/Branch.sol")
-const BranchStub = artifacts.require("BranchStub.sol")
+const {contract, web3} = require("@openzeppelin/test-environment")
+
+const Branch = contract.fromArtifact("Branch")
+const BranchStub = contract.fromArtifact("BranchStub")
+
+const toHex = web3.utils.numberToHex
+const utils = require("./helpers/utils")
 
 const BN = web3.utils.BN
-const toHex = web3.utils.numberToHex
-const utils = require("./utils")
+
+const chai = require("chai")
+const assert = chai.assert
 
 const DEPLOY = [
   {name: "Branch", contract: Branch},
@@ -14,7 +20,7 @@ const node = new BN(
   16,
 )
 
-contract("Branch", (accounts) => {
+describe("Branch", () => {
   let branchInstance
 
   before(async () => {

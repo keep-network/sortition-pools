@@ -1,14 +1,19 @@
-const Interval = artifacts.require("./contracts/Interval.sol")
-const IntervalStub = artifacts.require("IntervalStub.sol")
+const {contract} = require("@openzeppelin/test-environment")
 
-const utils = require("./utils")
+const Interval = contract.fromArtifact("Interval")
+const IntervalStub = contract.fromArtifact("IntervalStub")
+
+const utils = require("./helpers/utils")
 
 const DEPLOY = [
   {name: "Interval", contract: Interval},
   {name: "IntervalStub", contract: IntervalStub},
 ]
 
-contract("Interval", (accounts) => {
+const chai = require("chai")
+const assert = chai.assert
+
+describe("Interval", () => {
   let interval
 
   before(async () => {

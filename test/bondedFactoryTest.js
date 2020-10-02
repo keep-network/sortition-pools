@@ -1,13 +1,17 @@
-const BondedSortitionPoolFactory = artifacts.require(
-  "./contracts/BondedSortitionPoolFactory.sol",
-)
-const BondedSortitionPool = artifacts.require(
-  "./contracts/BondedSortitionPool.sol",
-)
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
-const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const {accounts, contract} = require("@openzeppelin/test-environment")
 
-contract("BondedSortitionPoolFactory", (accounts) => {
+const BondedSortitionPoolFactory = contract.fromArtifact(
+  "BondedSortitionPoolFactory",
+)
+const BondedSortitionPool = contract.fromArtifact("BondedSortitionPool")
+const StakingContractStub = contract.fromArtifact("StakingContractStub")
+const BondingContractStub = contract.fromArtifact("BondingContractStub")
+const StackLib = contract.fromArtifact("StackLib")
+
+const chai = require("chai")
+const assert = chai.assert
+
+describe("BondedSortitionPoolFactory", () => {
   let bondedSortitionPoolFactory
   let stakingContract
   let bondingContract
@@ -16,7 +20,13 @@ contract("BondedSortitionPoolFactory", (accounts) => {
   const poolWeightDivisor = 1
 
   before(async () => {
-    bondedSortitionPoolFactory = await BondedSortitionPoolFactory.deployed()
+    await BondedSortitionPoolFactory.detectNetwork()
+    await BondedSortitionPoolFactory.link(
+      "StackLib",
+      (await StackLib.new()).address,
+    )
+
+    bondedSortitionPoolFactory = await BondedSortitionPoolFactory.new()
     stakingContract = await StakingContractStub.new()
     bondingContract = await BondingContractStub.new()
   })
