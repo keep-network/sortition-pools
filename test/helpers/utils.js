@@ -5,6 +5,8 @@ async function deploySystem(deploy_list) {
 
   // eslint-disable-next-line camelcase,guard-for-in
   for (const i in deploy_list) {
+    await deploy_list[i].contract.detectNetwork()
+
     await deploy_list[i].contract.link(linkable)
     const contract = await deploy_list[i].contract.new()
     linkable[deploy_list[i].name] = contract.address
