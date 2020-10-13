@@ -224,7 +224,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
     it("removes minimum-bond-ineligible operators and still works afterwards", async () => {
       await prepareOperator(alice, bond)
       await prepareOperator(bob, bond)
-      await prepareOperator(carol, bond)
+      await prepareOperator(carol, bond.muln(100))
       await prepareOperator(david, bond)
 
       await mineBlocks(operatorInitBlocks.addn(1))
