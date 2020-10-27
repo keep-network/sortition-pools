@@ -56,6 +56,10 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
 
   PoolParams poolParams;
 
+  // Banned operator addresses. Banned operators are removed from the pool; they
+  // won't be selected to groups and won't be able to join the pool.
+  mapping(address => bool) public bannedOperators;
+
   constructor(
     IFullyBackedBonding _bondingContract,
     uint256 _initialMinimumBondableValue,
@@ -87,9 +91,9 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 groupSize,
     bytes32 seed,
     uint256 bondValue
-  ) public returns (address[] memory) {
+  ) public onlyOwner() returns (address[] memory) {
     PoolParams memory params = initializeSelectionParams(bondValue);
-    require(msg.sender == params.owner, "Only owner may select groups");
+
     uint256 paramsPtr;
     // solium-disable-next-line security/no-inline-assembly
     assembly {
@@ -119,6 +123,18 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     return poolParams.minimumBondableValue;
   }
 
+  /// @notice Bans an operator in the pool. The operator is added to banned
+  /// operators list. If the operator is already registered in the pool it gets
+  /// removed. Only onwer of the pool can call this function.
+  /// @param operator An operator address.
+  function ban(address operator) public onlyOwner() {
+    bannedOperators[operator] = true;
+
+    if (isOperatorRegistered(operator)) {
+      removeOperator(operator);
+    }
+  }
+
   function initializeSelectionParams(uint256 bondValue)
     internal
     returns (PoolParams memory params)
@@ -136,6 +152,11 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256) {
+    // Check if the operator has been banned.
+    if (bannedOperators[operator]) {
+      return 0;
+    }
+
     address ownerAddress = poolParams.owner;
     // Get the amount of bondable value available for this pool.
     // We only care that this covers one single bond
@@ -233,5 +254,10 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     // Not sure if we want to do this exact thing,
     // but reasonable to begin with.
     return Fate(Decision.UpdateSelect, postWeight);
+  }
+
+  modifier onlyOwner() {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+    _;
   }
 }
