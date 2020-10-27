@@ -1,10 +1,8 @@
 const FullyBackedSortitionPoolFactory = artifacts.require(
-  "./contracts/FullyBackedSortitionPoolFactory.sol",
+  "FullyBackedSortitionPoolFactory",
 )
-const FullyBackedSortitionPool = artifacts.require(
-  "./contracts/FullyBackedSortitionPool.sol",
-)
-const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const FullyBackedSortitionPool = artifacts.require("FullyBackedSortitionPool")
+const FullyBackedBondingStub = artifacts.require("FullyBackedBondingStub")
 
 contract("FullyBackedSortitionPoolFactory", (accounts) => {
   let bondingContract
@@ -15,7 +13,7 @@ contract("FullyBackedSortitionPoolFactory", (accounts) => {
 
   before(async () => {
     factory = await FullyBackedSortitionPoolFactory.deployed()
-    bondingContract = await BondingContractStub.new()
+    bondingContract = await FullyBackedBondingStub.new()
   })
 
   describe("createSortitionPool()", async () => {
@@ -46,8 +44,11 @@ contract("FullyBackedSortitionPoolFactory", (accounts) => {
 
       assert.notEqual(pool1Address, pool2Address)
 
-      bondingContract.setBondableValue(accounts[1], 100)
-      bondingContract.setBondableValue(accounts[2], 200)
+      await bondingContract.setBondableValue(accounts[1], 100)
+      await bondingContract.setBondableValue(accounts[2], 200)
+
+      await bondingContract.setInitialized(accounts[1], true)
+      await bondingContract.setInitialized(accounts[2], true)
 
       assert.equal(await pool1.operatorsInPool(), 0)
       assert.equal(await pool2.operatorsInPool(), 0)

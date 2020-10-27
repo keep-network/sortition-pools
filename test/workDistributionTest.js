@@ -11,6 +11,7 @@ const FullyBackedSortitionPool = artifacts.require(
 
 const StakingContractStub = artifacts.require("StakingContractStub.sol")
 const BondingContractStub = artifacts.require("BondingContractStub.sol")
+const FullyBackedBondingStub = artifacts.require("FullyBackedBondingStub.sol")
 
 const {mineBlocks} = require("./mineBlocks")
 
@@ -219,7 +220,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
     FullyBackedSortitionPool.link(Position)
     FullyBackedSortitionPool.link(StackLib)
     FullyBackedSortitionPool.link(Leaf)
-    keepBonding = await BondingContractStub.new()
+    keepBonding = await FullyBackedBondingStub.new()
 
     pool = await FullyBackedSortitionPool.new(
       keepBonding.address,
@@ -307,6 +308,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       address,
       web3.utils.toBN(bond).mul(tokenDecimalMultiplier),
     )
+    await keepBonding.setInitialized(address, true)
     await pool.joinPool(address)
   }
 
