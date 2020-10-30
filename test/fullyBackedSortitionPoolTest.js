@@ -476,4 +476,46 @@ contract("FullyBackedSortitionPool", (accounts) => {
       await expectRevert(pool.ban(alice), "Caller is not the owner")
     })
   })
+
+  describe("unregister", async () => {
+    it("does not revert when operator is not registered", async () => {
+      expect(await pool.isOperatorRegistered(alice)).to.be.false
+
+      await pool.unregister(alice, {from: owner})
+    })
+
+    it("removes operator from the pool", async () => {
+      await bonding.setBondableValue(alice, minimumBondableValue)
+      await bonding.setInitialized(alice, true)
+      await pool.joinPool(alice)
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.true
+
+      await pool.unregister(alice, {from: owner})
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.false
+      expect(await pool.isOperatorInPool(alice)).to.be.false
+      expect(await pool.getPoolWeight(alice)).to.eq.BN(0)
+    })
+
+    it("operator can re-join the pool after removal", async () => {
+      await bonding.setBondableValue(alice, minimumBondableValue)
+      await bonding.setInitialized(alice, true)
+      await pool.joinPool(alice)
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.true
+
+      await pool.unregister(alice, {from: owner})
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.false
+
+      await pool.joinPool(alice)
+
+      expect(await pool.isOperatorRegistered(alice)).to.be.true
+    })
+
+    it("reverts when called by non-owner", async () => {
+      await expectRevert(pool.unregister(alice), "Caller is not the owner")
+    })
+  })
 })

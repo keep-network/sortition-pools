@@ -130,6 +130,13 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   function ban(address operator) public onlyOwner() {
     bannedOperators[operator] = true;
 
+    unregister(operator);
+  }
+
+  /// @notice Removes an operator from the pool. Only onwer of the pool can call
+  /// this function.
+  /// @param operator An operator address.
+  function unregister(address operator) public onlyOwner() {
     if (isOperatorRegistered(operator)) {
       removeOperator(operator);
     }
