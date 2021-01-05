@@ -2,13 +2,13 @@ name: NPM
 
 on:
   push:
-    branches:
-      - master
-    paths:
-      - "contracts/**"
-      - "migrations/scripts/**"
-      - "package.json"
-      - "package-lock.json"
+    # branches:
+    #   - master
+    # paths:
+    #   - "contracts/**"
+    #   - "migrations/scripts/**"
+    #   - "package.json"
+    #   - "package-lock.json"
 
 jobs:
   publish-contracts:
