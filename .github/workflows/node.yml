@@ -1,4 +1,4 @@
-name: Run linters
+name: Node.js CI
 
 on: [push]
 
@@ -101,3 +101,43 @@ jobs:
 
       - name: Run Solidity linter
         run: npm run lint:sol
+
+  run-tests:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      ## Restore `node_nodules` from cache initialized in `install` job.
+      # Get exact Node version.
+      - name: Get Node version
+        id: node-version
+        run: echo "::set-output name=version::$(node --version)"
+      # Restore cache for specific OS, Node version and `package-lock.json` files hash.
+      # It is expected that the cache will always be found as it was initialized
+      # in `install` job executed as a requirement of this job.
+      - name: Restore cached node modules
+        id: node-cache
+        uses: actions/cache@v2
+        env:
+          cache-name: node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.node-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
+      # As a fallback to not found cached node_modules directory execute `npm ci`
+      # to install dependencies. It's not expected to happen, but better be safe
+      # than sorry.
+      - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run tests
+        # Runs ganache in background
+        run: |
+          npm run buidler-vm & 
+          npm test
+        env:
+          CI: true
