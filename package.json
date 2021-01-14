@@ -10,9 +10,6 @@
     "contracts/**/*.sol",
     "migrations/scripts"
   ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
-  },
   "scripts": {
     "ganache": "echo 'GANACHE IS NO LONGER USED; use buidler-vm script instead'",
     "buidler-vm": "buidler node",
