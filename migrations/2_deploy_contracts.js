@@ -1,11 +1,9 @@
-const {
-  deploySortitionPoolFactory,
-  deployBondedSortitionPoolFactory,
-  deployFullyBackedSortitionPoolFactory,
-} = require("./scripts/deployContracts")
+const SortitionPoolsDeployer = require("./scripts/deployContracts")
 
 module.exports = async function (deployer) {
-  await deploySortitionPoolFactory(artifacts, deployer)
-  await deployBondedSortitionPoolFactory(artifacts, deployer)
-  await deployFullyBackedSortitionPoolFactory(artifacts, deployer)
+  const sortitionPoolsDeployer = new SortitionPoolsDeployer(deployer, artifacts)
+
+  await sortitionPoolsDeployer.deploySortitionPoolFactory()
+  await sortitionPoolsDeployer.deployBondedSortitionPoolFactory()
+  await sortitionPoolsDeployer.deployFullyBackedSortitionPoolFactory()
 }
