@@ -191,4 +191,32 @@ contract("SortitionPool", (accounts) => {
       assert.equal(group.length, 100)
     })
   })
+
+  describe("selectSetGroup", async () => {
+    it("works", async () => {
+      const nOperators = 1000
+      const nSelected = 100
+      for (i = 1010; i < 1010 + nOperators; i++) {
+        const address = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
+        await staking.setStake(address, minStake * i)
+        await pool.joinPool(address)
+      }
+
+      await mineBlocks(11)
+
+      const group = await pool.selectSetGroup.call(nSelected, seed, minStake, {
+        from: owner,
+      })
+      const tx = await pool.selectSetGroup(nSelected, seed, minStake, {
+        from: owner,
+      })
+      assert.equal(group.length, nSelected)
+      const gasUsed = tx.receipt.gasUsed
+      console.log("Number of operators: " + nOperators)
+      console.log("Number selected: " + nSelected)
+      console.log("Total gas: " + gasUsed)
+      console.log("Gas per member: " + gasUsed / nSelected)
+      assert.equal(gasUsed < 8000000, true)
+    })
+  })
 })
