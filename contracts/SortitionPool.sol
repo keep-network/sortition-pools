@@ -61,6 +61,30 @@ contract SortitionPool is AbstractSortitionPool {
     return generalizedSelectGroup(groupSize, seed, paramsPtr, false);
   }
 
+  /// @notice Selects a new group of operators of the provided size based on
+  /// the provided pseudo-random seed.
+  /// All operators in the group are unique.
+  /// If there are not enough operators in a pool to form a group
+  /// or not enough operators are eligible for work selection,
+  /// the function fails.
+  /// @param groupSize Size of the requested group
+  /// @param seed Pseudo-random number used to select operators to group
+  /// @return selected Members of the selected group
+  function selectSetGroup(
+    uint256 groupSize,
+    bytes32 seed,
+    uint256 minimumStake
+  ) public returns (address[] memory) {
+    PoolParams memory params = initializeSelectionParams(minimumStake);
+    require(msg.sender == params.owner, "Only owner may select groups");
+    uint256 paramsPtr;
+    // solium-disable-next-line security/no-inline-assembly
+    assembly {
+      paramsPtr := params
+    }
+    return generalizedSelectGroup(groupSize, seed, paramsPtr, true);
+  }
+
   function initializeSelectionParams(uint256 currentMinimumStake)
     internal
     returns (PoolParams memory params)
