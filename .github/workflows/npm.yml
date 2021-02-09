@@ -31,7 +31,8 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - uses: keep-network/npm-version-bump@v1
+      - name: Bump up package version
+        uses: keep-network/npm-version-bump@v1
       - name: Publish package
         run: npm publish --access public
         env:
