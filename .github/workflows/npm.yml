@@ -2,13 +2,13 @@ name: NPM
 
 on:
   push:
-    # branches:
-    #   - master
-    # paths:
-    #   - "contracts/**"
-    #   - "migrations/scripts/**"
-    #   - "package.json"
-    #   - "package-lock.json"
+    branches:
+      - master
+    paths:
+      - "contracts/**"
+      - "migrations/scripts/**"
+      - "package.json"
+      - "package-lock.json"
 
 jobs:
   publish-contracts:
@@ -32,10 +32,7 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
       - uses: keep-network/npm-version-bump@v1
-      # TODO: Just for testing
-      - name: Print package.json content
-        run: cat package.json
-      # - name: Publish package
-      #   run: npm publish --access public
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish package
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
