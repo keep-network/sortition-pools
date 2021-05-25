@@ -13,9 +13,6 @@ on:
 jobs:
   npm-publish-contracts:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./solidity
     steps:
       - uses: actions/checkout@v2
 
@@ -40,7 +37,6 @@ jobs:
         id: npm-version-bump
         uses: keep-network/npm-version-bump@v2
         with:
-          work-dir: ./solidity
           environment: dev
           branch: ${{ github.ref }}
           commit: ${{ github.sha }}
