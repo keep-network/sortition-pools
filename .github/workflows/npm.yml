@@ -9,6 +9,7 @@ on:
       - "migrations/scripts/**"
       - "package.json"
       - "package-lock.json"
+  workflow_dispatch:
 
 jobs:
   npm-publish-contracts:
