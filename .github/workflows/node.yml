@@ -1,0 +1,143 @@
+name: Node.js CI
+
+on: [push]
+
+jobs:
+  # Setup that results will be used by other jobs.
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      ## Cache `node_nodules` directory so it can be used by other jobs.
+      # Get exact Node version. It will be included in cache's key as there can
+      # be differences between resolved dependencies depending on Node version.
+      - name: Get Node version
+        id: node-version
+        run: echo "::set-output name=version::$(node --version)"
+      # Cache `node_modules` directory for specific OS, Node version and `package-lock.json`
+      # files hash. The cache will be used by subsequent jobs execution.
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.node-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
+      # Install dependencies. It won't use currently cached `node_modules` directory
+      # but do a clean installation. Resolved directory will be cached afterwards.
+      - name: Install dependencies
+        run: npm ci
+
+  lint-js:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      ## Restore `node_nodules` from cache initialized in `install` job.
+      # Get exact Node version.
+      - name: Get Node version
+        id: node-version
+        run: echo "::set-output name=version::$(node --version)"
+      # Restore cache for specific OS, Node version and `package-lock.json` files hash.
+      # It is expected that the cache will always be found as it was initialized
+      # in `install` job executed as a requirement of this job.
+      - name: Restore cached node modules
+        id: node-cache
+        uses: actions/cache@v2
+        env:
+          cache-name: node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.node-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
+      # As a fallback to not found cached node_modules directory execute `npm ci`
+      # to install dependencies. It's not expected to happen, but better be safe
+      # than sorry.
+      - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run JS linter
+        run: npm run lint:js
+
+  lint-sol:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      ## Restore `node_nodules` from cache initialized in `install` job.
+      # Get exact Node version.
+      - name: Get Node version
+        id: node-version
+        run: echo "::set-output name=version::$(node --version)"
+      # Restore cache for specific OS, Node version and `package-lock.json` files hash.
+      # It is expected that the cache will always be found as it was initialized
+      # in `install` job executed as a requirement of this job.
+      - name: Restore cached node modules
+        id: node-cache
+        uses: actions/cache@v2
+        env:
+          cache-name: node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.node-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
+      # As a fallback to not found cached node_modules directory execute `npm ci`
+      # to install dependencies. It's not expected to happen, but better be safe
+      # than sorry.
+      - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run Solidity linter
+        run: npm run lint:sol
+
+  run-tests:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      ## Restore `node_nodules` from cache initialized in `install` job.
+      # Get exact Node version.
+      - name: Get Node version
+        id: node-version
+        run: echo "::set-output name=version::$(node --version)"
+      # Restore cache for specific OS, Node version and `package-lock.json` files hash.
+      # It is expected that the cache will always be found as it was initialized
+      # in `install` job executed as a requirement of this job.
+      - name: Restore cached node modules
+        id: node-cache
+        uses: actions/cache@v2
+        env:
+          cache-name: node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.node-version.outputs.version }}-${{ hashFiles('**/package-lock.json') }}
+      # As a fallback to not found cached node_modules directory execute `npm ci`
+      # to install dependencies. It's not expected to happen, but better be safe
+      # than sorry.
+      - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run tests
+        # Runs ganache in background
+        run: |
+          npm run buidler-vm & 
+          npm test
+        env:
+          CI: true
