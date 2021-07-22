@@ -36,7 +36,7 @@ jobs:
 
       - name: Bump up package version
         id: npm-version-bump
-        uses: keep-network/npm-version-bump@v2
+        uses: keep-network/ci/actions/npm-version-bump@move-actions-to-ci # TODO: change to @v1 before merging to main
         with:
           environment: dev
           branch: ${{ github.ref }}
