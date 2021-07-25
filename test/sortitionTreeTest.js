@@ -88,6 +88,20 @@ contract("SortitionTree", (accounts) => {
 
       assert.fail("Expected throw not received")
     })
+
+    it("allocates operator IDs", async () => {
+      await sortition.publicInsertOperator(alice, weightA)
+
+      const aliceID = await sortition.getOperatorID.call(alice)
+      const bobID = await sortition.getOperatorID.call(bob)
+
+      assert.equal(aliceID, 1)
+      assert.equal(bobID, 0)
+
+      const aliceAddress = await sortition.getIDOperator.call(1)
+
+      assert.equal(aliceAddress, alice)
+    })
   })
 
   describe("removeOperator()", async () => {
@@ -114,6 +128,15 @@ contract("SortitionTree", (accounts) => {
       }
 
       assert.fail("Expected throw not received")
+    })
+
+    it("does not remove ID numbers", async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      await sortition.publicRemoveOperator(alice)
+
+      const aliceID = await sortition.getOperatorID.call(alice)
+
+      assert.equal(aliceID, 1)
     })
   })
 

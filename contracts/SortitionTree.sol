@@ -50,9 +50,30 @@ contract SortitionTree {
   // between 0 and the rightmost occupied leaf
   uint256[] emptyLeaves;
 
+  // Each operator has an uint32 ID number
+  // which is allocated when they first join the pool
+  // and remains unchanged even if they leave and rejoin the pool.
+  mapping(address => uint256) operatorID;
+  // The idAddress array records the address corresponding to each ID number.
+  // The ID number 0 is initialized with a zero address and is not used.
+  address[] idAddress;
+
   constructor() public {
     root = 0;
     rightmostLeaf = 0;
+    idAddress.length = 1;
+  }
+
+  // Return the ID number of the given operator address.
+  // An ID number of 0 means the operator has not been allocated an ID number yet.
+  function getOperatorID(address operator) public view returns (uint256) {
+      return operatorID[operator];
+  }
+
+  // Get the operator address corresponding to the given ID number.
+  // An empty address means the ID number has not been allocated yet.
+  function getIDOperator(uint256 id) public view returns (address) {
+      return idAddress.length > id ? idAddress[id] : address(0);
   }
 
   // checks if operator is already registered in the pool
@@ -78,11 +99,23 @@ contract SortitionTree {
     return root.sumWeight();
   }
 
+  // Give the operator a new ID number
+  // Does not check if the operator already has an ID number
+  function allocateOperatorID(address operator) internal returns (uint256) {
+      uint256 id = idAddress.length;
+      operatorID[operator] = id;
+      idAddress.push(operator);
+      return id;
+  }
+
   function insertOperator(address operator, uint256 weight) internal {
     require(
       !isOperatorRegistered(operator),
       "Operator is already registered in the pool"
     );
+
+    uint256 id = getOperatorID(operator);
+    if (id == 0) {id = allocateOperatorID(operator);}
 
     uint256 position = getEmptyLeafPosition();
     // Record the block the operator was inserted in
