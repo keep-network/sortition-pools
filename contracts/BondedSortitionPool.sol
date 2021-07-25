@@ -169,6 +169,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
 
   function decideFate(
     uint256 leaf,
+    uint256 leafWeight,
     DynamicArray.AddressArray memory, // `selected`, for future use
     uint256 paramsPtr
   ) internal view returns (Fate memory) {
@@ -178,7 +179,6 @@ contract BondedSortitionPool is AbstractSortitionPool {
       params := paramsPtr
     }
     address operator = leaf.operator();
-    uint256 leafWeight = leaf.weight();
 
     if (!isLeafInitialized(leaf)) {
       return Fate(Decision.Skip, 0);

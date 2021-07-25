@@ -56,6 +56,7 @@ library Leaf {
   function weight(uint256 leaf) internal pure returns (uint256) {
     // Weight is stored in the 32 least significant bits.
     // Bitwise AND ensures that we only get the contents of those bits.
+    require(false, "this should not be called");
     return (leaf & WEIGHT_MAX);
   }
 

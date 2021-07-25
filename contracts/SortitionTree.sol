@@ -121,7 +121,7 @@ contract SortitionTree {
     // Record the block the operator was inserted in
     uint256 theLeaf = Leaf.make(operator, block.number, weight);
 
-    root = setLeaf(position, theLeaf, root);
+    root = setLeaf(position, theLeaf, weight, root);
 
     // Without position flags,
     // the position 0x000000 would be treated as empty
@@ -144,7 +144,7 @@ contract SortitionTree {
 
     uint256 flaggedPosition = getFlaggedLeafPosition(operator);
     uint256 unflaggedPosition = flaggedPosition.unsetFlag();
-    updateLeaf(unflaggedPosition, weight);
+    root = updateLeaf(unflaggedPosition, weight, root);
   }
 
   function removeLeafPositionRecord(address operator) internal {
@@ -159,6 +159,13 @@ contract SortitionTree {
     return flaggedLeafPosition[operator];
   }
 
+  function getLeafWeight(uint256 position) internal view returns (uint256) {
+      uint256 slot = position.slot();
+      uint256 parent = position.parent();
+      uint256 node = branches[LEVELS][parent];
+      return node.getSlot(slot);
+  }
+
   function removeLeaf(uint256 position, uint256 _root)
     internal
     returns (uint256)
@@ -166,7 +173,7 @@ contract SortitionTree {
     uint256 rightmostSubOne = rightmostLeaf - 1;
     bool isRightmost = position == rightmostSubOne;
 
-    uint256 newRoot = setLeaf(position, 0, _root);
+    uint256 newRoot = setLeaf(position, 0, 0, _root);
 
     if (isRightmost) {
       rightmostLeaf = rightmostSubOne;
@@ -176,26 +183,37 @@ contract SortitionTree {
     return newRoot;
   }
 
-  function updateLeaf(uint256 position, uint256 weight) internal {
-    uint256 oldLeaf = leaves[position];
-    if (oldLeaf.weight() != weight) {
-      uint256 newLeaf = oldLeaf.setWeight(weight);
-      root = setLeaf(position, newLeaf, root);
+  function updateLeaf(
+      uint256 position,
+      uint256 weight,
+      uint256 _root
+  ) internal returns (uint256) {
+    if (getLeafWeight(position) != weight) {
+      return updateTree(position, weight, _root);
     }
   }
 
   function setLeaf(
     uint256 position,
     uint256 theLeaf,
+    uint256 leafWeight,
+    uint256 _root
+  ) internal returns (uint256) {
+    // set leaf
+    leaves[position] = theLeaf;
+
+    return(updateTree(position, leafWeight, _root));
+  }
+
+  function updateTree(
+    uint256 position,
+    uint256 weight,
     uint256 _root
   ) internal returns (uint256) {
     uint256 childSlot;
     uint256 treeNode;
     uint256 newNode;
-    uint256 nodeWeight = theLeaf.weight();
-
-    // set leaf
-    leaves[position] = theLeaf;
+    uint256 nodeWeight = weight;
 
     uint256 parent = position;
     // set levels 7 to 2
@@ -216,7 +234,7 @@ contract SortitionTree {
   function pickWeightedLeaf(uint256 index, uint256 _root)
     internal
     view
-    returns (uint256 leafPosition, uint256 leafFirstIndex)
+    returns (uint256 leafPosition, uint256 leafFirstIndex, uint256 leafWeight)
   {
     uint256 currentIndex = index;
     uint256 currentNode = _root;
@@ -241,6 +259,8 @@ contract SortitionTree {
     // This works because the last weight returned from `pickWeightedSlot()`
     // equals the "overflow" from getting the current slot.
     leafFirstIndex = index - currentIndex;
+
+    leafWeight = currentNode.getSlot(currentSlot);
   }
 
   function getEmptyLeafPosition() internal returns (uint256) {

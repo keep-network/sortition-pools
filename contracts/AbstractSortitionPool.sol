@@ -92,7 +92,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
       return 0;
     } else {
       uint256 leafPosition = flaggedPosition.unsetFlag();
-      uint256 leafWeight = leaves[leafPosition].weight();
+      uint256 leafWeight = getLeafWeight(leafPosition);
       return leafWeight;
     }
   }
@@ -153,16 +153,17 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     while (selected.array.length < groupSize) {
       rng.generateNewIndex();
 
-      (uint256 leafPosition, uint256 startingIndex) = pickWeightedLeaf(
+      (uint256 leafPosition, uint256 startingIndex, uint256 leafWeight)
+        = pickWeightedLeaf(
         rng.currentMappedIndex,
         _root
       );
 
       uint256 leaf = leaves[leafPosition];
-      address operator = leaf.operator();
-      uint256 leafWeight = leaf.weight();
 
-      Fate memory fate = decideFate(leaf, selected, paramsPtr);
+      Fate memory fate = decideFate(leaf, leafWeight, selected, paramsPtr);
+
+      address operator = leaf.operator();
 
       if (fate.decision == Decision.Select) {
         selected.arrayPush(operator);
@@ -188,13 +189,13 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         continue;
       }
       if (fate.decision == Decision.UpdateRetry) {
-        _root = setLeaf(leafPosition, leaf.setWeight(fate.maybeWeight), _root);
+        _root = updateTree(leafPosition, fate.maybeWeight, _root);
         rootChanged = true;
         rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
         continue;
       }
       if (fate.decision == Decision.UpdateSelect) {
-        _root = setLeaf(leafPosition, leaf.setWeight(fate.maybeWeight), _root);
+        _root = updateTree(leafPosition, fate.maybeWeight, _root);
         rootChanged = true;
         selected.arrayPush(operator);
         rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
@@ -224,6 +225,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
   function decideFate(
     uint256 leaf,
+    uint256 leafWeight,
     DynamicArray.AddressArray memory selected,
     uint256 paramsPtr
   ) internal view returns (Fate memory);
