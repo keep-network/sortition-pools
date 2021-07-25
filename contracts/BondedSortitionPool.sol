@@ -91,7 +91,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
     assembly {
       paramsPtr := params
     }
-    return generalizedSelectGroup(groupSize, seed, paramsPtr, true);
+    uint256[] memory selected = generalizedSelectGroup(
+        groupSize, seed, paramsPtr, true
+    );
+    address[] memory selectedAddresses = new address[](groupSize);
+    for (uint256 i = 0; i < selected.length; i++) {
+        selectedAddresses[i] = selected[i].operator();
+    }
+    return selectedAddresses;
   }
 
   /// @notice Sets the minimum bondable value required from the operator
@@ -170,7 +177,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
   function decideFate(
     uint256 leaf,
     uint256 leafWeight,
-    DynamicArray.AddressArray memory, // `selected`, for future use
+    DynamicArray.UintArray memory, // `selected`, for future use
     uint256 paramsPtr
   ) internal view returns (Fate memory) {
     PoolParams memory params;

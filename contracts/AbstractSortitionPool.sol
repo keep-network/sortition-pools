@@ -140,12 +140,12 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // to work with any desired eligibility logic.
     uint256 paramsPtr,
     bool noDuplicates
-  ) internal returns (address[] memory) {
+  ) internal returns (uint256[] memory) {
     uint256 _root = root;
     bool rootChanged = false;
 
-    DynamicArray.AddressArray memory selected;
-    selected = DynamicArray.addressArray(groupSize);
+    DynamicArray.UintArray memory selected;
+    selected = DynamicArray.uintArray(groupSize);
 
     RNG.State memory rng;
     rng = RNG.initialize(seed, _root.sumWeight(), groupSize);
@@ -163,10 +163,8 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
       Fate memory fate = decideFate(leaf, leafWeight, selected, paramsPtr);
 
-      address operator = leaf.operator();
-
       if (fate.decision == Decision.Select) {
-        selected.arrayPush(operator);
+        selected.arrayPush(leaf);
         if (noDuplicates) {
           rng.addSkippedInterval(startingIndex, leafWeight);
         }
@@ -184,6 +182,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         _root = removeLeaf(leafPosition, _root);
         rootChanged = true;
         // Remove the record of the operator's leaf and release gas
+        address operator = leaf.operator();
         removeLeafPositionRecord(operator);
         releaseGas(operator);
         continue;
@@ -197,7 +196,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
       if (fate.decision == Decision.UpdateSelect) {
         _root = updateTree(leafPosition, fate.maybeWeight, _root);
         rootChanged = true;
-        selected.arrayPush(operator);
+        selected.arrayPush(leaf);
         rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
         if (noDuplicates) {
           rng.addSkippedInterval(startingIndex, fate.maybeWeight);
@@ -226,7 +225,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
   function decideFate(
     uint256 leaf,
     uint256 leafWeight,
-    DynamicArray.AddressArray memory selected,
+    DynamicArray.UintArray memory selected,
     uint256 paramsPtr
   ) internal view returns (Fate memory);
 
