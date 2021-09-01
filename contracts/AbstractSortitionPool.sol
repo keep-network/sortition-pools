@@ -14,7 +14,6 @@ contract AbstractSortitionPool is SortitionTree {
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
-  using RNG for RNG.State;
 
   enum Decision {
     Select, // Add to the group, and use new seed
@@ -129,17 +128,15 @@ contract AbstractSortitionPool is SortitionTree {
     DynamicArray.UintArray memory selected;
     selected = DynamicArray.uintArray(groupSize);
 
-    RNG.State memory rng;
-    rng = RNG.initialize(seed, _root.sumWeight(), groupSize);
+    bytes32 rngState = seed;
+    uint256 rngRange = _root.sumWeight();
+    require(rngRange > 0, "Not enough operators in pool");
+    uint256 currentIndex;
 
     while (selected.array.length < groupSize) {
-      rng.generateNewIndex();
+      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
 
-      (uint256 leafPosition,,)
-        = pickWeightedLeaf(
-        rng.currentMappedIndex,
-        _root
-      );
+      uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
       uint256 leaf = leaves[leafPosition];
       selected.arrayPush(leaf);

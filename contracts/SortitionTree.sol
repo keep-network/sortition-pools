@@ -236,11 +236,7 @@ contract SortitionTree {
   function pickWeightedLeaf(uint256 index, uint256 _root)
     internal
     view
-    returns (
-      uint256 leafPosition,
-      uint256 leafFirstIndex,
-      uint256 leafWeight
-    )
+    returns (uint256 leafPosition)
   {
     uint256 currentIndex = index;
     uint256 currentNode = _root;
@@ -261,12 +257,6 @@ contract SortitionTree {
 
     // get leaf position
     leafPosition = currentPosition.child(currentSlot);
-    // get the first index of the leaf
-    // This works because the last weight returned from `pickWeightedSlot()`
-    // equals the "overflow" from getting the current slot.
-    leafFirstIndex = index - currentIndex;
-
-    leafWeight = currentNode.getSlot(currentSlot);
   }
 
   function getEmptyLeafPosition() internal returns (uint256) {
