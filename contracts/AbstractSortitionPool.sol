@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-import "./GasStation.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./DynamicArray.sol";
@@ -10,7 +9,7 @@ import "./api/IStaking.sol";
 /// @notice Abstract contract encapsulating common logic of all sortition pools.
 /// @dev Inheriting implementations are expected to implement getEligibleWeight
 /// function.
-contract AbstractSortitionPool is SortitionTree, GasStation {
+contract AbstractSortitionPool is SortitionTree {
   using Leaf for uint256;
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
@@ -103,7 +102,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     uint256 eligibleWeight = getEligibleWeight(operator);
     require(eligibleWeight > 0, "Operator not eligible");
 
-    depositGas(operator);
     insertOperator(operator, eligibleWeight);
   }
 
@@ -117,7 +115,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
     if (eligibleWeight == 0) {
       removeOperator(operator);
-      releaseGas(operator);
     } else {
       updateOperator(operator, eligibleWeight);
     }
@@ -184,7 +181,6 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         // Remove the record of the operator's leaf and release gas
         address operator = leaf.operator();
         removeLeafPositionRecord(operator);
-        releaseGas(operator);
         continue;
       }
       if (fate.decision == Decision.UpdateRetry) {
@@ -228,8 +224,4 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     DynamicArray.UintArray memory selected,
     uint256 paramsPtr
   ) internal view returns (Fate memory);
-
-  function gasDepositSize() internal pure returns (uint256) {
-    return GAS_DEPOSIT_SIZE;
-  }
 }
