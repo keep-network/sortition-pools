@@ -95,7 +95,7 @@ contract("SortitionPool", (accounts) => {
       assert.equal(group.length, 5)
     })
 
-    it("removes ineligible operators", async () => {
+    it("does not remove ineligible operators", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
       await pool.joinPool(alice)
@@ -109,10 +109,10 @@ contract("SortitionPool", (accounts) => {
         from: owner,
       })
       await pool.selectGroup(5, seed, minStake, {from: owner})
-      assert.deepEqual(group, [alice, alice, alice, alice, alice])
+      assert.equal(group.length, 5)
     })
 
-    it("removes outdated but still operators", async () => {
+    it("does not remove outdated but eligible operators", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
       await pool.joinPool(alice)
@@ -126,7 +126,7 @@ contract("SortitionPool", (accounts) => {
         from: owner,
       })
       await pool.selectGroup(5, seed, minStake, {from: owner})
-      assert.deepEqual(group, [alice, alice, alice, alice, alice])
+      assert.equal(group.length, 5)
     })
 
     it("lets outdated operators update their status", async () => {
@@ -148,31 +148,6 @@ contract("SortitionPool", (accounts) => {
       })
       await pool.selectGroup(5, seed, minStake, {from: owner})
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
-    })
-
-    it("ignores too recently added operators", async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 2000)
-      await pool.joinPool(alice)
-
-      await mineBlocks(11)
-
-      await pool.joinPool(bob)
-
-      const group = await pool.selectGroup.call(5, seed, minStake, {
-        from: owner,
-      })
-      await pool.selectGroup(5, seed, minStake, {from: owner})
-      assert.deepEqual(group, [alice, alice, alice, alice, alice])
-
-      await mineBlocks(11)
-      await staking.setStake(alice, 1000)
-
-      const group2 = await pool.selectGroup.call(5, seed, minStake, {
-        from: owner,
-      })
-      await pool.selectGroup(5, seed, minStake, {from: owner})
-      assert.deepEqual(group2, [bob, bob, bob, bob, bob])
     })
 
     it("can select really large groups efficiently", async () => {

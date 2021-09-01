@@ -122,24 +122,9 @@ contract AbstractSortitionPool is SortitionTree {
 
   function generalizedSelectGroup(
     uint256 groupSize,
-    bytes32 seed,
-    // This uint256 is actually a void pointer.
-    // We can't pass a SelectionParams,
-    // because the implementation of the SelectionParams struct
-    // can vary between different concrete sortition pool implementations.
-    //
-    // Whatever SelectionParams struct is used by the concrete contract
-    // should be created in the `selectGroup`/`selectSetGroup` function,
-    // then coerced into a uint256 to be passed into this function.
-    // The paramsPtr is then passed to the `decideFate` implementation
-    // which can coerce it back into the concrete SelectionParams.
-    // This allows `generalizedSelectGroup`
-    // to work with any desired eligibility logic.
-    uint256 paramsPtr,
-    bool noDuplicates
+    bytes32 seed
   ) internal returns (uint256[] memory) {
     uint256 _root = root;
-    bool rootChanged = false;
 
     DynamicArray.UintArray memory selected;
     selected = DynamicArray.uintArray(groupSize);
@@ -150,59 +135,14 @@ contract AbstractSortitionPool is SortitionTree {
     while (selected.array.length < groupSize) {
       rng.generateNewIndex();
 
-      (
-        uint256 leafPosition,
-        uint256 startingIndex,
-        uint256 leafWeight
-      ) = pickWeightedLeaf(rng.currentMappedIndex, _root);
+      (uint256 leafPosition,,)
+        = pickWeightedLeaf(
+        rng.currentMappedIndex,
+        _root
+      );
 
       uint256 leaf = leaves[leafPosition];
-
-      Fate memory fate = decideFate(leaf, leafWeight, selected, paramsPtr);
-
-      if (fate.decision == Decision.Select) {
-        selected.arrayPush(leaf);
-        if (noDuplicates) {
-          rng.addSkippedInterval(startingIndex, leafWeight);
-        }
-        rng.reseed(seed, selected.array.length);
-        continue;
-      }
-      if (fate.decision == Decision.Skip) {
-        rng.addSkippedInterval(startingIndex, leafWeight);
-        continue;
-      }
-      if (fate.decision == Decision.Delete) {
-        // Update the RNG
-        rng.updateInterval(startingIndex, leafWeight, 0);
-        // Remove the leaf and update root
-        _root = removeLeaf(leafPosition, _root);
-        rootChanged = true;
-        // Remove the record of the operator's leaf and release gas
-        address operator = leaf.operator();
-        removeLeafPositionRecord(operator);
-        continue;
-      }
-      if (fate.decision == Decision.UpdateRetry) {
-        _root = updateTree(leafPosition, fate.maybeWeight, _root);
-        rootChanged = true;
-        rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
-        continue;
-      }
-      if (fate.decision == Decision.UpdateSelect) {
-        _root = updateTree(leafPosition, fate.maybeWeight, _root);
-        rootChanged = true;
-        selected.arrayPush(leaf);
-        rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
-        if (noDuplicates) {
-          rng.addSkippedInterval(startingIndex, fate.maybeWeight);
-        }
-        rng.reseed(seed, selected.array.length);
-        continue;
-      }
-    }
-    if (rootChanged) {
-      root = _root;
+      selected.arrayPush(leaf);
     }
     return selected.array;
   }
@@ -217,11 +157,4 @@ contract AbstractSortitionPool is SortitionTree {
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256);
-
-  function decideFate(
-    uint256 leaf,
-    uint256 leafWeight,
-    DynamicArray.UintArray memory selected,
-    uint256 paramsPtr
-  ) internal view returns (Fate memory);
 }

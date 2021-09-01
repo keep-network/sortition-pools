@@ -51,38 +51,15 @@ contract SortitionPool is AbstractSortitionPool {
     bytes32 seed,
     uint256 minimumStake
   ) public returns (address[] memory) {
-    PoolParams memory params = initializeSelectionParams(minimumStake);
-    require(msg.sender == params.owner, "Only owner may select groups");
-    uint256 paramsPtr;
-    // solium-disable-next-line security/no-inline-assembly
-    assembly {
-      paramsPtr := params
-    }
+    require(msg.sender == poolParams.owner, "Only owner may select groups");
     uint256[] memory selected = generalizedSelectGroup(
-      groupSize,
-      seed,
-      paramsPtr,
-      false
+        groupSize, seed
     );
     address[] memory selectedAddresses = new address[](groupSize);
     for (uint256 i = 0; i < selected.length; i++) {
       selectedAddresses[i] = selected[i].operator();
     }
     return selectedAddresses;
-  }
-
-  function initializeSelectionParams(uint256 currentMinimumStake)
-    internal
-    returns (PoolParams memory params)
-  {
-    params = poolParams;
-
-    if (params.minimumStake != currentMinimumStake) {
-      params.minimumStake = currentMinimumStake;
-      poolParams.minimumStake = currentMinimumStake;
-    }
-
-    return params;
   }
 
   // Return the eligible weight of the operator,
@@ -105,39 +82,5 @@ contract SortitionPool is AbstractSortitionPool {
       return 0;
     }
     return operatorStake / params.poolWeightDivisor;
-  }
-
-  function decideFate(
-    uint256 leaf,
-    uint256 leafWeight,
-    DynamicArray.UintArray memory, // `selected`, for future use
-    uint256 paramsPtr
-  ) internal view returns (Fate memory) {
-    PoolParams memory params;
-    // solium-disable-next-line security/no-inline-assembly
-    assembly {
-      params := paramsPtr
-    }
-    address operator = leaf.operator();
-
-    if (!isLeafInitialized(leaf)) {
-      return Fate(Decision.Skip, 0);
-    }
-
-    address ownerAddress = params.owner;
-
-    uint256 eligibleStake = params.stakingContract.eligibleStake(
-      operator,
-      ownerAddress
-    );
-
-    // Weight = floor(eligibleStake / mimimumStake)
-    // Ethereum uint256 division performs implicit floor
-    uint256 eligibleWeight = eligibleStake / params.poolWeightDivisor;
-
-    if (eligibleWeight < leafWeight || eligibleStake < params.minimumStake) {
-      return Fate(Decision.Delete, 0);
-    }
-    return Fate(Decision.Select, 0);
   }
 }
