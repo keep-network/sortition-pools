@@ -41,8 +41,6 @@ contract("SortitionPool", (accounts) => {
       await pool.joinPool(bob)
       await pool.joinPool(carol)
 
-      await mineBlocks(11)
-
       const group = await pool.selectGroup.call(3, seed, minStake, {
         from: owner,
       })
@@ -58,8 +56,6 @@ contract("SortitionPool", (accounts) => {
       await pool.joinPool(alice)
       await pool.joinPool(bob)
       await pool.joinPool(carol)
-
-      await mineBlocks(11)
 
       try {
         await pool.selectGroup.call(3, seed, minStake, {from: accounts[0]})
@@ -86,8 +82,6 @@ contract("SortitionPool", (accounts) => {
       await staking.setStake(alice, 2000)
       await pool.joinPool(alice)
 
-      await mineBlocks(11)
-
       const group = await pool.selectGroup.call(5, seed, minStake, {
         from: owner,
       })
@@ -103,8 +97,6 @@ contract("SortitionPool", (accounts) => {
 
       await staking.setStake(bob, 1000)
 
-      await mineBlocks(11)
-
       const group = await pool.selectGroup.call(5, seed, minStake, {
         from: owner,
       })
@@ -119,8 +111,6 @@ contract("SortitionPool", (accounts) => {
       await pool.joinPool(bob)
 
       await staking.setStake(bob, 390000)
-
-      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(5, seed, minStake, {
         from: owner,
@@ -156,8 +146,6 @@ contract("SortitionPool", (accounts) => {
         await staking.setStake(address, minStake * i)
         await pool.joinPool(address)
       }
-
-      await mineBlocks(11)
 
       const group = await pool.selectGroup.call(100, seed, minStake, {
         from: owner,
