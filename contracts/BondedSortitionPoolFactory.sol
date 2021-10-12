@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./BondedSortitionPool.sol";
 import "./api/IBonding.sol";

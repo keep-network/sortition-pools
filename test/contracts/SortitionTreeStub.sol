@@ -1,8 +1,12 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import '../../contracts/SortitionTree.sol';
 
 contract SortitionTreeStub is SortitionTree {
+    using Leaf for uint256;
+
     function publicSetLeaf(uint256 position, uint256 leaf) public {
         root = setLeaf(position, leaf, root);
     }

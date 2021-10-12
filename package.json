@@ -41,17 +41,17 @@
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.5",
     "@openzeppelin/test-helpers": "^0.5.4",
+    "bn-chai": "^1.0.1",
+    "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "eslint-config-keep": "github:keep-network/eslint-config-keep#0.3.0",
     "eth-gas-reporter": "^0.1.12",
-    "bn-chai": "^1.0.1",
-    "chai": "^4.2.0",
     "ethlint": "^1.2.5",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.47",
-    "solc": "0.5.17",
+    "solc": "0.8.6",
     "solium": "^1.2.5",
     "solium-config-keep": "github:keep-network/solium-config-keep#0.1.2",
-    "truffle": "^5.1.0"
+    "truffle": "^5.4.14"
   }
 }

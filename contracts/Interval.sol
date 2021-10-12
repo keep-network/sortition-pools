@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./Leaf.sol";
 import "./DynamicArray.sol";
@@ -109,8 +111,6 @@ library Interval {
   /// positive for an added interval.
   /// @param previousLeaves The starting indices and weights
   /// of the previously selected leaves.
-  /// @return The starting indices of the previous leaves
-  /// in a tree with the affected interval updated.
   function remapIndices(
     uint256 affectedStartingIndex,
     int256 weightDiff,

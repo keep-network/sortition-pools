@@ -1,4 +1,7 @@
-pragma solidity 0.5.17;
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 contract StakingContractStub {
     mapping(address => uint256) public stakedTokens;

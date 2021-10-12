@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
@@ -16,12 +18,14 @@ import "./api/IStaking.sol";
 /// would be detrimental to the operator, the operator selection is performed
 /// again with the updated input to ensure correctness.
 contract SortitionPool is AbstractSortitionPool {
+  using Leaf for uint256;
+
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
     uint256 _poolWeightDivisor,
     address _poolOwner
-  ) public {
+  ) {
     poolParams = PoolParams(
       _stakingContract,
       _minimumStake,
@@ -78,7 +82,7 @@ contract SortitionPool is AbstractSortitionPool {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view returns (uint256) {
+  function getEligibleWeight(address operator) internal view override returns (uint256) {
     return queryEligibleWeight(operator, poolParams);
   }
 
@@ -101,7 +105,7 @@ contract SortitionPool is AbstractSortitionPool {
     uint256 leaf,
     DynamicArray.AddressArray memory, // `selected`, for future use
     uint256 paramsPtr
-  ) internal view returns (Fate memory) {
+  ) internal view override returns (Fate memory) {
     PoolParams memory params;
     // solium-disable-next-line security/no-inline-assembly
     assembly {

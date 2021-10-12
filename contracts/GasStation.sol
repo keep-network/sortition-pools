@@ -1,6 +1,8 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
 
-contract GasStation {
+pragma solidity ^0.8.6;
+
+abstract contract GasStation {
   mapping(address => mapping(uint256 => uint256)) gasDeposits;
 
   function depositGas(address addr) internal {
@@ -17,5 +19,5 @@ contract GasStation {
     }
   }
 
-  function gasDepositSize() internal pure returns (uint256);
+  function gasDepositSize() internal pure virtual returns (uint256);
 }

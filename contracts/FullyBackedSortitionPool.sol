@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./AbstractSortitionPool.sol";
 import "./RNG.sol";
@@ -29,6 +31,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
   using RNG for RNG.State;
+  using Leaf for uint256;
   // The pool should specify a reasonable minimum bond
   // for operators trying to join the pool,
   // to prevent griefing by operators joining without enough bondable value.
@@ -65,7 +68,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 _initialMinimumBondableValue,
     uint256 _bondWeightDivisor,
     address _poolOwner
-  ) public {
+  ) {
     require(_bondWeightDivisor > 0, "Weight divisor must be nonzero");
 
     poolParams = PoolParams(
@@ -136,7 +139,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   }
 
   function initializeSelectionParams(uint256 bondValue)
-    internal
+    internal view
     returns (PoolParams memory params)
   {
     params = poolParams;
@@ -151,7 +154,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view returns (uint256) {
+  function getEligibleWeight(address operator) internal view override returns (uint256) {
     // Check if the operator has been banned.
     if (bannedOperators[operator]) {
       return 0;
@@ -192,7 +195,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 leaf,
     DynamicArray.AddressArray memory, // `selected`, for future use
     uint256 paramsPtr
-  ) internal view returns (Fate memory) {
+  ) internal view override returns (Fate memory) {
     PoolParams memory params;
     // solium-disable-next-line security/no-inline-assembly
     assembly {

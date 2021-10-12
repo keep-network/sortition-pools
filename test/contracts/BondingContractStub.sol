@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "../../contracts/api/IBonding.sol";
 
@@ -13,7 +15,7 @@ contract BondingContractStub is IBonding {
     address operator,
     address, // bondCreator,
     address // additionalAuthorizedContract
-  ) external view returns (uint256) {
+  ) external view override returns (uint256) {
     return unbondedValue[operator];
   }
 }

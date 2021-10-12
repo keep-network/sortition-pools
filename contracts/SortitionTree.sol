@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./StackLib.sol";
 import "./Branch.sol";
@@ -50,7 +52,7 @@ contract SortitionTree {
   // between 0 and the rightmost occupied leaf
   uint256[] emptyLeaves;
 
-  constructor() public {
+  constructor() {
     root = 0;
     rightmostLeaf = 0;
   }

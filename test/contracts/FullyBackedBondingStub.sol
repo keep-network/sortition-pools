@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "../../contracts/api/IFullyBackedBonding.sol";
 import "./BondingContractStub.sol";
@@ -13,7 +15,7 @@ contract FullyBackedBondingStub is IFullyBackedBonding, BondingContractStub {
   function isInitialized(
     address operator,
     address // bondCreator
-  ) public view returns (bool) {
+  ) public view override returns (bool) {
     return initialized[operator];
   }
 }

@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import "./GasStation.sol";
 import "./RNG.sol";
@@ -10,8 +12,9 @@ import "./api/IStaking.sol";
 /// @notice Abstract contract encapsulating common logic of all sortition pools.
 /// @dev Inheriting implementations are expected to implement getEligibleWeight
 /// function.
-contract AbstractSortitionPool is SortitionTree, GasStation {
+abstract contract AbstractSortitionPool is SortitionTree, GasStation {
   using Leaf for uint256;
+  using Branch for uint256;
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
@@ -220,15 +223,15 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view returns (uint256);
+  function getEligibleWeight(address operator) internal view virtual returns (uint256);
 
   function decideFate(
     uint256 leaf,
     DynamicArray.AddressArray memory selected,
     uint256 paramsPtr
-  ) internal view returns (Fate memory);
+  ) internal view virtual returns (Fate memory);
 
-  function gasDepositSize() internal pure returns (uint256) {
+  function gasDepositSize() internal pure override returns (uint256) {
     return GAS_DEPOSIT_SIZE;
   }
 }

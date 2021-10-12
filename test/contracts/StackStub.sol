@@ -1,7 +1,11 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 import '../../contracts/SortitionTree.sol';
 contract StackStub is SortitionTree {
+    using StackLib for uint256[];
+
     uint256[] stack;
 
     function stackPush(uint256 _element) public {

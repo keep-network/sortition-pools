@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.6;
 
 library StackLib {
   function stackPeek(uint256[] storage _array) internal view returns (uint256) {
@@ -13,7 +15,7 @@ library StackLib {
   function stackPop(uint256[] storage _array) internal returns (uint256) {
     require(_array.length > 0, "No value to pop, array is empty");
     uint256 value = _array[_array.length - 1];
-    _array.length -= 1;
+    _array.pop();
     return value;
   }
 
