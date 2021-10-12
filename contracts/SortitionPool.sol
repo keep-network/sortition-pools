@@ -58,7 +58,7 @@ contract SortitionPool is AbstractSortitionPool {
     PoolParams memory params = initializeSelectionParams(minimumStake);
     require(msg.sender == params.owner, "Only owner may select groups");
     uint256 paramsPtr;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       paramsPtr := params
     }
@@ -82,7 +82,12 @@ contract SortitionPool is AbstractSortitionPool {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view override returns (uint256) {
+  function getEligibleWeight(address operator)
+    internal
+    view
+    override
+    returns (uint256)
+  {
     return queryEligibleWeight(operator, poolParams);
   }
 
@@ -107,7 +112,7 @@ contract SortitionPool is AbstractSortitionPool {
     uint256 paramsPtr
   ) internal view override returns (Fate memory) {
     PoolParams memory params;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       params := paramsPtr
     }

@@ -7,11 +7,11 @@ const BN = web3.utils.BN
 const utils = require("./utils")
 
 const DEPLOY = [
-  {name: "StackLib", contract: StackLib},
-  {name: "Branch", contract: Branch},
-  {name: "Position", contract: Position},
-  {name: "Leaf", contract: Leaf},
-  {name: "StackStub", contract: StackStub},
+  { name: "StackLib", contract: StackLib },
+  { name: "Branch", contract: Branch },
+  { name: "Position", contract: Position },
+  { name: "Leaf", contract: Leaf },
+  { name: "StackStub", contract: StackStub },
 ]
 
 contract("Stack", (accounts) => {

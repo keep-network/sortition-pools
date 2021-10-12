@@ -19,8 +19,8 @@
     "lint:fix": "npm run lint:fix:js && npm run lint:fix:sol",
     "lint:js": "eslint ${npm_package_config_eslintPaths}",
     "lint:fix:js": "eslint --fix ${npm_package_config_eslintPaths}",
-    "lint:sol": "solium -d contracts/ && prettier --list-different **/*.sol",
-    "lint:fix:sol": "solium -d contracts/ --fix && prettier --write **/*.sol"
+    "lint:sol": "solhint 'contracts/**/*.sol' && prettier --list-different **/*.sol",
+    "lint:fix:sol": "solhint 'contracts/**/*.sol' --fix && prettier --write **/*.sol"
   },
   "config": {
     "eslintPaths": "test/ migrations/"
@@ -50,8 +50,8 @@
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.47",
     "solc": "0.8.6",
-    "solium": "^1.2.5",
-    "solium-config-keep": "github:keep-network/solium-config-keep#0.1.2",
+    "solhint": "^3.3.6",
+    "solhint-config-keep": "github:keep-network/solhint-config-keep",
     "truffle": "^5.4.14"
   }
 }

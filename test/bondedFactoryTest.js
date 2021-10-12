@@ -23,13 +23,14 @@ contract("BondedSortitionPoolFactory", (accounts) => {
 
   describe("createSortitionPool()", async () => {
     it("creates independent pools", async () => {
-      const pool1Address = await bondedSortitionPoolFactory.createSortitionPool.call(
-        stakingContract.address,
-        bondingContract.address,
-        minimumStake,
-        initialMinimumBond,
-        poolWeightDivisor,
-      )
+      const pool1Address =
+        await bondedSortitionPoolFactory.createSortitionPool.call(
+          stakingContract.address,
+          bondingContract.address,
+          minimumStake,
+          initialMinimumBond,
+          poolWeightDivisor,
+        )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,
@@ -39,13 +40,14 @@ contract("BondedSortitionPoolFactory", (accounts) => {
       )
       const pool1 = await BondedSortitionPool.at(pool1Address)
 
-      const pool2Address = await bondedSortitionPoolFactory.createSortitionPool.call(
-        stakingContract.address,
-        bondingContract.address,
-        minimumStake,
-        initialMinimumBond,
-        poolWeightDivisor,
-      )
+      const pool2Address =
+        await bondedSortitionPoolFactory.createSortitionPool.call(
+          stakingContract.address,
+          bondingContract.address,
+          minimumStake,
+          initialMinimumBond,
+          poolWeightDivisor,
+        )
       await bondedSortitionPoolFactory.createSortitionPool(
         stakingContract.address,
         bondingContract.address,

@@ -6,9 +6,9 @@ const FullyBackedSortitionPool = artifacts.require("FullyBackedSortitionPool")
 
 const FullyBackedBondingStub = artifacts.require("FullyBackedBondingStub")
 
-const {mineBlocks} = require("./mineBlocks")
+const { mineBlocks } = require("./mineBlocks")
 
-const {expectRevert} = require("@openzeppelin/test-helpers")
+const { expectRevert } = require("@openzeppelin/test-helpers")
 
 const BN = web3.utils.BN
 
@@ -100,7 +100,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       await mineBlocks(operatorInitBlocks.addn(1))
 
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
 
       expectRevert(
         pool.isOperatorInitialized(alice),
@@ -124,14 +124,14 @@ contract("FullyBackedSortitionPool", (accounts) => {
       group = await pool.selectSetGroup.call(3, seed, minimumBondableValue, {
         from: owner,
       })
-      await pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner })
       assert.equal(group.length, 3)
       assert.isFalse(hasDuplicates(group))
 
       group = await pool.selectSetGroup.call(5, seed, minimumBondableValue, {
         from: owner,
       })
-      await pool.selectSetGroup(5, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(5, seed, minimumBondableValue, { from: owner })
       assert.equal(group.length, 5)
       assert.isFalse(hasDuplicates(group))
     })
@@ -151,7 +151,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
         bond.muln(3).div(weightDivisor),
       )
 
-      await pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner })
 
       expect(await pool.getPoolWeight(alice)).to.eq.BN(
         bond.sub(minimumBondableValue).div(weightDivisor),
@@ -172,14 +172,14 @@ contract("FullyBackedSortitionPool", (accounts) => {
       await mineBlocks(operatorInitBlocks.addn(1))
 
       await expectRevert(
-        pool.selectSetGroup(3, seed, minimumBondableValue, {from: alice}),
+        pool.selectSetGroup(3, seed, minimumBondableValue, { from: alice }),
         "Caller is not the owner",
       )
     })
 
     it("reverts when there are no operators in pool", async () => {
       await expectRevert(
-        pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner}),
+        pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner }),
         "Not enough operators in pool",
       )
     })
@@ -191,7 +191,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       await mineBlocks(operatorInitBlocks.addn(1))
 
       await expectRevert(
-        pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner}),
+        pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner }),
         "Not enough operators in pool",
       )
     })
@@ -205,14 +205,14 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       // Initialization period not passed.
       await expectRevert(
-        pool.selectSetGroup(2, seed, minimumBondableValue, {from: owner}),
+        pool.selectSetGroup(2, seed, minimumBondableValue, { from: owner }),
         "Not enough operators in pool",
       )
 
       // Initialization period passed.
       await mineBlocks(operatorInitBlocks.addn(1))
 
-      await pool.selectSetGroup(2, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(2, seed, minimumBondableValue, { from: owner })
 
       // Register third operator.
       await prepareOperator(carol, bond)
@@ -224,14 +224,14 @@ contract("FullyBackedSortitionPool", (accounts) => {
       )
 
       await expectRevert(
-        pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner}),
+        pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner }),
         "Not enough operators in pool",
         "unexpected result for the third group selection",
       )
 
       await mineBlocks(operatorInitBlocks.addn(1))
 
-      await pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner })
     })
 
     it("reverts when operator gets banned in the sortition pool", async () => {
@@ -245,10 +245,10 @@ contract("FullyBackedSortitionPool", (accounts) => {
       // Initialization period passed.
       await mineBlocks(operatorInitBlocks.addn(1))
 
-      await pool.selectSetGroup(2, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(2, seed, minimumBondableValue, { from: owner })
 
       // Ban an operator.
-      await pool.ban(carol, {from: owner})
+      await pool.ban(carol, { from: owner })
 
       assert.equal(
         await pool.operatorsInPool(),
@@ -257,7 +257,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       )
 
       await expectRevert(
-        pool.selectSetGroup(3, seed, minimumBondableValue, {from: owner}),
+        pool.selectSetGroup(3, seed, minimumBondableValue, { from: owner }),
         "Not enough operators in pool",
       )
     })
@@ -276,7 +276,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       assert.equal(await pool.operatorsInPool(), 4)
 
       // should select group and remove carol
-      await pool.selectSetGroup(3, seed, bond, {from: owner})
+      await pool.selectSetGroup(3, seed, bond, { from: owner })
 
       assert.equal(await pool.operatorsInPool(), 3) // carol removed
 
@@ -302,7 +302,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       assert.equal(await pool.operatorsInPool(), 4)
 
       // should select group and skip bob (do not remove it!)
-      await pool.selectSetGroup(3, seed, bond, {from: owner})
+      await pool.selectSetGroup(3, seed, bond, { from: owner })
 
       // all 4 operators still in the pool
       assert.equal(await pool.operatorsInPool(), 4)
@@ -340,7 +340,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
       group = await pool.selectSetGroup.call(4, seed, minimumBondableValue, {
         from: owner,
       })
-      await pool.selectSetGroup(4, seed, minimumBondableValue, {from: owner})
+      await pool.selectSetGroup(4, seed, minimumBondableValue, { from: owner })
       assert.equal(group.length, 4)
       assert.isFalse(hasDuplicates(group))
 
@@ -372,16 +372,16 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
     it("can only be called by the owner", async () => {
       await expectRevert(
-        pool.setMinimumBondableValue(1, {from: accounts[0]}),
+        pool.setMinimumBondableValue(1, { from: accounts[0] }),
         "Only owner may update minimum bond value",
       )
     })
 
     it("updates the minimum bondable value", async () => {
-      await pool.setMinimumBondableValue(1, {from: owner})
+      await pool.setMinimumBondableValue(1, { from: owner })
       expect(await pool.getMinimumBondableValue()).to.eq.BN(1)
 
-      await pool.setMinimumBondableValue(6, {from: owner})
+      await pool.setMinimumBondableValue(6, { from: owner })
       expect(await pool.getMinimumBondableValue()).to.eq.BN(6)
     })
   })
@@ -425,7 +425,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
     })
 
     it("fails for banned operator", async () => {
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
 
       await bonding.setBondableValue(alice, minimumBondableValue)
       await bonding.setInitialized(alice, true)
@@ -438,7 +438,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
     it("adds operator to banned operators", async () => {
       expect(await pool.bannedOperators(alice)).to.be.false
 
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
 
       expect(await pool.bannedOperators(alice)).to.be.true
     })
@@ -446,8 +446,8 @@ contract("FullyBackedSortitionPool", (accounts) => {
     it("does not revert when called multiple times", async () => {
       expect(await pool.bannedOperators(alice)).to.be.false
 
-      await pool.ban(alice, {from: owner})
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
+      await pool.ban(alice, { from: owner })
 
       expect(await pool.bannedOperators(alice)).to.be.true
     })
@@ -455,7 +455,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
     it("does not revert when operator is not registered", async () => {
       expect(await pool.isOperatorRegistered(alice)).to.be.false
 
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
     })
 
     it("removes operator from the pool", async () => {
@@ -465,7 +465,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
 
       expect(await pool.isOperatorRegistered(alice)).to.be.true
 
-      await pool.ban(alice, {from: owner})
+      await pool.ban(alice, { from: owner })
 
       expect(await pool.isOperatorRegistered(alice)).to.be.false
       expect(await pool.isOperatorInPool(alice)).to.be.false

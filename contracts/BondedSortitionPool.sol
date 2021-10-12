@@ -90,7 +90,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     );
     require(msg.sender == params.owner, "Only owner may select groups");
     uint256 paramsPtr;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       paramsPtr := params
     }
@@ -139,7 +139,12 @@ contract BondedSortitionPool is AbstractSortitionPool {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view override returns (uint256) {
+  function getEligibleWeight(address operator)
+    internal
+    view
+    override
+    returns (uint256)
+  {
     address ownerAddress = poolParams.owner;
     // Get the amount of bondable value available for this pool.
     // We only care that this covers one single bond
@@ -176,7 +181,7 @@ contract BondedSortitionPool is AbstractSortitionPool {
     uint256 paramsPtr
   ) internal view override returns (Fate memory) {
     PoolParams memory params;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       params := paramsPtr
     }

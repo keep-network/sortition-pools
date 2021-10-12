@@ -4,8 +4,8 @@ const IntervalStub = artifacts.require("IntervalStub.sol")
 const utils = require("./utils")
 
 const DEPLOY = [
-  {name: "Interval", contract: Interval},
-  {name: "IntervalStub", contract: IntervalStub},
+  { name: "Interval", contract: Interval },
+  { name: "IntervalStub", contract: IntervalStub },
 ]
 
 contract("Interval", (accounts) => {

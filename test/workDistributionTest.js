@@ -13,7 +13,7 @@ const StakingContractStub = artifacts.require("StakingContractStub.sol")
 const BondingContractStub = artifacts.require("BondingContractStub.sol")
 const FullyBackedBondingStub = artifacts.require("FullyBackedBondingStub.sol")
 
-const {mineBlocks} = require("./mineBlocks")
+const { mineBlocks } = require("./mineBlocks")
 
 const initialSeed =
   "0xe1df17bc605ccc488fc59e3a69f8101a36094a4d250dd48b5d730c50d6dfdc74"
@@ -163,7 +163,7 @@ contract("BondedSortitionPool", (accounts) => {
         seed,
         minimumStake,
         minimumBondableValue,
-        {from: owner},
+        { from: owner },
       )
       allSelections = allSelections.concat(group)
       seed = web3.utils.soliditySha3(seed)
@@ -323,7 +323,7 @@ contract("FullyBackedSortitionPool", (accounts) => {
         groupSize,
         seed,
         minimumBondableValue,
-        {from: owner},
+        { from: owner },
       )
       allSelections = allSelections.concat(group)
       seed = web3.utils.soliditySha3(seed)

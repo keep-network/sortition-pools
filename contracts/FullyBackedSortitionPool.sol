@@ -94,11 +94,11 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 groupSize,
     bytes32 seed,
     uint256 bondValue
-  ) public onlyOwner() returns (address[] memory) {
+  ) public onlyOwner returns (address[] memory) {
     PoolParams memory params = initializeSelectionParams(bondValue);
 
     uint256 paramsPtr;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       paramsPtr := params
     }
@@ -130,7 +130,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   /// operators list. If the operator is already registered in the pool it gets
   /// removed. Only onwer of the pool can call this function.
   /// @param operator An operator address.
-  function ban(address operator) public onlyOwner() {
+  function ban(address operator) public onlyOwner {
     bannedOperators[operator] = true;
 
     if (isOperatorRegistered(operator)) {
@@ -139,7 +139,8 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   }
 
   function initializeSelectionParams(uint256 bondValue)
-    internal view
+    internal
+    view
     returns (PoolParams memory params)
   {
     params = poolParams;
@@ -154,7 +155,12 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view override returns (uint256) {
+  function getEligibleWeight(address operator)
+    internal
+    view
+    override
+    returns (uint256)
+  {
     // Check if the operator has been banned.
     if (bannedOperators[operator]) {
       return 0;
@@ -197,7 +203,7 @@ contract FullyBackedSortitionPool is AbstractSortitionPool {
     uint256 paramsPtr
   ) internal view override returns (Fate memory) {
     PoolParams memory params;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       params := paramsPtr
     }

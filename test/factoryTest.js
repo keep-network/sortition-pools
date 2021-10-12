@@ -4,7 +4,7 @@ const SortitionPoolFactory = artifacts.require(
 const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
 const StakingContractStub = artifacts.require("StakingContractStub.sol")
 
-const {mineBlocks} = require("./mineBlocks")
+const { mineBlocks } = require("./mineBlocks")
 
 contract("SortitionPoolFactory", (accounts) => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"

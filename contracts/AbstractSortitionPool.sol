@@ -223,7 +223,11 @@ abstract contract AbstractSortitionPool is SortitionTree, GasStation {
   // Return the eligible weight of the operator,
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view virtual returns (uint256);
+  function getEligibleWeight(address operator)
+    internal
+    view
+    virtual
+    returns (uint256);
 
   function decideFate(
     uint256 leaf,
