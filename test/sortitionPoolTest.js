@@ -1,6 +1,5 @@
 const Branch = artifacts.require("Branch")
 const Position = artifacts.require("Position")
-const StackLib = artifacts.require("StackLib")
 const Leaf = artifacts.require("Leaf")
 const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
 const StakingContractStub = artifacts.require("StakingContractStub.sol")
@@ -21,7 +20,6 @@ contract("SortitionPool", (accounts) => {
   beforeEach(async () => {
     SortitionPool.link(Branch)
     SortitionPool.link(Position)
-    SortitionPool.link(StackLib)
     SortitionPool.link(Leaf)
     staking = await StakingContractStub.new()
     pool = await SortitionPool.new(

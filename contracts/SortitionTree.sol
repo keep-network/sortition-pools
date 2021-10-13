@@ -1,12 +1,10 @@
 pragma solidity 0.5.17;
 
-import "./StackLib.sol";
 import "./Branch.sol";
 import "./Position.sol";
 import "./Leaf.sol";
 
 contract SortitionTree {
-  using StackLib for uint256[];
   using Branch for uint256;
   using Position for uint256;
   using Leaf for uint256;
@@ -90,7 +88,7 @@ contract SortitionTree {
     uint256 nPossiblyUsedLeaves = rightmostLeaf;
     // Get the number of empty leaves
     // not accounted for by the `rightmostLeaf`
-    uint256 nEmptyLeaves = emptyLeaves.getSize();
+    uint256 nEmptyLeaves = emptyLeaves.length;
 
     return (nPossiblyUsedLeaves - nEmptyLeaves);
   }
@@ -180,7 +178,7 @@ contract SortitionTree {
     if (isRightmost) {
       rightmostLeaf = rightmostSubOne;
     } else {
-      emptyLeaves.stackPush(position);
+      emptyLeaves.push(position);
     }
     return newRoot;
   }
@@ -266,13 +264,11 @@ contract SortitionTree {
       rightmostLeaf = rLeaf + 1;
       return rLeaf;
     } else {
-      bool emptyLeavesInStack = leavesInStack();
-      require(emptyLeavesInStack, "Pool is full");
-      return emptyLeaves.stackPop();
+      uint256 emptyLeafCount = emptyLeaves.length;
+      require(emptyLeafCount > 0, "Pool is full");
+      uint256 emptyLeaf = emptyLeaves[emptyLeafCount - 1];
+      emptyLeaves.pop();
+      return emptyLeaf;
     }
-  }
-
-  function leavesInStack() internal view returns (bool) {
-    return emptyLeaves.getSize() > 0;
   }
 }

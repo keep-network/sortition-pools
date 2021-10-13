@@ -1,4 +1,3 @@
-const StackLib = artifacts.require("StackLib")
 const Branch = artifacts.require("Branch")
 const Position = artifacts.require("Position")
 const Leaf = artifacts.require("Leaf")
@@ -12,7 +11,6 @@ contract("SortitionTree", (accounts) => {
   const bob = accounts[1]
 
   before(async () => {
-    SortitionTreeStub.link(StackLib)
     SortitionTreeStub.link(Branch)
     SortitionTreeStub.link(Position)
     SortitionTreeStub.link(Leaf)

@@ -17,11 +17,6 @@ class SortitionPoolsDeployer {
       await this.deployer.deploy(this.libs.Position)
     }
 
-    if (!this.libs.StackLib) {
-      this.libs.StackLib = this.artifacts.require("StackLib")
-      await this.deployer.deploy(this.libs.StackLib)
-    }
-
     if (!this.libs.Leaf) {
       this.libs.Leaf = this.artifacts.require("Leaf")
       await this.deployer.link(this.libs.Branch, this.libs.Leaf)
@@ -37,7 +32,6 @@ class SortitionPoolsDeployer {
     // Sortition Pool Factory
     await this.deployer.link(this.libs.Branch, SortitionPoolFactory)
     await this.deployer.link(this.libs.Position, SortitionPoolFactory)
-    await this.deployer.link(this.libs.StackLib, SortitionPoolFactory)
     await this.deployer.link(this.libs.Leaf, SortitionPoolFactory)
     await this.deployer.deploy(SortitionPoolFactory)
   }
