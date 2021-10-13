@@ -92,11 +92,14 @@ contract BondedSortitionPool is AbstractSortitionPool {
       paramsPtr := params
     }
     uint256[] memory selected = generalizedSelectGroup(
-        groupSize, seed, paramsPtr, true
+      groupSize,
+      seed,
+      paramsPtr,
+      true
     );
     address[] memory selectedAddresses = new address[](groupSize);
     for (uint256 i = 0; i < selected.length; i++) {
-        selectedAddresses[i] = selected[i].operator();
+      selectedAddresses[i] = selected[i].operator();
     }
     return selectedAddresses;
   }

@@ -153,11 +153,11 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     while (selected.array.length < groupSize) {
       rng.generateNewIndex();
 
-      (uint256 leafPosition, uint256 startingIndex, uint256 leafWeight)
-        = pickWeightedLeaf(
-        rng.currentMappedIndex,
-        _root
-      );
+      (
+        uint256 leafPosition,
+        uint256 startingIndex,
+        uint256 leafWeight
+      ) = pickWeightedLeaf(rng.currentMappedIndex, _root);
 
       uint256 leaf = leaves[leafPosition];
 

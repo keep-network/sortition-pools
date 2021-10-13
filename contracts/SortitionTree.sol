@@ -67,13 +67,13 @@ contract SortitionTree {
   // Return the ID number of the given operator address.
   // An ID number of 0 means the operator has not been allocated an ID number yet.
   function getOperatorID(address operator) public view returns (uint256) {
-      return operatorID[operator];
+    return operatorID[operator];
   }
 
   // Get the operator address corresponding to the given ID number.
   // An empty address means the ID number has not been allocated yet.
   function getIDOperator(uint256 id) public view returns (address) {
-      return idAddress.length > id ? idAddress[id] : address(0);
+    return idAddress.length > id ? idAddress[id] : address(0);
   }
 
   // checks if operator is already registered in the pool
@@ -102,10 +102,10 @@ contract SortitionTree {
   // Give the operator a new ID number
   // Does not check if the operator already has an ID number
   function allocateOperatorID(address operator) internal returns (uint256) {
-      uint256 id = idAddress.length;
-      operatorID[operator] = id;
-      idAddress.push(operator);
-      return id;
+    uint256 id = idAddress.length;
+    operatorID[operator] = id;
+    idAddress.push(operator);
+    return id;
   }
 
   function insertOperator(address operator, uint256 weight) internal {
@@ -115,7 +115,9 @@ contract SortitionTree {
     );
 
     uint256 id = getOperatorID(operator);
-    if (id == 0) {id = allocateOperatorID(operator);}
+    if (id == 0) {
+      id = allocateOperatorID(operator);
+    }
 
     uint256 position = getEmptyLeafPosition();
     // Record the block the operator was inserted in
@@ -160,10 +162,10 @@ contract SortitionTree {
   }
 
   function getLeafWeight(uint256 position) internal view returns (uint256) {
-      uint256 slot = position.slot();
-      uint256 parent = position.parent();
-      uint256 node = branches[LEVELS][parent];
-      return node.getSlot(slot);
+    uint256 slot = position.slot();
+    uint256 parent = position.parent();
+    uint256 node = branches[LEVELS][parent];
+    return node.getSlot(slot);
   }
 
   function removeLeaf(uint256 position, uint256 _root)
@@ -184,9 +186,9 @@ contract SortitionTree {
   }
 
   function updateLeaf(
-      uint256 position,
-      uint256 weight,
-      uint256 _root
+    uint256 position,
+    uint256 weight,
+    uint256 _root
   ) internal returns (uint256) {
     if (getLeafWeight(position) != weight) {
       return updateTree(position, weight, _root);
@@ -202,7 +204,7 @@ contract SortitionTree {
     // set leaf
     leaves[position] = theLeaf;
 
-    return(updateTree(position, leafWeight, _root));
+    return (updateTree(position, leafWeight, _root));
   }
 
   function updateTree(
@@ -234,7 +236,11 @@ contract SortitionTree {
   function pickWeightedLeaf(uint256 index, uint256 _root)
     internal
     view
-    returns (uint256 leafPosition, uint256 leafFirstIndex, uint256 leafWeight)
+    returns (
+      uint256 leafPosition,
+      uint256 leafFirstIndex,
+      uint256 leafWeight
+    )
   {
     uint256 currentIndex = index;
     uint256 currentNode = _root;
