@@ -66,14 +66,7 @@ contract SortitionPool is AbstractSortitionPool {
   // which may differ from the weight in the pool.
   // Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256) {
-    return queryEligibleWeight(operator, poolParams);
-  }
-
-  function queryEligibleWeight(address operator, PoolParams memory params)
-    internal
-    view
-    returns (uint256)
-  {
+    PoolParams memory params = poolParams;
     uint256 operatorStake = params.stakingContract.eligibleStake(
       operator,
       params.owner
