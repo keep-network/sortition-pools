@@ -123,18 +123,18 @@ contract SortitionPool is SortitionTree {
     uint256 currentIndex;
 
     while (selected.array.length < groupSize) {
-        (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
+      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
 
-        uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
+      uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
-        uint256 leaf = leaves[leafPosition];
-        selected.arrayPush(leaf);
+      uint256 leaf = leaves[leafPosition];
+      selected.arrayPush(leaf);
     }
 
     address[] memory selectedAddresses = new address[](groupSize);
 
     for (uint256 i = 0; i < groupSize; i++) {
-        selectedAddresses[i] = selected.array[i].operator();
+      selectedAddresses[i] = selected.array[i].operator();
     }
     return selectedAddresses;
   }
