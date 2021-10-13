@@ -71,7 +71,7 @@ contract AbstractSortitionPool is SortitionTree {
   function generalizedSelectGroup(
     uint256 groupSize,
     bytes32 seed
-  ) internal returns (uint256[] memory) {
+  ) internal view returns (uint256[] memory) {
     uint256 _root = root;
 
     DynamicArray.UintArray memory selected;

@@ -50,7 +50,7 @@ contract SortitionPool is AbstractSortitionPool {
     uint256 groupSize,
     bytes32 seed,
     uint256 minimumStake
-  ) public returns (address[] memory) {
+  ) public view returns (address[] memory) {
     require(msg.sender == poolParams.owner, "Only owner may select groups");
     uint256[] memory selected = generalizedSelectGroup(
         groupSize, seed
