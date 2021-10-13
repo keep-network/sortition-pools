@@ -92,7 +92,7 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
       return 0;
     } else {
       uint256 leafPosition = flaggedPosition.unsetFlag();
-      uint256 leafWeight = leaves[leafPosition].weight();
+      uint256 leafWeight = getLeafWeight(leafPosition);
       return leafWeight;
     }
   }
@@ -140,12 +140,12 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     // to work with any desired eligibility logic.
     uint256 paramsPtr,
     bool noDuplicates
-  ) internal returns (address[] memory) {
+  ) internal returns (uint256[] memory) {
     uint256 _root = root;
     bool rootChanged = false;
 
-    DynamicArray.AddressArray memory selected;
-    selected = DynamicArray.addressArray(groupSize);
+    DynamicArray.UintArray memory selected;
+    selected = DynamicArray.uintArray(groupSize);
 
     RNG.State memory rng;
     rng = RNG.initialize(seed, _root.sumWeight(), groupSize);
@@ -153,19 +153,18 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
     while (selected.array.length < groupSize) {
       rng.generateNewIndex();
 
-      (uint256 leafPosition, uint256 startingIndex) = pickWeightedLeaf(
-        rng.currentMappedIndex,
-        _root
-      );
+      (
+        uint256 leafPosition,
+        uint256 startingIndex,
+        uint256 leafWeight
+      ) = pickWeightedLeaf(rng.currentMappedIndex, _root);
 
       uint256 leaf = leaves[leafPosition];
-      address operator = leaf.operator();
-      uint256 leafWeight = leaf.weight();
 
-      Fate memory fate = decideFate(leaf, selected, paramsPtr);
+      Fate memory fate = decideFate(leaf, leafWeight, selected, paramsPtr);
 
       if (fate.decision == Decision.Select) {
-        selected.arrayPush(operator);
+        selected.arrayPush(leaf);
         if (noDuplicates) {
           rng.addSkippedInterval(startingIndex, leafWeight);
         }
@@ -183,20 +182,21 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
         _root = removeLeaf(leafPosition, _root);
         rootChanged = true;
         // Remove the record of the operator's leaf and release gas
+        address operator = leaf.operator();
         removeLeafPositionRecord(operator);
         releaseGas(operator);
         continue;
       }
       if (fate.decision == Decision.UpdateRetry) {
-        _root = setLeaf(leafPosition, leaf.setWeight(fate.maybeWeight), _root);
+        _root = updateTree(leafPosition, fate.maybeWeight, _root);
         rootChanged = true;
         rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
         continue;
       }
       if (fate.decision == Decision.UpdateSelect) {
-        _root = setLeaf(leafPosition, leaf.setWeight(fate.maybeWeight), _root);
+        _root = updateTree(leafPosition, fate.maybeWeight, _root);
         rootChanged = true;
-        selected.arrayPush(operator);
+        selected.arrayPush(leaf);
         rng.updateInterval(startingIndex, leafWeight, fate.maybeWeight);
         if (noDuplicates) {
           rng.addSkippedInterval(startingIndex, fate.maybeWeight);
@@ -224,7 +224,8 @@ contract AbstractSortitionPool is SortitionTree, GasStation {
 
   function decideFate(
     uint256 leaf,
-    DynamicArray.AddressArray memory selected,
+    uint256 leafWeight,
+    DynamicArray.UintArray memory selected,
     uint256 paramsPtr
   ) internal view returns (Fate memory);
 

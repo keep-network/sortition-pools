@@ -58,7 +58,17 @@ contract SortitionPool is AbstractSortitionPool {
     assembly {
       paramsPtr := params
     }
-    return generalizedSelectGroup(groupSize, seed, paramsPtr, false);
+    uint256[] memory selected = generalizedSelectGroup(
+      groupSize,
+      seed,
+      paramsPtr,
+      false
+    );
+    address[] memory selectedAddresses = new address[](groupSize);
+    for (uint256 i = 0; i < selected.length; i++) {
+      selectedAddresses[i] = selected[i].operator();
+    }
+    return selectedAddresses;
   }
 
   function initializeSelectionParams(uint256 currentMinimumStake)
@@ -99,7 +109,8 @@ contract SortitionPool is AbstractSortitionPool {
 
   function decideFate(
     uint256 leaf,
-    DynamicArray.AddressArray memory, // `selected`, for future use
+    uint256 leafWeight,
+    DynamicArray.UintArray memory, // `selected`, for future use
     uint256 paramsPtr
   ) internal view returns (Fate memory) {
     PoolParams memory params;
@@ -108,7 +119,6 @@ contract SortitionPool is AbstractSortitionPool {
       params := paramsPtr
     }
     address operator = leaf.operator();
-    uint256 leafWeight = leaf.weight();
 
     if (!isLeafInitialized(leaf)) {
       return Fate(Decision.Skip, 0);

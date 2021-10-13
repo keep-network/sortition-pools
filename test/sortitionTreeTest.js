@@ -30,12 +30,12 @@ contract("SortitionTree", (accounts) => {
       const position2 = parseInt("01234567", 8)
 
       const leaf1 = await sortition.toLeaf.call(alice, weight1)
-      await sortition.publicSetLeaf(position1, leaf1)
+      await sortition.publicSetLeaf(position1, leaf1, weight1)
       const res1 = await sortition.getRoot.call()
       assert.equal(toHex(res1), "0x1234")
 
       const leaf2 = await sortition.toLeaf.call(bob, weight2)
-      await sortition.publicSetLeaf(position2, leaf2)
+      await sortition.publicSetLeaf(position2, leaf2, weight2)
       const res2 = await sortition.getRoot.call()
       assert.equal(toHex(res2), "0x1100001234")
     })
@@ -49,10 +49,10 @@ contract("SortitionTree", (accounts) => {
       const position2 = parseInt("01234567", 8)
 
       const leaf1 = await sortition.toLeaf.call(alice, weight1)
-      await sortition.publicSetLeaf(position1, leaf1)
+      await sortition.publicSetLeaf(position1, leaf1, weight1)
 
       const leaf2 = await sortition.toLeaf.call(bob, weight2)
-      await sortition.publicSetLeaf(position2, leaf2)
+      await sortition.publicSetLeaf(position2, leaf2, weight2)
       await sortition.publicRemoveLeaf(position1)
 
       const root = await sortition.getRoot.call()
@@ -88,6 +88,20 @@ contract("SortitionTree", (accounts) => {
 
       assert.fail("Expected throw not received")
     })
+
+    it("allocates operator IDs", async () => {
+      await sortition.publicInsertOperator(alice, weightA)
+
+      const aliceID = await sortition.getOperatorID.call(alice)
+      const bobID = await sortition.getOperatorID.call(bob)
+
+      assert.equal(aliceID, 1)
+      assert.equal(bobID, 0)
+
+      const aliceAddress = await sortition.getIDOperator.call(1)
+
+      assert.equal(aliceAddress, alice)
+    })
   })
 
   describe("removeOperator()", async () => {
@@ -114,6 +128,15 @@ contract("SortitionTree", (accounts) => {
       }
 
       assert.fail("Expected throw not received")
+    })
+
+    it("does not remove ID numbers", async () => {
+      await sortition.publicInsertOperator(alice, 0x1234)
+      await sortition.publicRemoveOperator(alice)
+
+      const aliceID = await sortition.getOperatorID.call(alice)
+
+      assert.equal(aliceID, 1)
     })
   })
 

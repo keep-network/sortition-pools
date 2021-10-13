@@ -3,12 +3,12 @@ pragma solidity 0.5.17;
 import '../../contracts/SortitionTree.sol';
 
 contract SortitionTreeStub is SortitionTree {
-    function publicSetLeaf(uint256 position, uint256 leaf) public {
-        root = setLeaf(position, leaf, root);
+    function publicSetLeaf(uint256 position, uint256 leaf, uint256 weight) public {
+        root = setLeaf(position, leaf, weight, root);
     }
 
     function publicUpdateLeaf(uint256 position, uint256 weight) public {
-        updateLeaf(position, weight);
+        root = updateLeaf(position, weight, root);
     }
 
     function publicRemoveLeaf(uint256 position) public {
@@ -44,7 +44,7 @@ contract SortitionTreeStub is SortitionTree {
     }
 
     function publicPickWeightedLeaf(uint256 index) public view returns (uint256) {
-        (uint256 leafPosition, ) = pickWeightedLeaf(
+        (uint256 leafPosition,,) = pickWeightedLeaf(
             index,
             root
         );

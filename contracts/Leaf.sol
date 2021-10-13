@@ -15,10 +15,10 @@ library Leaf {
   uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
   uint256 constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
 
-  uint256 constant WEIGHT_WIDTH = SLOT_WIDTH;
-  uint256 constant WEIGHT_MAX = SLOT_MAX;
+  uint256 constant ID_WIDTH = SLOT_WIDTH;
+  uint256 constant ID_MAX = SLOT_MAX;
 
-  uint256 constant BLOCKHEIGHT_WIDTH = 96 - WEIGHT_WIDTH;
+  uint256 constant BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
   uint256 constant BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
 
   ////////////////////////////////////////////////////////////////////////////
@@ -26,20 +26,20 @@ library Leaf {
   function make(
     address _operator,
     uint256 _creationBlock,
-    uint256 _weight
+    uint256 _id
   ) internal pure returns (uint256) {
     // Converting a bytesX type into a larger type
     // adds zero bytes on the right.
     uint256 op = uint256(bytes32(bytes20(_operator)));
-    // Bitwise AND the weight to erase
+    // Bitwise AND the id to erase
     // all but the 32 least significant bits
-    uint256 wt = _weight & WEIGHT_MAX;
+    uint256 id = _id & ID_MAX;
     // Erase all but the 64 least significant bits,
-    // then shift left by 32 bits to make room for the weight
-    uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << WEIGHT_WIDTH;
+    // then shift left by 32 bits to make room for the id
+    uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << ID_WIDTH;
     // Bitwise OR them all together to get
-    // [address operator || uint64 creationBlock || uint32 weight]
-    return (op | cb | wt);
+    // [address operator || uint64 creationBlock || uint32 id]
+    return (op | cb | id);
   }
 
   function operator(uint256 leaf) internal pure returns (address) {
@@ -50,20 +50,12 @@ library Leaf {
 
   /// @notice Return the block number the leaf was created in.
   function creationBlock(uint256 leaf) internal pure returns (uint256) {
-    return ((leaf >> WEIGHT_WIDTH) & BLOCKHEIGHT_MAX);
+    return ((leaf >> ID_WIDTH) & BLOCKHEIGHT_MAX);
   }
 
-  function weight(uint256 leaf) internal pure returns (uint256) {
-    // Weight is stored in the 32 least significant bits.
+  function id(uint256 leaf) internal pure returns (uint256) {
+    // Id is stored in the 32 least significant bits.
     // Bitwise AND ensures that we only get the contents of those bits.
-    return (leaf & WEIGHT_MAX);
-  }
-
-  function setWeight(uint256 leaf, uint256 newWeight)
-    internal
-    pure
-    returns (uint256)
-  {
-    return ((leaf & ~WEIGHT_MAX) | (newWeight & WEIGHT_MAX));
+    return (leaf & ID_MAX);
   }
 }

@@ -60,6 +60,10 @@ library Interval {
     return (op & (~(START_INDEX_MAX << WEIGHT_WIDTH))) | shiftedIndex;
   }
 
+  function weight(uint256 a) internal pure returns (uint256) {
+    return (a & WEIGHT_MAX);
+  }
+
   function insert(DynamicArray.UintArray memory intervals, uint256 interval)
     internal
     pure
@@ -91,7 +95,7 @@ library Interval {
       if (mappedIndex >= index(interval)) {
         // Add the weight of this previous leaf to the index,
         // ensuring that we skip the leaf.
-        mappedIndex += Leaf.weight(interval);
+        mappedIndex += weight(interval);
       } else {
         break;
       }
