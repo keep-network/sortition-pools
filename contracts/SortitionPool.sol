@@ -28,6 +28,7 @@ contract SortitionPool is AbstractSortitionPool {
       _poolWeightDivisor,
       _poolOwner
     );
+    
   }
 
   struct PoolParams {
