@@ -15,6 +15,7 @@ library RNG {
   // Derived constants, do not touch
   uint256 constant SLOT_COUNT = 2**SLOT_BITS;
   uint256 constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
+
   ////////////////////////////////////////////////////////////////////////////
 
   /// @notice Calculate how many bits are required

@@ -45,7 +45,7 @@ contract SortitionPool is SortitionTree {
 
   PoolParams poolParams;
 
-    // Return whether the operator is eligible for the pool.
+  // Return whether the operator is eligible for the pool.
   function isOperatorEligible(address operator) public view returns (bool) {
     return getEligibleWeight(operator) > 0;
   }
