@@ -1,21 +1,20 @@
 pragma solidity 0.5.17;
 
-import "./AbstractSortitionPool.sol";
+import "./DynamicArray.sol";
 import "./RNG.sol";
+import "./SortitionTree.sol";
 import "./api/IStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-/// @dev Keeping pool up to date cannot be done eagerly as proliferation of
-/// privileged customers could be used to perform DOS attacks by increasing the
-/// cost of such updates. When a sortition pool prospectively selects an
-/// operator, the selected operator’s eligibility status and weight needs to be
-/// checked and, if necessary, updated in the sortition pool. If the changes
-/// would be detrimental to the operator, the operator selection is performed
-/// again with the updated input to ensure correctness.
-contract SortitionPool is AbstractSortitionPool {
+contract SortitionPool is SortitionTree {
+  using Leaf for uint256;
+  using Position for uint256;
+  using DynamicArray for DynamicArray.UintArray;
+  using DynamicArray for DynamicArray.AddressArray;
+
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
@@ -39,6 +38,59 @@ contract SortitionPool is AbstractSortitionPool {
 
   PoolParams poolParams;
 
+  /// @notice Return whether the operator is eligible for the pool.
+  function isOperatorEligible(address operator) public view returns (bool) {
+    return getEligibleWeight(operator) > 0;
+  }
+
+  /// @notice Return whether the operator is present in the pool.
+  function isOperatorInPool(address operator) public view returns (bool) {
+    return getFlaggedLeafPosition(operator) != 0;
+  }
+
+  /// @notice Return whether the operator's weight in the pool
+  /// matches their eligible weight.
+  function isOperatorUpToDate(address operator) public view returns (bool) {
+    return getEligibleWeight(operator) == getPoolWeight(operator);
+  }
+
+  /// @notice Return the weight of the operator in the pool,
+  /// which may or may not be out of date.
+  function getPoolWeight(address operator) public view returns (uint256) {
+    uint256 flaggedPosition = getFlaggedLeafPosition(operator);
+    if (flaggedPosition == 0) {
+      return 0;
+    } else {
+      uint256 leafPosition = flaggedPosition.unsetFlag();
+      uint256 leafWeight = getLeafWeight(leafPosition);
+      return leafWeight;
+    }
+  }
+
+  /// @notice Add an operator to the pool,
+  /// reverting if the operator is already present.
+  function joinPool(address operator) public {
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    require(eligibleWeight > 0, "Operator not eligible");
+
+    insertOperator(operator, eligibleWeight);
+  }
+
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible.
+  function updateOperatorStatus(address operator) public {
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    uint256 inPoolWeight = getPoolWeight(operator);
+
+    require(eligibleWeight != inPoolWeight, "Operator already up to date");
+
+    if (eligibleWeight == 0) {
+      removeOperator(operator);
+    } else {
+      updateOperator(operator, eligibleWeight);
+    }
+  }
+
   /// @notice Selects a new group of operators of the provided size based on
   /// the provided pseudo-random seed. At least one operator has to be
   /// registered in the pool, otherwise the function fails reverting the
@@ -50,53 +102,41 @@ contract SortitionPool is AbstractSortitionPool {
     uint256 groupSize,
     bytes32 seed,
     uint256 minimumStake
-  ) public returns (address[] memory) {
-    PoolParams memory params = initializeSelectionParams(minimumStake);
-    require(msg.sender == params.owner, "Only owner may select groups");
-    uint256 paramsPtr;
-    // solium-disable-next-line security/no-inline-assembly
-    assembly {
-      paramsPtr := params
+  ) public view returns (address[] memory) {
+    require(msg.sender == poolParams.owner, "Only owner may select groups");
+
+    uint256 _root = root;
+
+    DynamicArray.UintArray memory selected;
+    selected = DynamicArray.uintArray(groupSize);
+
+    bytes32 rngState = seed;
+    uint256 rngRange = _root.sumWeight();
+    require(rngRange > 0, "Not enough operators in pool");
+    uint256 currentIndex;
+
+    while (selected.array.length < groupSize) {
+      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
+
+      uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
+
+      uint256 leaf = leaves[leafPosition];
+      selected.arrayPush(leaf);
     }
-    uint256[] memory selected = generalizedSelectGroup(
-      groupSize,
-      seed,
-      paramsPtr,
-      false
-    );
+
     address[] memory selectedAddresses = new address[](groupSize);
-    for (uint256 i = 0; i < selected.length; i++) {
-      selectedAddresses[i] = selected[i].operator();
+
+    for (uint256 i = 0; i < groupSize; i++) {
+      selectedAddresses[i] = selected.array[i].operator();
     }
     return selectedAddresses;
   }
 
-  function initializeSelectionParams(uint256 currentMinimumStake)
-    internal
-    returns (PoolParams memory params)
-  {
-    params = poolParams;
-
-    if (params.minimumStake != currentMinimumStake) {
-      params.minimumStake = currentMinimumStake;
-      poolParams.minimumStake = currentMinimumStake;
-    }
-
-    return params;
-  }
-
-  // Return the eligible weight of the operator,
-  // which may differ from the weight in the pool.
-  // Return 0 if ineligible.
+  /// @notice Return the eligible weight of the operator,
+  /// which may differ from the weight in the pool.
+  /// Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256) {
-    return queryEligibleWeight(operator, poolParams);
-  }
-
-  function queryEligibleWeight(address operator, PoolParams memory params)
-    internal
-    view
-    returns (uint256)
-  {
+    PoolParams memory params = poolParams;
     uint256 operatorStake = params.stakingContract.eligibleStake(
       operator,
       params.owner
@@ -105,39 +145,5 @@ contract SortitionPool is AbstractSortitionPool {
       return 0;
     }
     return operatorStake / params.poolWeightDivisor;
-  }
-
-  function decideFate(
-    uint256 leaf,
-    uint256 leafWeight,
-    DynamicArray.UintArray memory, // `selected`, for future use
-    uint256 paramsPtr
-  ) internal view returns (Fate memory) {
-    PoolParams memory params;
-    // solium-disable-next-line security/no-inline-assembly
-    assembly {
-      params := paramsPtr
-    }
-    address operator = leaf.operator();
-
-    if (!isLeafInitialized(leaf)) {
-      return Fate(Decision.Skip, 0);
-    }
-
-    address ownerAddress = params.owner;
-
-    uint256 eligibleStake = params.stakingContract.eligibleStake(
-      operator,
-      ownerAddress
-    );
-
-    // Weight = floor(eligibleStake / mimimumStake)
-    // Ethereum uint256 division performs implicit floor
-    uint256 eligibleWeight = eligibleStake / params.poolWeightDivisor;
-
-    if (eligibleWeight < leafWeight || eligibleStake < params.minimumStake) {
-      return Fate(Decision.Delete, 0);
-    }
-    return Fate(Decision.Select, 0);
   }
 }
