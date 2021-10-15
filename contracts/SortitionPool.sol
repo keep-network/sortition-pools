@@ -45,24 +45,24 @@ contract SortitionPool is SortitionTree {
 
   PoolParams poolParams;
 
-    // Return whether the operator is eligible for the pool.
+  /// @notice Return whether the operator is eligible for the pool.
   function isOperatorEligible(address operator) public view returns (bool) {
     return getEligibleWeight(operator) > 0;
   }
 
-  // Return whether the operator is present in the pool.
+  /// @notice Return whether the operator is present in the pool.
   function isOperatorInPool(address operator) public view returns (bool) {
     return getFlaggedLeafPosition(operator) != 0;
   }
 
-  // Return whether the operator's weight in the pool
-  // matches their eligible weight.
+  /// @notice Return whether the operator's weight in the pool
+  /// matches their eligible weight.
   function isOperatorUpToDate(address operator) public view returns (bool) {
     return getEligibleWeight(operator) == getPoolWeight(operator);
   }
 
-  // Return the weight of the operator in the pool,
-  // which may or may not be out of date.
+  /// @notice Return the weight of the operator in the pool,
+  /// which may or may not be out of date.
   function getPoolWeight(address operator) public view returns (uint256) {
     uint256 flaggedPosition = getFlaggedLeafPosition(operator);
     if (flaggedPosition == 0) {
@@ -74,8 +74,8 @@ contract SortitionPool is SortitionTree {
     }
   }
 
-  // Add an operator to the pool,
-  // reverting if the operator is already present.
+  /// @notice Add an operator to the pool,
+  /// reverting if the operator is already present.
   function joinPool(address operator) public {
     uint256 eligibleWeight = getEligibleWeight(operator);
     require(eligibleWeight > 0, "Operator not eligible");
@@ -83,8 +83,8 @@ contract SortitionPool is SortitionTree {
     insertOperator(operator, eligibleWeight);
   }
 
-  // Update the operator's weight if present and eligible,
-  // or remove from the pool if present and ineligible.
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible.
   function updateOperatorStatus(address operator) public {
     uint256 eligibleWeight = getEligibleWeight(operator);
     uint256 inPoolWeight = getPoolWeight(operator);
@@ -139,9 +139,9 @@ contract SortitionPool is SortitionTree {
     return selectedAddresses;
   }
 
-  // Return the eligible weight of the operator,
-  // which may differ from the weight in the pool.
-  // Return 0 if ineligible.
+  /// @notice Return the eligible weight of the operator,
+  /// which may differ from the weight in the pool.
+  /// Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256) {
     PoolParams memory params = poolParams;
     uint256 operatorStake = params.stakingContract.eligibleStake(
