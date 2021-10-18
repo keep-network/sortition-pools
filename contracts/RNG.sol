@@ -72,6 +72,10 @@ library RNG {
   /// @return uint The smallest number of bits
   /// that can contain the number `range-1`.
   function bitsRequired(uint256 range) internal pure returns (uint256) {
+    if (range == 1) {
+      return 0;
+    }
+
     uint256 bits = WEIGHT_WIDTH - 1;
 
     // Left shift by `bits`,
