@@ -4,8 +4,8 @@ const utils = require("./utils")
 const params = require("./params")
 
 const DEPLOY = [
-  {name: "Position", contract: Position},
-  {name: "PositionStub", contract: PositionStub},
+  { name: "Position", contract: Position },
+  { name: "PositionStub", contract: PositionStub },
 ]
 
 contract("Position", (accounts) => {
@@ -46,7 +46,7 @@ contract("Position", (accounts) => {
     it("Returns the child address", async () => {
       const result = await positionInstance.child.call(
         parentPosition,
-        childPosition,
+        childPosition
       )
       assert.equal(result, fullPosition)
     })

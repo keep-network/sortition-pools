@@ -6,8 +6,8 @@ const toNum = web3.utils.hexToNumber
 const utils = require("./utils")
 
 const DEPLOY = [
-  {name: "RNG", contract: RNG},
-  {name: "RNGStub", contract: RNGStub},
+  { name: "RNG", contract: RNG },
+  { name: "RNGStub", contract: RNGStub },
 ]
 
 contract("RNG", () => {

@@ -79,7 +79,7 @@ contract("SortitionTree", (accounts) => {
       } catch (error) {
         assert.include(
           error.message,
-          "Operator is already registered in the pool",
+          "Operator is already registered in the pool"
         )
         return
       }

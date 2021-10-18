@@ -1,10 +1,10 @@
 const SortitionPoolFactory = artifacts.require(
-  "./contracts/SortitionPoolFactory.sol",
+  "./contracts/SortitionPoolFactory.sol"
 )
 const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
 const StakingContractStub = artifacts.require("StakingContractStub.sol")
 
-const {mineBlocks} = require("./mineBlocks")
+const { mineBlocks } = require("./mineBlocks")
 
 contract("SortitionPoolFactory", (accounts) => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"
@@ -25,24 +25,24 @@ contract("SortitionPoolFactory", (accounts) => {
       const sortitionPool1Address = await factory.createSortitionPool.call(
         staking.address,
         minStake,
-        poolWeightDivisor,
+        poolWeightDivisor
       )
       await factory.createSortitionPool(
         staking.address,
         minStake,
-        poolWeightDivisor,
+        poolWeightDivisor
       )
       const sortitionPool1 = await SortitionPool.at(sortitionPool1Address)
 
       const sortitionPool2Address = await factory.createSortitionPool.call(
         staking.address,
         minStake,
-        poolWeightDivisor,
+        poolWeightDivisor
       )
       await factory.createSortitionPool(
         staking.address,
         minStake,
-        poolWeightDivisor,
+        poolWeightDivisor
       )
       const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
