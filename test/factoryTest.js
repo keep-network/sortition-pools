@@ -54,10 +54,10 @@ contract("SortitionPoolFactory", (accounts) => {
 
       await mineBlocks(11)
 
-      const group1 = await sortitionPool1.selectGroup.call(2, seed, minStake)
+      const group1 = await sortitionPool1.selectGroup.call(2, seed)
       assert.deepEqual(group1, [alice, alice])
 
-      const group2 = await sortitionPool2.selectGroup.call(2, seed, minStake)
+      const group2 = await sortitionPool2.selectGroup.call(2, seed)
       assert.deepEqual(group2, [bob, bob])
     })
   })

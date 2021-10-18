@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 /// @notice The implicit 8-ary trees of the sortition pool
 /// rely on packing 8 "slots" of 32-bit values into each uint256.

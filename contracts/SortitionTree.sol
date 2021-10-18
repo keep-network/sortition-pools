@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./Branch.sol";
 import "./Position.sol";
@@ -56,10 +56,10 @@ contract SortitionTree {
   // The ID number 0 is initialized with a zero address and is not used.
   address[] idAddress;
 
-  constructor() public {
+  constructor() {
     root = 0;
     rightmostLeaf = 0;
-    idAddress.length = 1;
+    idAddress.push();
   }
 
   // Return the ID number of the given operator address.
@@ -190,6 +190,8 @@ contract SortitionTree {
   ) internal returns (uint256) {
     if (getLeafWeight(position) != weight) {
       return updateTree(position, weight, _root);
+    } else {
+      return _root;
     }
   }
 

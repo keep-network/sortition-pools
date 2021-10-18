@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./DynamicArray.sol";
 import "./RNG.sol";
@@ -10,6 +10,7 @@ import "./api/IStaking.sol";
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
 contract SortitionPool is SortitionTree {
+  using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
@@ -20,7 +21,7 @@ contract SortitionPool is SortitionTree {
     uint256 _minimumStake,
     uint256 _poolWeightDivisor,
     address _poolOwner
-  ) public {
+  ) {
     poolParams = PoolParams(
       _stakingContract,
       _minimumStake,
@@ -100,8 +101,7 @@ contract SortitionPool is SortitionTree {
   /// @return selected Members of the selected group
   function selectGroup(
     uint256 groupSize,
-    bytes32 seed,
-    uint256 minimumStake
+    bytes32 seed
   ) public view returns (address[] memory) {
     require(msg.sender == poolParams.owner, "Only owner may select groups");
 

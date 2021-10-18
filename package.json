@@ -49,7 +49,7 @@
     "ethlint": "^1.2.5",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.47",
-    "solc": "0.5.17",
+    "solc": "0.8.6",
     "solhint": "^3.3.6",
     "solhint-config-keep": "github:keep-network/solhint-config-keep",
     "truffle": "^5.4.14"

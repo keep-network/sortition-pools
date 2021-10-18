@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 library Leaf {
   ////////////////////////////////////////////////////////////////////////////
@@ -33,13 +33,13 @@ library Leaf {
     uint256 op = uint256(bytes32(bytes20(_operator)));
     // Bitwise AND the id to erase
     // all but the 32 least significant bits
-    uint256 id = _id & ID_MAX;
+    uint256 uid = _id & ID_MAX;
     // Erase all but the 64 least significant bits,
     // then shift left by 32 bits to make room for the id
     uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << ID_WIDTH;
     // Bitwise OR them all together to get
     // [address operator || uint64 creationBlock || uint32 id]
-    return (op | cb | id);
+    return (op | cb | uid);
   }
 
   function operator(uint256 leaf) internal pure returns (address) {

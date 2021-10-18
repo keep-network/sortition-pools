@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 library DynamicArray {
   // The in-memory dynamic Array is implemented
@@ -255,7 +255,7 @@ library DynamicArray {
     // and the contents of the array after it,
     // so we add 1 to the length to account for this.
     uint256 inMemorySize = (length + 1) * 0x20;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       // Get some free memory
       array := mload(0x40)
@@ -278,7 +278,7 @@ library DynamicArray {
     returns (address[] memory array)
   {
     uint256 inMemorySize = (length + 1) * 0x20;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       array := mload(0x40)
       mstore(array, 0)
@@ -291,7 +291,7 @@ library DynamicArray {
   /// into an empty initialized array
   /// with sufficient free memory available.
   function _copy(uint256[] memory dest, uint256[] memory src) private pure {
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       let length := mload(src)
       let byteLength := mul(length, 0x20)
@@ -327,7 +327,7 @@ library DynamicArray {
   }
 
   function _copy(address[] memory dest, address[] memory src) private pure {
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       let length := mload(src)
       let byteLength := mul(length, 0x20)
@@ -349,7 +349,7 @@ library DynamicArray {
   /// @notice Unsafe function to push past the limit of an array.
   /// Only use with preallocated free memory.
   function _push(uint256[] memory array, uint256 item) private pure {
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       // Get array length
       let length := mload(array)
@@ -368,7 +368,7 @@ library DynamicArray {
   }
 
   function _push(address[] memory array, address item) private pure {
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       let length := mload(array)
       let newLength := add(length, 1)
@@ -381,7 +381,7 @@ library DynamicArray {
 
   function _pop(uint256[] memory array) private pure returns (uint256 item) {
     uint256 length = array.length;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       // Calculate the memory position of the last element
       let lastPosition := add(array, mul(length, 0x20))
@@ -395,7 +395,7 @@ library DynamicArray {
 
   function _pop(address[] memory array) private pure returns (address item) {
     uint256 length = array.length;
-    // solium-disable-next-line security/no-inline-assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       let lastPosition := add(array, mul(length, 0x20))
       item := mload(lastPosition)
