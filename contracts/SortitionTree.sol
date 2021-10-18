@@ -151,21 +151,6 @@ contract SortitionTree {
     flaggedLeafPosition[operator] = 0;
   }
 
-  function getFlaggedLeafPosition(address operator)
-    internal
-    view
-    returns (uint256)
-  {
-    return flaggedLeafPosition[operator];
-  }
-
-  function getLeafWeight(uint256 position) internal view returns (uint256) {
-    uint256 slot = position.slot();
-    uint256 parent = position.parent();
-    uint256 node = branches[LEVELS][parent];
-    return node.getSlot(slot);
-  }
-
   function removeLeaf(uint256 position, uint256 _root)
     internal
     returns (uint256)
@@ -233,32 +218,6 @@ contract SortitionTree {
     return _root.setSlot(childSlot, nodeWeight);
   }
 
-  function pickWeightedLeaf(uint256 index, uint256 _root)
-    internal
-    view
-    returns (uint256 leafPosition)
-  {
-    uint256 currentIndex = index;
-    uint256 currentNode = _root;
-    uint256 currentPosition = 0;
-    uint256 currentSlot;
-
-    require(index < currentNode.sumWeight(), "Index exceeds weight");
-
-    // get root slot
-    (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
-
-    // get slots from levels 2 to 7
-    for (uint256 level = 2; level <= LEVELS; level++) {
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = branches[level][currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
-    }
-
-    // get leaf position
-    leafPosition = currentPosition.child(currentSlot);
-  }
-
   function getEmptyLeafPosition() internal returns (uint256) {
     uint256 rLeaf = rightmostLeaf;
     bool spaceOnRight = (rLeaf + 1) < POOL_CAPACITY;
@@ -272,5 +231,46 @@ contract SortitionTree {
       emptyLeaves.pop();
       return emptyLeaf;
     }
+  }
+
+  function getFlaggedLeafPosition(address operator)
+      internal
+      view
+      returns (uint256)
+  {
+      return flaggedLeafPosition[operator];
+  }
+
+  function getLeafWeight(uint256 position) internal view returns (uint256) {
+      uint256 slot = position.slot();
+      uint256 parent = position.parent();
+      uint256 node = branches[LEVELS][parent];
+      return node.getSlot(slot);
+  }
+
+  function pickWeightedLeaf(uint256 index, uint256 _root)
+      internal
+      view
+      returns (uint256 leafPosition)
+  {
+      uint256 currentIndex = index;
+      uint256 currentNode = _root;
+      uint256 currentPosition = 0;
+      uint256 currentSlot;
+
+      require(index < currentNode.sumWeight(), "Index exceeds weight");
+
+      // get root slot
+      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+
+      // get slots from levels 2 to 7
+      for (uint256 level = 2; level <= LEVELS; level++) {
+          currentPosition = currentPosition.child(currentSlot);
+          currentNode = branches[level][currentPosition];
+          (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+      }
+
+      // get leaf position
+      leafPosition = currentPosition.child(currentSlot);
   }
 }

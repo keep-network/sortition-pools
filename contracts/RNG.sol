@@ -18,41 +18,6 @@ library RNG {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  /// @notice Calculate how many bits are required
-  /// for an index in the range `[0 .. range-1]`.
-  ///
-  /// @param range The upper bound of the desired range, exclusive.
-  ///
-  /// @return uint The smallest number of bits
-  /// that can contain the number `range-1`.
-  function bitsRequired(uint256 range) internal pure returns (uint256) {
-    uint256 bits = WEIGHT_WIDTH - 1;
-
-    // Left shift by `bits`,
-    // so we have a 1 in the (bits + 1)th least significant bit
-    // and 0 in other bits.
-    // If this number is equal or greater than `range`,
-    // the range [0, range-1] fits in `bits` bits.
-    //
-    // Because we loop from high bits to low bits,
-    // we find the highest number of bits that doesn't fit the range,
-    // and return that number + 1.
-    while (1 << bits >= range) {
-      bits--;
-    }
-
-    return bits + 1;
-  }
-
-  /// @notice Truncate `input` to the `bits` least significant bits.
-  function truncate(uint256 bits, uint256 input)
-    internal
-    pure
-    returns (uint256)
-  {
-    return input & ((1 << bits) - 1);
-  }
-
   /// @notice Get an index in the range `[0 .. range-1]`
   /// and the new state of the RNG,
   /// using the provided `state` of the RNG.
@@ -97,5 +62,40 @@ library RNG {
       }
     }
     return (index, newState);
+  }
+
+  /// @notice Calculate how many bits are required
+  /// for an index in the range `[0 .. range-1]`.
+  ///
+  /// @param range The upper bound of the desired range, exclusive.
+  ///
+  /// @return uint The smallest number of bits
+  /// that can contain the number `range-1`.
+  function bitsRequired(uint256 range) internal pure returns (uint256) {
+    uint256 bits = WEIGHT_WIDTH - 1;
+
+    // Left shift by `bits`,
+    // so we have a 1 in the (bits + 1)th least significant bit
+    // and 0 in other bits.
+    // If this number is equal or greater than `range`,
+    // the range [0, range-1] fits in `bits` bits.
+    //
+    // Because we loop from high bits to low bits,
+    // we find the highest number of bits that doesn't fit the range,
+    // and return that number + 1.
+    while (1 << bits >= range) {
+      bits--;
+    }
+
+    return bits + 1;
+  }
+
+  /// @notice Truncate `input` to the `bits` least significant bits.
+  function truncate(uint256 bits, uint256 input)
+    internal
+    pure
+    returns (uint256)
+  {
+    return input & ((1 << bits) - 1);
   }
 }

@@ -16,6 +16,15 @@ contract SortitionPool is SortitionTree {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
+  struct PoolParams {
+      IStaking stakingContract;
+      uint256 minimumStake;
+      uint256 poolWeightDivisor;
+      address owner;
+  }
+
+  PoolParams poolParams;
+
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
@@ -29,15 +38,6 @@ contract SortitionPool is SortitionTree {
       _poolOwner
     );
   }
-
-  struct PoolParams {
-    IStaking stakingContract;
-    uint256 minimumStake;
-    uint256 poolWeightDivisor;
-    address owner;
-  }
-
-  PoolParams poolParams;
 
   /// @notice Return whether the operator is eligible for the pool.
   function isOperatorEligible(address operator) public view returns (bool) {
