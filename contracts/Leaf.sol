@@ -6,20 +6,20 @@ library Leaf {
 
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 constant SLOT_BITS = 3;
+  uint256 constant private SLOT_BITS = 3;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
+  uint256 constant private SLOT_COUNT = 2**SLOT_BITS;
+  uint256 constant private SLOT_WIDTH = 256 / SLOT_COUNT;
+  uint256 constant private SLOT_MAX = (2**SLOT_WIDTH) - 1;
 
-  uint256 constant ID_WIDTH = SLOT_WIDTH;
-  uint256 constant ID_MAX = SLOT_MAX;
+  uint256 constant private ID_WIDTH = SLOT_WIDTH;
+  uint256 constant private ID_MAX = SLOT_MAX;
 
-  uint256 constant BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
-  uint256 constant BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
+  uint256 constant private BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
+  uint256 constant private BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
 
   ////////////////////////////////////////////////////////////////////////////
 

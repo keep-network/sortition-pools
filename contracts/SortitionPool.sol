@@ -23,7 +23,7 @@ contract SortitionPool is SortitionTree {
       address owner;
   }
 
-  PoolParams poolParams;
+  PoolParams internal poolParams;
 
   constructor(
     IStaking _stakingContract,
@@ -37,6 +37,30 @@ contract SortitionPool is SortitionTree {
       _poolWeightDivisor,
       _poolOwner
     );
+  }
+
+  /// @notice Add an operator to the pool,
+  /// reverting if the operator is already present.
+  function joinPool(address operator) public {
+      uint256 eligibleWeight = getEligibleWeight(operator);
+      require(eligibleWeight > 0, "Operator not eligible");
+
+      insertOperator(operator, eligibleWeight);
+  }
+
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible.
+  function updateOperatorStatus(address operator) public {
+      uint256 eligibleWeight = getEligibleWeight(operator);
+      uint256 inPoolWeight = getPoolWeight(operator);
+
+      require(eligibleWeight != inPoolWeight, "Operator already up to date");
+
+      if (eligibleWeight == 0) {
+          removeOperator(operator);
+      } else {
+          updateOperator(operator, eligibleWeight);
+      }
   }
 
   /// @notice Return whether the operator is eligible for the pool.
@@ -65,30 +89,6 @@ contract SortitionPool is SortitionTree {
       uint256 leafPosition = flaggedPosition.unsetFlag();
       uint256 leafWeight = getLeafWeight(leafPosition);
       return leafWeight;
-    }
-  }
-
-  /// @notice Add an operator to the pool,
-  /// reverting if the operator is already present.
-  function joinPool(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    require(eligibleWeight > 0, "Operator not eligible");
-
-    insertOperator(operator, eligibleWeight);
-  }
-
-  /// @notice Update the operator's weight if present and eligible,
-  /// or remove from the pool if present and ineligible.
-  function updateOperatorStatus(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    uint256 inPoolWeight = getPoolWeight(operator);
-
-    require(eligibleWeight != inPoolWeight, "Operator already up to date");
-
-    if (eligibleWeight == 0) {
-      removeOperator(operator);
-    } else {
-      updateOperator(operator, eligibleWeight);
     }
   }
 
