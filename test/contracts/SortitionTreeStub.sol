@@ -7,6 +7,9 @@ contract SortitionTreeStub is SortitionTree {
 
     function publicSetLeaf(uint256 position, uint256 leaf, uint256 weight) public {
         root = setLeaf(position, leaf, weight, root);
+        if (rightmostLeaf <= position) {
+            rightmostLeaf = position + 1;
+        }
     }
 
     function publicUpdateLeaf(uint256 position, uint256 weight) public {
