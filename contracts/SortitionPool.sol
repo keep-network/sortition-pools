@@ -111,15 +111,19 @@ contract SortitionPool is SortitionTree {
     DynamicArray.UintArray memory selected;
     selected = DynamicArray.uintArray(groupSize);
 
-    bytes32 rngState = seed;
     uint256 rngRange = _root.sumWeight();
     require(rngRange > 0, "Not enough operators in pool");
+
+    RNG.State memory rngState = RNG.State(
+      uint256(seed),
+      uint256(uint160(address(this)))
+    );
+
+    uint256 trunc = RNG._trunc(rngRange);
+
     uint256 currentIndex;
-
-    uint256 bits = RNG.bitsRequired(rngRange);
-
     while (selected.array.length < groupSize) {
-      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState, bits);
+      currentIndex = RNG._getIndex(rngState, rngRange, trunc);
 
       uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 

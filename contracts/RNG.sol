@@ -3,6 +3,10 @@ pragma solidity 0.8.6;
 import "./Leaf.sol";
 
 library RNG {
+  struct State {
+    uint256 seed;
+    uint256 salt;
+  }
   ////////////////////////////////////////////////////////////////////////////
   // Parameters for configuration
 
@@ -61,6 +65,30 @@ library RNG {
       }
     }
     return (index, newState);
+  }
+
+  function _getIndex(
+    State memory state,
+    uint256 range,
+    uint256 trunc
+  ) internal view returns (uint256) {
+    uint256 index = 0;
+    while (true) {
+      index = state.seed & trunc;
+      // solhint-disable-next-line no-inline-assembly
+      assembly {
+        mstore(state, keccak256(state, 64))
+      }
+      if (index < range) {
+        return index;
+      }
+    }
+  }
+
+  function _trunc(uint256 range) internal pure returns (uint256) {
+    unchecked {
+      return (1 << bitsRequired(range)) - 1;
+    }
   }
 
   /// @notice Calculate how many bits are required
