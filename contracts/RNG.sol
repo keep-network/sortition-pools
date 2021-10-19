@@ -72,26 +72,28 @@ library RNG {
   /// @return uint The smallest number of bits
   /// that can contain the number `range-1`.
   function bitsRequired(uint256 range) internal pure returns (uint256) {
-    if (range == 1) {
-      return 0;
+    unchecked {
+      if (range == 1) {
+        return 0;
+      }
+
+      uint256 bits = WEIGHT_WIDTH - 1;
+
+      // Left shift by `bits`,
+      // so we have a 1 in the (bits + 1)th least significant bit
+      // and 0 in other bits.
+      // If this number is equal or greater than `range`,
+      // the range [0, range-1] fits in `bits` bits.
+      //
+      // Because we loop from high bits to low bits,
+      // we find the highest number of bits that doesn't fit the range,
+      // and return that number + 1.
+      while (1 << bits >= range) {
+        bits--;
+      }
+
+      return bits + 1;
     }
-
-    uint256 bits = WEIGHT_WIDTH - 1;
-
-    // Left shift by `bits`,
-    // so we have a 1 in the (bits + 1)th least significant bit
-    // and 0 in other bits.
-    // If this number is equal or greater than `range`,
-    // the range [0, range-1] fits in `bits` bits.
-    //
-    // Because we loop from high bits to low bits,
-    // we find the highest number of bits that doesn't fit the range,
-    // and return that number + 1.
-    while (1 << bits >= range) {
-      bits--;
-    }
-
-    return bits + 1;
   }
 
   /// @notice Truncate `input` to the `bits` least significant bits.
@@ -100,6 +102,8 @@ library RNG {
     pure
     returns (uint256)
   {
-    return input & ((1 << bits) - 1);
+    unchecked {
+      return input & ((1 << bits) - 1);
+    }
   }
 }
