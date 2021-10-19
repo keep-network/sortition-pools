@@ -6,13 +6,13 @@ library Position {
 
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 constant private SLOT_BITS = 3;
+  uint256 private constant SLOT_BITS = 3;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant private SLOT_POINTER_MAX = (2**SLOT_BITS) - 1;
-  uint256 constant private LEAF_FLAG = 1 << 255;
+  uint256 private constant SLOT_POINTER_MAX = (2**SLOT_BITS) - 1;
+  uint256 private constant LEAF_FLAG = 1 << 255;
 
   ////////////////////////////////////////////////////////////////////////////
 

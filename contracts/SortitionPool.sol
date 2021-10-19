@@ -17,10 +17,10 @@ contract SortitionPool is SortitionTree {
   using DynamicArray for DynamicArray.AddressArray;
 
   struct PoolParams {
-      IStaking stakingContract;
-      uint256 minimumStake;
-      uint256 poolWeightDivisor;
-      address owner;
+    IStaking stakingContract;
+    uint256 minimumStake;
+    uint256 poolWeightDivisor;
+    address owner;
   }
 
   PoolParams internal poolParams;
@@ -42,25 +42,25 @@ contract SortitionPool is SortitionTree {
   /// @notice Add an operator to the pool,
   /// reverting if the operator is already present.
   function joinPool(address operator) public {
-      uint256 eligibleWeight = getEligibleWeight(operator);
-      require(eligibleWeight > 0, "Operator not eligible");
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    require(eligibleWeight > 0, "Operator not eligible");
 
-      insertOperator(operator, eligibleWeight);
+    insertOperator(operator, eligibleWeight);
   }
 
   /// @notice Update the operator's weight if present and eligible,
   /// or remove from the pool if present and ineligible.
   function updateOperatorStatus(address operator) public {
-      uint256 eligibleWeight = getEligibleWeight(operator);
-      uint256 inPoolWeight = getPoolWeight(operator);
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    uint256 inPoolWeight = getPoolWeight(operator);
 
-      require(eligibleWeight != inPoolWeight, "Operator already up to date");
+    require(eligibleWeight != inPoolWeight, "Operator already up to date");
 
-      if (eligibleWeight == 0) {
-          removeOperator(operator);
-      } else {
-          updateOperator(operator, eligibleWeight);
-      }
+    if (eligibleWeight == 0) {
+      removeOperator(operator);
+    } else {
+      updateOperator(operator, eligibleWeight);
+    }
   }
 
   /// @notice Return whether the operator is eligible for the pool.
@@ -99,10 +99,11 @@ contract SortitionPool is SortitionTree {
   /// @param groupSize Size of the requested group
   /// @param seed Pseudo-random number used to select operators to group
   /// @return selected Members of the selected group
-  function selectGroup(
-    uint256 groupSize,
-    bytes32 seed
-  ) public view returns (address[] memory) {
+  function selectGroup(uint256 groupSize, bytes32 seed)
+    public
+    view
+    returns (address[] memory)
+  {
     require(msg.sender == poolParams.owner, "Only owner may select groups");
 
     uint256 _root = root;
