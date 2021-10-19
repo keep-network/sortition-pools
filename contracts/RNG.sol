@@ -45,12 +45,11 @@ library RNG {
   /// of the most recent call as the input `state` of a subsequent call.
   /// At the end of a transaction calling `RNG.getIndex()`,
   /// the previous stored state must be overwritten with the latest output.
-  function getIndex(uint256 range, bytes32 state)
-    internal
-    view
-    returns (uint256, bytes32)
-  {
-    uint256 bits = bitsRequired(range);
+  function getIndex(
+    uint256 range,
+    bytes32 state,
+    uint256 bits
+  ) internal view returns (uint256, bytes32) {
     bool found = false;
     uint256 index = 0;
     bytes32 newState = state;

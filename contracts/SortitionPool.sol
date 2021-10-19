@@ -116,8 +116,10 @@ contract SortitionPool is SortitionTree {
     require(rngRange > 0, "Not enough operators in pool");
     uint256 currentIndex;
 
+    uint256 bits = RNG.bitsRequired(rngRange);
+
     while (selected.array.length < groupSize) {
-      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
+      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState, bits);
 
       uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
