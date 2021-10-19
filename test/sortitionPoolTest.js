@@ -4,7 +4,7 @@ const Leaf = artifacts.require("Leaf")
 const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
 const StakingContractStub = artifacts.require("StakingContractStub.sol")
 
-const {mineBlocks} = require("./mineBlocks")
+const { mineBlocks } = require("./mineBlocks")
 
 contract("SortitionPool", (accounts) => {
   const seed = "0xff39d6cca87853892d2854566e883008bc"
@@ -42,7 +42,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(3, seed, {
         from: owner,
       })
-      await pool.selectGroup(3, seed, {from: owner})
+      await pool.selectGroup(3, seed, { from: owner })
 
       assert.equal(group.length, 3)
     })
@@ -56,7 +56,7 @@ contract("SortitionPool", (accounts) => {
       await pool.joinPool(carol)
 
       try {
-        await pool.selectGroup.call(3, seed, {from: accounts[0]})
+        await pool.selectGroup.call(3, seed, { from: accounts[0] })
       } catch (error) {
         assert.include(error.message, "Only owner may select groups")
         return
@@ -67,7 +67,7 @@ contract("SortitionPool", (accounts) => {
 
     it("reverts when there are no operators in pool", async () => {
       try {
-        await pool.selectGroup.call(3, seed, {from: owner})
+        await pool.selectGroup.call(3, seed, { from: owner })
       } catch (error) {
         assert.include(error.message, "Not enough operators in pool")
         return
@@ -83,7 +83,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(5, seed, {
         from: owner,
       })
-      await pool.selectGroup(5, seed, {from: owner})
+      await pool.selectGroup(5, seed, { from: owner })
       assert.equal(group.length, 5)
     })
 
@@ -98,7 +98,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(5, seed, {
         from: owner,
       })
-      await pool.selectGroup(5, seed, {from: owner})
+      await pool.selectGroup(5, seed, { from: owner })
       assert.equal(group.length, 5)
     })
 
@@ -113,7 +113,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(5, seed, {
         from: owner,
       })
-      await pool.selectGroup(5, seed, {from: owner})
+      await pool.selectGroup(5, seed, { from: owner })
       assert.equal(group.length, 5)
     })
 
@@ -134,7 +134,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(5, seed, {
         from: owner,
       })
-      await pool.selectGroup(5, seed, {from: owner})
+      await pool.selectGroup(5, seed, { from: owner })
       assert.deepEqual(group, [bob, bob, bob, bob, bob])
     })
 
@@ -148,7 +148,7 @@ contract("SortitionPool", (accounts) => {
       const group = await pool.selectGroup.call(100, seed, {
         from: owner,
       })
-      await pool.selectGroup(100, seed, {from: owner})
+      await pool.selectGroup(100, seed, { from: owner })
       assert.equal(group.length, 100)
     })
   })

@@ -4,8 +4,8 @@ const utils = require("./utils")
 const params = require("./params")
 
 const DEPLOY = [
-  {name: "Position", contract: Position},
-  {name: "PositionStub", contract: PositionStub},
+  { name: "Position", contract: Position },
+  { name: "PositionStub", contract: PositionStub },
 ]
 
 contract("Position", (accounts) => {
