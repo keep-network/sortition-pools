@@ -258,8 +258,6 @@ contract SortitionTree {
     uint256 currentPosition = 0;
     uint256 currentSlot;
 
-    require(index < currentNode.sumWeight(), "Index exceeds weight");
-
     // get root slot
     (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
 
