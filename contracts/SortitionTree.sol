@@ -263,11 +263,15 @@ contract SortitionTree {
     // get root slot
     (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
 
-    // get slots from levels 2 to 7
-    for (uint256 level = 2; level <= LEVELS; level++) {
-      currentPosition = currentPosition.child(currentSlot);
-      currentNode = branches[level][currentPosition];
-      (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
+    unchecked {
+      // get slots from levels 2 to 7
+      for (uint256 level = 2; level <= LEVELS; level++) {
+        currentPosition = currentPosition.child(currentSlot);
+        currentNode = branches[level][currentPosition];
+        (currentSlot, currentIndex) = currentNode.pickWeightedSlot(
+          currentIndex
+        );
+      }
     }
 
     // get leaf position
