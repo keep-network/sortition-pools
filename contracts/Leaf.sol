@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 library Leaf {
   ////////////////////////////////////////////////////////////////////////////
@@ -6,20 +6,20 @@ library Leaf {
 
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 constant SLOT_BITS = 3;
+  uint256 private constant SLOT_BITS = 3;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
+  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
+  uint256 private constant SLOT_WIDTH = 256 / SLOT_COUNT;
+  uint256 private constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
 
-  uint256 constant ID_WIDTH = SLOT_WIDTH;
-  uint256 constant ID_MAX = SLOT_MAX;
+  uint256 private constant ID_WIDTH = SLOT_WIDTH;
+  uint256 private constant ID_MAX = SLOT_MAX;
 
-  uint256 constant BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
-  uint256 constant BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
+  uint256 private constant BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
+  uint256 private constant BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
 
   ////////////////////////////////////////////////////////////////////////////
 
@@ -33,13 +33,13 @@ library Leaf {
     uint256 op = uint256(bytes32(bytes20(_operator)));
     // Bitwise AND the id to erase
     // all but the 32 least significant bits
-    uint256 id = _id & ID_MAX;
+    uint256 uid = _id & ID_MAX;
     // Erase all but the 64 least significant bits,
     // then shift left by 32 bits to make room for the id
     uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << ID_WIDTH;
     // Bitwise OR them all together to get
     // [address operator || uint64 creationBlock || uint32 id]
-    return (op | cb | id);
+    return (op | cb | uid);
   }
 
   function operator(uint256 leaf) internal pure returns (address) {

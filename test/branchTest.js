@@ -6,11 +6,11 @@ const toHex = web3.utils.numberToHex
 const utils = require("./utils")
 
 const DEPLOY = [
-  {name: "Branch", contract: Branch},
-  {name: "BranchStub", contract: BranchStub},
+  { name: "Branch", contract: Branch },
+  { name: "BranchStub", contract: BranchStub },
 ]
 const node = new BN(
-  "0x7777777766666666555555554444444433333333222222221111111100000000",
+  "7777777766666666555555554444444433333333222222221111111100000000",
   16,
 )
 

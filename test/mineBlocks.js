@@ -1,4 +1,4 @@
-const {time} = require("@openzeppelin/test-helpers")
+const { time } = require("@openzeppelin/test-helpers")
 
 async function mineBlocks(blocks) {
   for (i = 0; i < blocks; i++) {

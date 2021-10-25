@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./Leaf.sol";
 
@@ -8,50 +8,15 @@ library RNG {
 
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 constant SLOT_BITS = 3;
+  uint256 private constant SLOT_BITS = 3;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
+  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
+  uint256 private constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
 
   ////////////////////////////////////////////////////////////////////////////
-
-  /// @notice Calculate how many bits are required
-  /// for an index in the range `[0 .. range-1]`.
-  ///
-  /// @param range The upper bound of the desired range, exclusive.
-  ///
-  /// @return uint The smallest number of bits
-  /// that can contain the number `range-1`.
-  function bitsRequired(uint256 range) internal pure returns (uint256) {
-    uint256 bits = WEIGHT_WIDTH - 1;
-
-    // Left shift by `bits`,
-    // so we have a 1 in the (bits + 1)th least significant bit
-    // and 0 in other bits.
-    // If this number is equal or greater than `range`,
-    // the range [0, range-1] fits in `bits` bits.
-    //
-    // Because we loop from high bits to low bits,
-    // we find the highest number of bits that doesn't fit the range,
-    // and return that number + 1.
-    while (1 << bits >= range) {
-      bits--;
-    }
-
-    return bits + 1;
-  }
-
-  /// @notice Truncate `input` to the `bits` least significant bits.
-  function truncate(uint256 bits, uint256 input)
-    internal
-    pure
-    returns (uint256)
-  {
-    return input & ((1 << bits) - 1);
-  }
 
   /// @notice Get an index in the range `[0 .. range-1]`
   /// and the new state of the RNG,
@@ -80,12 +45,11 @@ library RNG {
   /// of the most recent call as the input `state` of a subsequent call.
   /// At the end of a transaction calling `RNG.getIndex()`,
   /// the previous stored state must be overwritten with the latest output.
-  function getIndex(uint256 range, bytes32 state)
-    internal
-    view
-    returns (uint256, bytes32)
-  {
-    uint256 bits = bitsRequired(range);
+  function getIndex(
+    uint256 range,
+    bytes32 state,
+    uint256 bits
+  ) internal view returns (uint256, bytes32) {
     bool found = false;
     uint256 index = 0;
     bytes32 newState = state;
@@ -97,5 +61,48 @@ library RNG {
       }
     }
     return (index, newState);
+  }
+
+  /// @notice Calculate how many bits are required
+  /// for an index in the range `[0 .. range-1]`.
+  ///
+  /// @param range The upper bound of the desired range, exclusive.
+  ///
+  /// @return uint The smallest number of bits
+  /// that can contain the number `range-1`.
+  function bitsRequired(uint256 range) internal pure returns (uint256) {
+    unchecked {
+      if (range == 1) {
+        return 0;
+      }
+
+      uint256 bits = WEIGHT_WIDTH - 1;
+
+      // Left shift by `bits`,
+      // so we have a 1 in the (bits + 1)th least significant bit
+      // and 0 in other bits.
+      // If this number is equal or greater than `range`,
+      // the range [0, range-1] fits in `bits` bits.
+      //
+      // Because we loop from high bits to low bits,
+      // we find the highest number of bits that doesn't fit the range,
+      // and return that number + 1.
+      while (1 << bits >= range) {
+        bits--;
+      }
+
+      return bits + 1;
+    }
+  }
+
+  /// @notice Truncate `input` to the `bits` least significant bits.
+  function truncate(uint256 bits, uint256 input)
+    internal
+    pure
+    returns (uint256)
+  {
+    unchecked {
+      return input & ((1 << bits) - 1);
+    }
   }
 }

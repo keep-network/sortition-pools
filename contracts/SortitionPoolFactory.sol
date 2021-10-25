@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./SortitionPool.sol";
 import "./api/IStaking.sol";

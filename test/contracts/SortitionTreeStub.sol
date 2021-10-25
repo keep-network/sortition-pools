@@ -1,10 +1,15 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import '../../contracts/SortitionTree.sol';
 
 contract SortitionTreeStub is SortitionTree {
+    using Leaf for uint256;
+
     function publicSetLeaf(uint256 position, uint256 leaf, uint256 weight) public {
         root = setLeaf(position, leaf, weight, root);
+        if (rightmostLeaf <= position) {
+            rightmostLeaf = position + 1;
+        }
     }
 
     function publicUpdateLeaf(uint256 position, uint256 weight) public {

@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import '../../contracts/RNG.sol';
 
@@ -14,7 +14,7 @@ contract RNGStub {
     function getIndex(uint range, uint state) public view returns (uint) {
         uint i;
         bytes32 s;
-        (i, s) = RNG.getIndex(range, bytes32(state));
+        (i, s) = RNG.getIndex(range, bytes32(state), bitsRequired(range));
         return i;
     }
 }

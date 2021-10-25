@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "truffle/Assert.sol";
 import "../contracts/Branch.sol";
@@ -6,7 +6,8 @@ import "../contracts/Branch.sol";
 contract TestBranch {
   using Branch for *;
 
-  uint256 node = 0x7777777766666666555555554444444433333333222222221111111100000000;
+  uint256 node =
+    0x7777777766666666555555554444444433333333222222221111111100000000;
 
   function testGetSlot() public {
     uint256 slot = node.getSlot(3);
@@ -16,18 +17,14 @@ contract TestBranch {
   function testClearSlot() public {
     uint256 newNode = node.clearSlot(3);
 
-
-      uint256 expected
-     = 0x7777777766666666555555554444444400000000222222221111111100000000;
+    uint256 expected = 0x7777777766666666555555554444444400000000222222221111111100000000;
     Assert.equal(newNode, expected, "clearSlot() should clear the slot");
   }
 
   function testSetSlot() public {
     uint256 newNode = node.setSlot(3, 0x01234567);
 
-
-      uint256 expected
-     = 0x7777777766666666555555554444444401234567222222221111111100000000;
+    uint256 expected = 0x7777777766666666555555554444444401234567222222221111111100000000;
     Assert.equal(newNode, expected, "setSlot() should set the slot");
   }
 

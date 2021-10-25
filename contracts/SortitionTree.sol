@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./Branch.sol";
 import "./Position.sol";
@@ -14,16 +14,16 @@ contract SortitionTree {
 
   // How many bits a position uses per level of the tree;
   // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 constant SLOT_BITS = 3;
-  uint256 constant LEVELS = 7;
+  uint256 private constant SLOT_BITS = 3;
+  uint256 private constant LEVELS = 7;
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   // Derived constants, do not touch
-  uint256 constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
-  uint256 constant POOL_CAPACITY = SLOT_COUNT**LEVELS;
+  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
+  uint256 private constant SLOT_WIDTH = 256 / SLOT_COUNT;
+  uint256 private constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
+  uint256 private constant POOL_CAPACITY = SLOT_COUNT**LEVELS;
   ////////////////////////////////////////////////////////////////////////////
 
   // implicit tree
@@ -34,32 +34,32 @@ contract SortitionTree {
   // level5 32k
   // level6 256k
   // level7 2M
-  uint256 root;
-  mapping(uint256 => mapping(uint256 => uint256)) branches;
-  mapping(uint256 => uint256) leaves;
+  uint256 internal root;
+  mapping(uint256 => mapping(uint256 => uint256)) internal branches;
+  mapping(uint256 => uint256) internal leaves;
 
   // the flagged (see setFlag() and unsetFlag() in Position.sol) positions
   // of all operators present in the pool
-  mapping(address => uint256) flaggedLeafPosition;
+  mapping(address => uint256) internal flaggedLeafPosition;
 
   // the leaf after the rightmost occupied leaf of each stack
-  uint256 rightmostLeaf;
+  uint256 internal rightmostLeaf;
   // the empty leaves in each stack
   // between 0 and the rightmost occupied leaf
-  uint256[] emptyLeaves;
+  uint256[] internal emptyLeaves;
 
   // Each operator has an uint32 ID number
   // which is allocated when they first join the pool
   // and remains unchanged even if they leave and rejoin the pool.
-  mapping(address => uint256) operatorID;
+  mapping(address => uint256) internal operatorID;
   // The idAddress array records the address corresponding to each ID number.
   // The ID number 0 is initialized with a zero address and is not used.
-  address[] idAddress;
+  address[] internal idAddress;
 
-  constructor() public {
+  constructor() {
     root = 0;
     rightmostLeaf = 0;
-    idAddress.length = 1;
+    idAddress.push();
   }
 
   // Return the ID number of the given operator address.
@@ -151,21 +151,6 @@ contract SortitionTree {
     flaggedLeafPosition[operator] = 0;
   }
 
-  function getFlaggedLeafPosition(address operator)
-    internal
-    view
-    returns (uint256)
-  {
-    return flaggedLeafPosition[operator];
-  }
-
-  function getLeafWeight(uint256 position) internal view returns (uint256) {
-    uint256 slot = position.slot();
-    uint256 parent = position.parent();
-    uint256 node = branches[LEVELS][parent];
-    return node.getSlot(slot);
-  }
-
   function removeLeaf(uint256 position, uint256 _root)
     internal
     returns (uint256)
@@ -190,6 +175,8 @@ contract SortitionTree {
   ) internal returns (uint256) {
     if (getLeafWeight(position) != weight) {
       return updateTree(position, weight, _root);
+    } else {
+      return _root;
     }
   }
 
@@ -231,6 +218,36 @@ contract SortitionTree {
     return _root.setSlot(childSlot, nodeWeight);
   }
 
+  function getEmptyLeafPosition() internal returns (uint256) {
+    uint256 rLeaf = rightmostLeaf;
+    bool spaceOnRight = (rLeaf + 1) < POOL_CAPACITY;
+    if (spaceOnRight) {
+      rightmostLeaf = rLeaf + 1;
+      return rLeaf;
+    } else {
+      uint256 emptyLeafCount = emptyLeaves.length;
+      require(emptyLeafCount > 0, "Pool is full");
+      uint256 emptyLeaf = emptyLeaves[emptyLeafCount - 1];
+      emptyLeaves.pop();
+      return emptyLeaf;
+    }
+  }
+
+  function getFlaggedLeafPosition(address operator)
+    internal
+    view
+    returns (uint256)
+  {
+    return flaggedLeafPosition[operator];
+  }
+
+  function getLeafWeight(uint256 position) internal view returns (uint256) {
+    uint256 slot = position.slot();
+    uint256 parent = position.parent();
+    uint256 node = branches[LEVELS][parent];
+    return node.getSlot(slot);
+  }
+
   function pickWeightedLeaf(uint256 index, uint256 _root)
     internal
     view
@@ -255,20 +272,5 @@ contract SortitionTree {
 
     // get leaf position
     leafPosition = currentPosition.child(currentSlot);
-  }
-
-  function getEmptyLeafPosition() internal returns (uint256) {
-    uint256 rLeaf = rightmostLeaf;
-    bool spaceOnRight = (rLeaf + 1) < POOL_CAPACITY;
-    if (spaceOnRight) {
-      rightmostLeaf = rLeaf + 1;
-      return rLeaf;
-    } else {
-      uint256 emptyLeafCount = emptyLeaves.length;
-      require(emptyLeafCount > 0, "Pool is full");
-      uint256 emptyLeaf = emptyLeaves[emptyLeafCount - 1];
-      emptyLeaves.pop();
-      return emptyLeaf;
-    }
   }
 }

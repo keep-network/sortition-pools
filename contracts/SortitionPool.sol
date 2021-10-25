@@ -1,4 +1,4 @@
-pragma solidity 0.5.17;
+pragma solidity 0.8.6;
 
 import "./DynamicArray.sol";
 import "./RNG.sol";
@@ -10,24 +10,11 @@ import "./api/IStaking.sol";
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
 contract SortitionPool is SortitionTree {
+  using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
-
-  constructor(
-    IStaking _stakingContract,
-    uint256 _minimumStake,
-    uint256 _poolWeightDivisor,
-    address _poolOwner
-  ) public {
-    poolParams = PoolParams(
-      _stakingContract,
-      _minimumStake,
-      _poolWeightDivisor,
-      _poolOwner
-    );
-  }
 
   struct PoolParams {
     IStaking stakingContract;
@@ -36,7 +23,45 @@ contract SortitionPool is SortitionTree {
     address owner;
   }
 
-  PoolParams poolParams;
+  PoolParams internal poolParams;
+
+  constructor(
+    IStaking _stakingContract,
+    uint256 _minimumStake,
+    uint256 _poolWeightDivisor,
+    address _poolOwner
+  ) {
+    poolParams = PoolParams(
+      _stakingContract,
+      _minimumStake,
+      _poolWeightDivisor,
+      _poolOwner
+    );
+  }
+
+  /// @notice Add an operator to the pool,
+  /// reverting if the operator is already present.
+  function joinPool(address operator) public {
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    require(eligibleWeight > 0, "Operator not eligible");
+
+    insertOperator(operator, eligibleWeight);
+  }
+
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible.
+  function updateOperatorStatus(address operator) public {
+    uint256 eligibleWeight = getEligibleWeight(operator);
+    uint256 inPoolWeight = getPoolWeight(operator);
+
+    require(eligibleWeight != inPoolWeight, "Operator already up to date");
+
+    if (eligibleWeight == 0) {
+      removeOperator(operator);
+    } else {
+      updateOperator(operator, eligibleWeight);
+    }
+  }
 
   /// @notice Return whether the operator is eligible for the pool.
   function isOperatorEligible(address operator) public view returns (bool) {
@@ -67,30 +92,6 @@ contract SortitionPool is SortitionTree {
     }
   }
 
-  /// @notice Add an operator to the pool,
-  /// reverting if the operator is already present.
-  function joinPool(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    require(eligibleWeight > 0, "Operator not eligible");
-
-    insertOperator(operator, eligibleWeight);
-  }
-
-  /// @notice Update the operator's weight if present and eligible,
-  /// or remove from the pool if present and ineligible.
-  function updateOperatorStatus(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    uint256 inPoolWeight = getPoolWeight(operator);
-
-    require(eligibleWeight != inPoolWeight, "Operator already up to date");
-
-    if (eligibleWeight == 0) {
-      removeOperator(operator);
-    } else {
-      updateOperator(operator, eligibleWeight);
-    }
-  }
-
   /// @notice Selects a new group of operators of the provided size based on
   /// the provided pseudo-random seed. At least one operator has to be
   /// registered in the pool, otherwise the function fails reverting the
@@ -98,11 +99,11 @@ contract SortitionPool is SortitionTree {
   /// @param groupSize Size of the requested group
   /// @param seed Pseudo-random number used to select operators to group
   /// @return selected Members of the selected group
-  function selectGroup(
-    uint256 groupSize,
-    bytes32 seed,
-    uint256 minimumStake
-  ) public view returns (address[] memory) {
+  function selectGroup(uint256 groupSize, bytes32 seed)
+    public
+    view
+    returns (address[] memory)
+  {
     require(msg.sender == poolParams.owner, "Only owner may select groups");
 
     uint256 _root = root;
@@ -115,8 +116,10 @@ contract SortitionPool is SortitionTree {
     require(rngRange > 0, "Not enough operators in pool");
     uint256 currentIndex;
 
+    uint256 bits = RNG.bitsRequired(rngRange);
+
     while (selected.array.length < groupSize) {
-      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState);
+      (currentIndex, rngState) = RNG.getIndex(rngRange, rngState, bits);
 
       uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
