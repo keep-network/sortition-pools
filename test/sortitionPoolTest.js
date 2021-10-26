@@ -31,14 +31,72 @@ contract("SortitionPool", (accounts) => {
     )
   })
 
+  describe("joinPool", async () => {
+    it("adds the operator to the pool if called by the owner", async () => {
+      await staking.setStake(alice, 20000)
+      await pool.joinPool(alice, { from: owner })
+
+      assert.equal(await pool.isOperatorInPool(alice), true)
+    })
+
+    it("reverts if called by a non-owner", async () => {
+      await staking.setStake(alice, 20000)
+
+      try {
+        await pool.joinPool(alice, { from: alice })
+      } catch (error) {
+        assert.include(error.message, "Caller is not the owner")
+        return
+      }
+
+      assert.fail("Expected throw not received")
+    })
+
+    it("reverts if operator is not eligible", async () => {
+      try {
+        await pool.joinPool(alice, { from: owner })
+      } catch (error) {
+        assert.include(error.message, "Operator not eligible")
+        return
+      }
+
+      assert.fail("Expected throw not received")
+    })
+  })
+
+  describe("leavePool", async () => {
+    it("removes the operator from the pool if called by the owner", async () => {
+      await staking.setStake(alice, 20000)
+      await pool.joinPool(alice, { from: owner })
+
+      await pool.leavePool(alice, { from: owner })
+
+      assert.equal(await pool.isOperatorInPool(alice), false)
+    })
+
+    it("reverts if called by a non-owner", async () => {
+      await staking.setStake(alice, 20000)
+      await pool.joinPool(alice, { from: owner })
+
+      try {
+        await pool.leavePool(alice, { from: alice })
+      } catch (error) {
+        assert.include(error.message, "Caller is not the owner")
+        return
+      }
+
+      assert.fail("Expected throw not received")
+    })
+  })
+
   describe("selectGroup", async () => {
     it("returns group of expected size", async () => {
       await staking.setStake(alice, 20000)
       await staking.setStake(bob, 22000)
       await staking.setStake(carol, 24000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      await pool.joinPool(carol)
+      await pool.joinPool(alice, { from: owner })
+      await pool.joinPool(bob, { from: owner })
+      await pool.joinPool(carol, { from: owner })
 
       const group = await pool.selectGroup(3, seed, {
         from: owner,
@@ -52,9 +110,9 @@ contract("SortitionPool", (accounts) => {
       await staking.setStake(alice, 20000)
       await staking.setStake(bob, 22000)
       await staking.setStake(carol, 24000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      await pool.joinPool(carol)
+      await pool.joinPool(alice, { from: owner })
+      await pool.joinPool(bob, { from: owner })
+      await pool.joinPool(carol, { from: owner })
 
       try {
         await pool.selectGroup(3, seed, { from: accounts[0] })
@@ -79,7 +137,7 @@ contract("SortitionPool", (accounts) => {
 
     it("returns group of expected size if less operators are registered", async () => {
       await staking.setStake(alice, 2000)
-      await pool.joinPool(alice)
+      await pool.joinPool(alice, { from: owner })
 
       const group = await pool.selectGroup(5, seed, {
         from: owner,
@@ -91,8 +149,8 @@ contract("SortitionPool", (accounts) => {
     it("does not remove ineligible operators", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
+      await pool.joinPool(alice, { from: owner })
+      await pool.joinPool(bob, { from: owner })
 
       await staking.setStake(bob, 1000)
 
@@ -106,8 +164,8 @@ contract("SortitionPool", (accounts) => {
     it("does not remove outdated but eligible operators", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
+      await pool.joinPool(alice, { from: owner })
+      await pool.joinPool(bob, { from: owner })
 
       await staking.setStake(bob, 390000)
 
@@ -121,8 +179,8 @@ contract("SortitionPool", (accounts) => {
     it("lets outdated operators update their status", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
+      await pool.joinPool(alice, { from: owner })
+      await pool.joinPool(bob, { from: owner })
 
       await staking.setStake(bob, 390000)
       await staking.setStake(alice, 1000)
@@ -143,7 +201,7 @@ contract("SortitionPool", (accounts) => {
       for (i = 101; i < 150; i++) {
         const address = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
         await staking.setStake(address, minStake * i)
-        await pool.joinPool(address)
+        await pool.joinPool(address, { from: owner })
       }
 
       const group = await pool.selectGroup(100, seed, {
