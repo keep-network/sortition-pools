@@ -31,10 +31,10 @@ contract("SortitionPool", (accounts) => {
     )
   })
 
-  describe("joinPool", async () => {
-    it("adds the operator to the pool if called by the owner", async () => {
+  describe("insertOperator", async () => {
+    it("inserts the operator to the pool if called by the owner", async () => {
       await staking.setStake(alice, 20000)
-      await pool.joinPool(alice, { from: owner })
+      await pool.insertOperator(alice, { from: owner })
 
       assert.equal(await pool.isOperatorInPool(alice), true)
     })
@@ -43,7 +43,7 @@ contract("SortitionPool", (accounts) => {
       await staking.setStake(alice, 20000)
 
       try {
-        await pool.joinPool(alice, { from: alice })
+        await pool.insertOperator(alice, { from: alice })
       } catch (error) {
         assert.include(error.message, "Caller is not the owner")
         return
@@ -54,7 +54,7 @@ contract("SortitionPool", (accounts) => {
 
     it("reverts if operator is not eligible", async () => {
       try {
-        await pool.joinPool(alice, { from: owner })
+        await pool.insertOperator(alice, { from: owner })
       } catch (error) {
         assert.include(error.message, "Operator not eligible")
         return
@@ -64,12 +64,12 @@ contract("SortitionPool", (accounts) => {
     })
   })
 
-  describe("leavePool", async () => {
+  describe("removeOperator", async () => {
     it("removes the operator from the pool if called by the owner", async () => {
       await staking.setStake(alice, 20000)
       await pool.joinPool(alice, { from: owner })
 
-      await pool.leavePool(alice, { from: owner })
+      await pool.removeOperator(alice, { from: owner })
 
       assert.equal(await pool.isOperatorInPool(alice), false)
     })
@@ -79,7 +79,7 @@ contract("SortitionPool", (accounts) => {
       await pool.joinPool(alice, { from: owner })
 
       try {
-        await pool.leavePool(alice, { from: alice })
+        await pool.removeOperator(alice, { from: alice })
       } catch (error) {
         assert.include(error.message, "Caller is not the owner")
         return

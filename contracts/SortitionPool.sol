@@ -39,24 +39,24 @@ contract SortitionPool is SortitionTree {
     );
   }
 
-  /// @notice Adds an operator to the pool,
+  /// @notice Inserts an operator to the pool,
   /// reverting if the operator is already present.
   /// @dev Can be called only by the contract owner.
-  function joinPool(address operator) public {
+  function insertOperator(address operator) public {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
     uint256 eligibleWeight = getEligibleWeight(operator);
     require(eligibleWeight > 0, "Operator not eligible");
 
-    insertOperator(operator, eligibleWeight);
+    _insertOperator(operator, eligibleWeight);
   }
 
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
-  function leavePool(address operator) public {
+  function removeOperator(address operator) public {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
-    removeOperator(operator);
+    _removeOperator(operator);
   }
 
   /// @notice Update the operator's weight if present and eligible,
@@ -68,7 +68,7 @@ contract SortitionPool is SortitionTree {
     require(eligibleWeight != inPoolWeight, "Operator already up to date");
 
     if (eligibleWeight == 0) {
-      removeOperator(operator);
+      _removeOperator(operator);
     } else {
       updateOperator(operator, eligibleWeight);
     }
