@@ -176,7 +176,7 @@ contract("SortitionPool", (accounts) => {
       assert.equal(group.length, 5)
     })
 
-    it("lets outdated operators update their status", async () => {
+    it("lets the owner to update outdated operators status", async () => {
       await staking.setStake(alice, 2000)
       await staking.setStake(bob, 4000000)
       await pool.insertOperator(alice, { from: owner })
@@ -187,8 +187,8 @@ contract("SortitionPool", (accounts) => {
 
       await mineBlocks(11)
 
-      await pool.updateOperatorStatus(bob)
-      await pool.updateOperatorStatus(alice)
+      await pool.updateOperatorStatus(bob, { from: owner })
+      await pool.updateOperatorStatus(alice, { from: owner })
 
       const group = await pool.selectGroup(5, seed, {
         from: owner,
