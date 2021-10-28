@@ -61,7 +61,10 @@ contract SortitionPool is SortitionTree {
 
   /// @notice Update the operator's weight if present and eligible,
   /// or remove from the pool if present and ineligible.
+  /// @dev Can be called only by the contract owner.
   function updateOperatorStatus(address operator) public {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+
     uint256 eligibleWeight = getEligibleWeight(operator);
     uint256 inPoolWeight = getPoolWeight(operator);
 
