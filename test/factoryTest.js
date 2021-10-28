@@ -49,8 +49,8 @@ contract("SortitionPoolFactory", (accounts) => {
       await staking.setStake(alice, 22000)
       await staking.setStake(bob, 24000)
 
-      await sortitionPool1.joinPool(alice)
-      await sortitionPool2.joinPool(bob)
+      await sortitionPool1.insertOperator(alice)
+      await sortitionPool2.insertOperator(bob)
 
       await mineBlocks(11)
 
