@@ -133,8 +133,10 @@ contract SortitionPool is SortitionTree {
 
     address[] memory selectedAddresses = new address[](groupSize);
 
-    for (uint256 i = 0; i < groupSize; i++) {
-      selectedAddresses[i] = selected.array[i].operator();
+    unchecked {
+      for (uint256 i = 0; i < groupSize; i++) {
+        selectedAddresses[i] = selected.array[i].operator();
+      }
     }
     return selectedAddresses;
   }
