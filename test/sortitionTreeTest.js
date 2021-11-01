@@ -272,4 +272,26 @@ describe("SortitionTree", () => {
       })
     })
   })
+
+  describe("getIDOperators", async () => {
+    it("returns operator addresses", async () => {
+      const weight = 0xfff
+      await sortition.publicInsertOperator(alice, weight)
+      await sortition.publicInsertOperator(bob, weight)
+
+      const aliceID = 1
+      const bobID = 2
+      const unknownID = 9
+
+      const addresses = await sortition.getIDOperators.call([
+        aliceID,
+        unknownID,
+        bobID,
+      ])
+      assert.equal(addresses.length, 3)
+      assert.equal(addresses[0], alice)
+      assert.equal(addresses[1], 0x0)
+      assert.equal(addresses[2], bob)
+    })
+  })
 })

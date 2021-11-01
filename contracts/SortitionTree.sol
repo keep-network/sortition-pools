@@ -74,6 +74,22 @@ contract SortitionTree {
     return idAddress.length > id ? idAddress[id] : address(0);
   }
 
+  // Gets the operator addresses corresponding to the given ID numbers.
+  // An empty address means the ID number has not been allocated yet.
+  // This function works just like getIDOperator except that it allows to fetch
+  // operator addresses for multiple IDs in one call.
+  function getIDOperators(uint32[] calldata ids)
+    public
+    view
+    returns (address[] memory)
+  {
+    address[] memory operators = new address[](ids.length);
+    for (uint256 i = 0; i < ids.length; i++) {
+      operators[i] = getIDOperator(ids[i]);
+    }
+    return operators;
+  }
+
   // checks if operator is already registered in the pool
   function isOperatorRegistered(address operator) public view returns (bool) {
     return getFlaggedLeafPosition(operator) != 0;
