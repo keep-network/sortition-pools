@@ -51,7 +51,7 @@ contract SortitionTree {
   // Each operator has an uint32 ID number
   // which is allocated when they first join the pool
   // and remains unchanged even if they leave and rejoin the pool.
-  mapping(address => uint256) internal operatorID;
+  mapping(address => uint32) internal operatorID;
   // The idAddress array records the address corresponding to each ID number.
   // The ID number 0 is initialized with a zero address and is not used.
   address[] internal idAddress;
@@ -64,14 +64,30 @@ contract SortitionTree {
 
   // Return the ID number of the given operator address.
   // An ID number of 0 means the operator has not been allocated an ID number yet.
-  function getOperatorID(address operator) public view returns (uint256) {
+  function getOperatorID(address operator) public view returns (uint32) {
     return operatorID[operator];
   }
 
   // Get the operator address corresponding to the given ID number.
   // An empty address means the ID number has not been allocated yet.
-  function getIDOperator(uint256 id) public view returns (address) {
+  function getIDOperator(uint32 id) public view returns (address) {
     return idAddress.length > id ? idAddress[id] : address(0);
+  }
+
+  // Gets the operator addresses corresponding to the given ID numbers.
+  // An empty address means the ID number has not been allocated yet.
+  // This function works just like getIDOperator except that it allows to fetch
+  // operator addresses for multiple IDs in one call.
+  function getIDOperators(uint32[] calldata ids)
+    public
+    view
+    returns (address[] memory)
+  {
+    address[] memory operators = new address[](ids.length);
+    for (uint256 i = 0; i < ids.length; i++) {
+      operators[i] = getIDOperator(ids[i]);
+    }
+    return operators;
   }
 
   // checks if operator is already registered in the pool
@@ -101,7 +117,10 @@ contract SortitionTree {
   // Does not check if the operator already has an ID number
   function allocateOperatorID(address operator) internal returns (uint256) {
     uint256 id = idAddress.length;
-    operatorID[operator] = id;
+
+    require(id <= type(uint32).max, "Pool capacity exceeded");
+
+    operatorID[operator] = uint32(id);
     idAddress.push(operator);
     return id;
   }
