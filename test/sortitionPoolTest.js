@@ -39,61 +39,99 @@ describe("SortitionPool", () => {
     await pool.deployed()
   })
 
-  describe("insertOperator", async () => {
-    it("inserts the operator to the pool if called by the owner", async () => {
-      await staking.setStake(alice, 20000)
-      await pool.insertOperator(alice, { from: owner })
+  describe("insertOperator", () => {
+    context("when called by the owner", () => {
+      context("when operator is eligible", () => {
+        beforeEach(async () => {
+          await staking.setStake(alice.address, 20000)
+          await pool.connect(owner).insertOperator(alice.address)
+        })
 
-      assert.equal(await pool.isOperatorInPool(alice), true)
+        it("should insert the operator to the pool", async () => {
+          expect(await pool.isOperatorInPool(alice.address)).to.be.true
+        })
+      })
+
+      context("when operator is not eligible", () => {
+        it("should revert", async () => {
+          await expect(
+            pool.connect(owner).insertOperator(alice.address),
+          ).to.be.revertedWith("Operator not eligible")
+        })
+      })
     })
-
-    it("reverts if called by a non-owner", async () => {
-      await staking.setStake(alice, 20000)
-
-      try {
-        await pool.insertOperator(alice, { from: alice })
-      } catch (error) {
-        assert.include(error.message, "Caller is not the owner")
-        return
-      }
-
-      assert.fail("Expected throw not received")
-    })
-
-    it("reverts if operator is not eligible", async () => {
-      try {
-        await pool.insertOperator(alice, { from: owner })
-      } catch (error) {
-        assert.include(error.message, "Operator not eligible")
-        return
-      }
-
-      assert.fail("Expected throw not received")
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).insertOperator(alice.address),
+        ).to.be.revertedWith("Caller is not the owner")
+      })
     })
   })
 
-  describe("removeOperator", async () => {
-    it("removes the operator from the pool if called by the owner", async () => {
-      await staking.setStake(alice, 20000)
-      await pool.insertOperator(alice, { from: owner })
+  describe("removeOperator", () => {
+    let aliceID
 
-      await pool.removeOperator(alice, { from: owner })
-
-      assert.equal(await pool.isOperatorInPool(alice), false)
+    beforeEach(async () => {
+      await staking.setStake(alice.address, 20000)
+      await pool.connect(owner).insertOperator(alice.address)
+      aliceID = await pool.getOperatorID(alice.address)
     })
 
-    it("reverts if called by a non-owner", async () => {
-      await staking.setStake(alice, 20000)
-      await pool.insertOperator(alice, { from: owner })
+    context("when called by the owner", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).removeOperator(aliceID)
+      })
 
-      try {
-        await pool.removeOperator(alice, { from: alice })
-      } catch (error) {
-        assert.include(error.message, "Caller is not the owner")
-        return
-      }
+      it("should remove the operator from the pool", async () => {
+        expect(await pool.isOperatorInPool(alice.address)).to.be.false
+      })
+    })
 
-      assert.fail("Expected throw not received")
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).removeOperator(aliceID),
+        ).to.be.revertedWith("Caller is not the owner")
+      })
+    })
+  })
+
+  describe("removeOperators", () => {
+    let bobID
+    let carolID
+
+    beforeEach(async () => {
+      await staking.setStake(alice.address, 20000)
+      await staking.setStake(bob.address, 20000)
+      await staking.setStake(carol.address, 20000)
+
+      await pool.connect(owner).insertOperator(alice.address)
+      await pool.connect(owner).insertOperator(bob.address)
+      await pool.connect(owner).insertOperator(carol.address)
+
+      bobID = await pool.getOperatorID(bob.address)
+      carolID = await pool.getOperatorID(carol.address)
+    })
+
+    context("when called by the owner", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).removeOperators([bobID, carolID])
+      })
+
+      it("should remove given operators from the pool", async () => {
+        expect(await pool.isOperatorInPool(alice.address)).to.be.true
+        expect(await pool.isOperatorInPool(bob.address)).to.be.false
+        expect(await pool.isOperatorInPool(carol.address)).to.be.false
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).removeOperators([bobID, carolID]),
+        ).to.be.revertedWith("Caller is not the owner")
+      })
     })
   })
 
@@ -191,19 +229,25 @@ describe("SortitionPool", () => {
     })
 
     context("when the owner updates outdated operators statuses", (async) => {
+      let aliceID
+      let bobID
+
       beforeEach(async () => {
         await staking.setStake(alice.address, 2000)
         await staking.setStake(bob.address, 4000000)
         await pool.connect(owner).insertOperator(alice.address)
         await pool.connect(owner).insertOperator(bob.address)
 
+        aliceID = await pool.getOperatorID(alice.address)
+        bobID = await pool.getOperatorID(bob.address)
+
         await staking.setStake(bob.address, 390000)
         await staking.setStake(alice.address, 1000)
 
         await helpers.time.mineBlocks(11)
 
-        await pool.connect(owner).updateOperatorStatus(bob.address)
-        await pool.connect(owner).updateOperatorStatus(alice.address)
+        await pool.connect(owner).updateOperatorStatus(bobID)
+        await pool.connect(owner).updateOperatorStatus(aliceID)
       })
 
       it("should update operators status", async () => {

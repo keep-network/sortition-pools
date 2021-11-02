@@ -42,6 +42,7 @@ contract SortitionPool is SortitionTree {
   /// @notice Inserts an operator to the pool,
   /// reverting if the operator is already present.
   /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the inserted operator.
   function insertOperator(address operator) public {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
@@ -53,17 +54,34 @@ contract SortitionPool is SortitionTree {
 
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
-  function removeOperator(address operator) public {
+  /// @param id ID of the removed operator.
+  function removeOperator(uint32 id) public {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
-    _removeOperator(operator);
+    _removeOperator(getIDOperator(id));
+  }
+
+  /// @notice Removes given operators from the pool.
+  /// @dev Can be called only by the contract owner.
+  /// @param ids IDs of the removed operators.
+  function removeOperators(uint32[] calldata ids) public {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+
+    address[] memory operators = getIDOperators(ids);
+
+    for (uint256 i = 0; i < operators.length; i++) {
+      _removeOperator(operators[i]);
+    }
   }
 
   /// @notice Update the operator's weight if present and eligible,
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
-  function updateOperatorStatus(address operator) public {
+  /// @param id ID of the updated operator.
+  function updateOperatorStatus(uint32 id) public {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
+
+    address operator = getIDOperator(id);
 
     uint256 eligibleWeight = getEligibleWeight(operator);
     uint256 inPoolWeight = getPoolWeight(operator);
