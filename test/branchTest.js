@@ -6,11 +6,16 @@ describe("Branch", () => {
     "0x7777777766666666555555554444444433333333222222221111111100000000",
   )
   let branchInstance
+  let testBranch
 
   beforeEach(async () => {
     const BranchStub = await ethers.getContractFactory("BranchStub")
     branchInstance = await BranchStub.deploy()
     await branchInstance.deployed()
+
+    const TestBranch = await ethers.getContractFactory("TestBranch")
+    testBranch = await TestBranch.deploy()
+    await testBranch.deployed()
   })
 
   describe("getSlot", async () => {
@@ -47,6 +52,13 @@ describe("Branch", () => {
       const weight = await branchInstance.sumWeight(node)
       const expected = 0x77777777 * 4
       expect(weight).to.be.equal(expected)
+    })
+  })
+
+  describe("pickWeightedSlot", async () => {
+    it("runPickWeightedSlotTest", async () => {
+      await testBranch.runPickWeightedSlotTest()
+      // ok, no revert
     })
   })
 })
