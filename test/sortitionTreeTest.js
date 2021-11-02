@@ -261,7 +261,7 @@ describe("SortitionTree", () => {
   })
 
   describe("operatorsInPool", async () => {
-    context("when there is an operator is in the pool", () => {
+    context("when the operator is in the pool", () => {
       beforeEach(async () => {
         await sortition.publicInsertOperator(alice.address, 1)
       })

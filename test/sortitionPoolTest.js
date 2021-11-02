@@ -74,7 +74,7 @@ describe("SortitionPool", () => {
       })
     })
 
-    context("reverts when there are no operators in pool", async () => {
+    context("when there are no operators in the pool", async () => {
       it("should revert", async () => {
         await expect(
           pool.connect(owner).selectGroup(3, seed),
