@@ -1,64 +1,75 @@
-const SortitionPoolFactory = artifacts.require(
-  "./contracts/SortitionPoolFactory.sol",
-)
-const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
+const { helpers, ethers } = require("hardhat")
+const { expect } = require("chai")
+const utils = require("./utils")
 
-const { mineBlocks } = require("./mineBlocks")
-
-contract("SortitionPoolFactory", (accounts) => {
-  const seed = "0xff39d6cca87853892d2854566e883008bc"
+describe("SortitionPoolFactory", () => {
+  const seed =
+    "0xff39d6cca87853892d2854566e883008bc000000000000000000000000000000"
   const minStake = 2000
   const poolWeightDivisor = 2000
-  let factory
+  let alice
+  let bob
   let staking
-  const alice = accounts[0]
-  const bob = accounts[1]
+  let factory
 
-  before(async () => {
-    staking = await StakingContractStub.new()
-    factory = await SortitionPoolFactory.new()
+  beforeEach(async () => {
+    alice = await ethers.getSigner(0)
+    bob = await ethers.getSigner(1)
+
+    const StakingContractStub = await ethers.getContractFactory(
+      "StakingContractStub",
+    )
+    staking = await StakingContractStub.deploy()
+    await staking.deployed()
+
+    const SortitionPoolFactory = await ethers.getContractFactory(
+      "SortitionPoolFactory",
+    )
+    factory = await SortitionPoolFactory.deploy()
+    await factory.deployed()
   })
 
-  describe("createSortitionPool()", async () => {
+  describe("createSortitionPool", () => {
     it("creates independent clones", async () => {
-      const sortitionPool1Address = await factory.createSortitionPool.call(
+      const tx1 = await factory.createSortitionPool(
         staking.address,
         minStake,
         poolWeightDivisor,
       )
-      await factory.createSortitionPool(
+      const receipt1 = await tx1.wait()
+      let events = utils.pastEvents(receipt1, factory, "SortitionPoolCreated")
+      const sortitionPoolAddress1 = events[0].args["sortitionPoolAddress"]
+      const sortitionPool1 = await ethers.getContractAt(
+        "SortitionPool",
+        sortitionPoolAddress1,
+      )
+
+      const tx2 = await factory.createSortitionPool(
         staking.address,
         minStake,
         poolWeightDivisor,
       )
-      const sortitionPool1 = await SortitionPool.at(sortitionPool1Address)
-
-      const sortitionPool2Address = await factory.createSortitionPool.call(
-        staking.address,
-        minStake,
-        poolWeightDivisor,
+      const receipt2 = await tx2.wait()
+      events = utils.pastEvents(receipt2, factory, "SortitionPoolCreated")
+      const sortitionPoolAddress2 = events[0].args["sortitionPoolAddress"]
+      const sortitionPool2 = await ethers.getContractAt(
+        "SortitionPool",
+        sortitionPoolAddress2,
       )
-      await factory.createSortitionPool(
-        staking.address,
-        minStake,
-        poolWeightDivisor,
-      )
-      const sortitionPool2 = await SortitionPool.at(sortitionPool2Address)
 
-      await staking.setStake(alice, 22000)
-      await staking.setStake(bob, 24000)
+      await staking.setStake(alice.address, 22000)
+      await staking.setStake(bob.address, 24000)
 
-      await sortitionPool1.joinPool(alice)
-      await sortitionPool2.joinPool(bob)
+      await sortitionPool1.joinPool(alice.address)
+      await sortitionPool2.joinPool(bob.address)
 
-      await mineBlocks(11)
+      await helpers.time.mineBlocks(11)
 
-      const group1 = await sortitionPool1.selectGroup.call(2, seed)
-      assert.deepEqual(group1, [alice, alice])
+      const group1 = await sortitionPool1.selectGroup(2, seed)
+      expect(group1).to.deep.equal([alice.address, alice.address])
 
-      const group2 = await sortitionPool2.selectGroup.call(2, seed)
-      assert.deepEqual(group2, [bob, bob])
+      const group2 = await sortitionPool2.selectGroup(2, seed)
+      expect(group2).to.deep.equal([bob.address, bob.address])
     })
   })
 })
