@@ -29,7 +29,7 @@ describe("SortitionPoolFactory", () => {
     await factory.deployed()
   })
 
-  describe("SortitionPoolFactory", () => {
+  describe("createSortitionPool", () => {
     it("creates independent clones", async () => {
       const tx1 = await factory.createSortitionPool(
         staking.address,

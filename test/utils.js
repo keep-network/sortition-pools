@@ -1,7 +1,7 @@
 // FIXME Retrieves past events. This is a workaround for a known issue described
-// FIXME here: https://github.com/nomiclabs/hardhat/pull/1163
-// FIXME The preferred way of getting events would be using listners:
-// FIXME https://docs.ethers.io/v5/api/contract/contract/#Contract--events
+//       here: https://github.com/nomiclabs/hardhat/pull/1163
+//       The preferred way of getting events would be using listeners:
+//       https://docs.ethers.io/v5/api/contract/contract/#Contract--events
 function pastEvents(receipt, contract, eventName) {
   const events = []
 
