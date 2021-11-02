@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-import '../../contracts/SortitionTree.sol';
+import "../../contracts/SortitionTree.sol";
 
 contract SortitionTreeStub is SortitionTree {
     using Leaf for uint256;

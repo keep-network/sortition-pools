@@ -1,73 +1,66 @@
-const RNG = artifacts.require("./contracts/RNG.sol")
-const RNGStub = artifacts.require("RNGStub.sol")
+const { expect } = require("chai")
 
-const toHex = web3.utils.numberToHex
-const toNum = web3.utils.hexToNumber
-const utils = require("./utils")
-
-const DEPLOY = [
-  { name: "RNG", contract: RNG },
-  { name: "RNGStub", contract: RNGStub },
-]
-
-contract("RNG", () => {
+describe("RNG", () => {
   let rngInstance
 
-  before(async () => {
-    deployed = await utils.deploySystem(DEPLOY)
-    rngInstance = deployed.RNGStub
+  beforeEach(async () => {
+    const RNGStub = await ethers.getContractFactory("RNGStub")
+    rngInstance = await RNGStub.deploy()
+    await rngInstance.deployed()
   })
 
-  describe("bitsRequired()", async () => {
+  describe("bitsRequired", async () => {
     it("Returns the number of bits required", async () => {
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 32 + 1), 32)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 32), 32)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 32 - 1), 32)
+      expect(await rngInstance.bitsRequired(2 ** 32 + 1)).to.be.equal(32)
+      expect(await rngInstance.bitsRequired(2 ** 32)).to.be.equal(32)
+      expect(await rngInstance.bitsRequired(2 ** 32 - 1)).to.be.equal(32)
 
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 31 + 1), 32)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 31), 31)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 31 - 1), 31)
+      expect(await rngInstance.bitsRequired(2 ** 31 + 1)).to.be.equal(32)
+      expect(await rngInstance.bitsRequired(2 ** 31)).to.be.equal(31)
+      expect(await rngInstance.bitsRequired(2 ** 31 - 1)).to.be.equal(31)
 
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 16 + 1), 17)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 16), 16)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 16 - 1), 16)
+      expect(await rngInstance.bitsRequired(2 ** 16 + 1)).to.be.equal(17)
+      expect(await rngInstance.bitsRequired(2 ** 16)).to.be.equal(16)
+      expect(await rngInstance.bitsRequired(2 ** 16 - 1)).to.be.equal(16)
 
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 2 + 1), 3)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 2), 2)
-      assert.equal(await rngInstance.bitsRequired.call(2 ** 2 - 1), 2)
+      expect(await rngInstance.bitsRequired(2 ** 2 + 1)).to.be.equal(3)
+      expect(await rngInstance.bitsRequired(2 ** 2)).to.be.equal(2)
+      expect(await rngInstance.bitsRequired(2 ** 2 - 1)).to.be.equal(2)
 
-      assert.equal(await rngInstance.bitsRequired.call(2), 1)
+      expect(await rngInstance.bitsRequired(2)).to.be.equal(1)
     })
   })
 
-  describe("truncate()", async () => {
+  describe("truncate", async () => {
     it("Truncates a number to the correct number of bits", async () => {
       a = 0xffffffff
 
-      b = await rngInstance.truncate.call(1, a)
-      c = await rngInstance.truncate.call(2, a)
-      d = await rngInstance.truncate.call(16, a)
-      e = await rngInstance.truncate.call(31, a)
-      f = await rngInstance.truncate.call(32, a)
-      g = await rngInstance.truncate.call(64, a)
+      b = await rngInstance.truncate(1, a)
+      c = await rngInstance.truncate(2, a)
+      d = await rngInstance.truncate(16, a)
+      e = await rngInstance.truncate(31, a)
+      f = await rngInstance.truncate(32, a)
+      g = await rngInstance.truncate(64, a)
 
-      assert.equal(b, 0x1)
-      assert.equal(c, 0x3)
-      assert.equal(d, 0xffff)
-      assert.equal(e, 0x7fffffff)
-      assert.equal(f, a)
-      assert.equal(g, a)
+      expect(b).to.be.equal(0x1)
+      expect(c).to.be.equal(0x3)
+      expect(d).to.be.equal(0xffff)
+      expect(e).to.be.equal(0x7fffffff)
+      expect(f).to.be.equal(a)
+      expect(g).to.be.equal(a)
     })
   })
 
-  describe("getIndex()", async () => {
+  describe("getIndex", async () => {
     it("Returns an index smaller than the range", async () => {
       r = 0x12345
       s = 0x0deadbeef
 
-      i = await rngInstance.getIndex.call(r, s)
+      i = await rngInstance.getIndex(r, s)
 
-      assert.isBelow(toNum(toHex(i)), r)
+      const hex = ethers.utils.hexlify(i)
+      const num = ethers.BigNumber.from(hex)
+      expect(num).to.be.below(r)
     })
   })
 })

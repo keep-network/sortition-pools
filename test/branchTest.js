@@ -1,61 +1,52 @@
-const Branch = artifacts.require("./contracts/Branch.sol")
-const BranchStub = artifacts.require("BranchStub.sol")
+const { BigNumber } = require("ethers")
+const { expect } = require("chai")
 
-const BN = web3.utils.BN
-const toHex = web3.utils.numberToHex
-const utils = require("./utils")
-
-const DEPLOY = [
-  { name: "Branch", contract: Branch },
-  { name: "BranchStub", contract: BranchStub },
-]
-const node = new BN(
-  "7777777766666666555555554444444433333333222222221111111100000000",
-  16,
-)
-
-contract("Branch", (accounts) => {
+describe("Branch", () => {
+  const node = BigNumber.from(
+    "0x7777777766666666555555554444444433333333222222221111111100000000",
+  )
   let branchInstance
 
-  before(async () => {
-    deployed = await utils.deploySystem(DEPLOY)
-    branchInstance = deployed.BranchStub
+  beforeEach(async () => {
+    const BranchStub = await ethers.getContractFactory("BranchStub")
+    branchInstance = await BranchStub.deploy()
+    await branchInstance.deployed()
   })
 
-  describe("getSlot()", async () => {
+  describe("getSlot", async () => {
     it("Returns the uint16 in the correct position", async () => {
-      const result = await branchInstance.getSlot.call(node, 3)
-      assert.equal(result, 0x33333333)
+      const result = await branchInstance.getSlot(node, 3)
+      expect(result).to.be.equal(0x33333333)
     })
   })
 
-  describe("clearSlot()", async () => {
+  describe("clearSlot", async () => {
     it("Clears the correct slot", async () => {
       newNode =
         "0x7777777766666666555555554444444400000000222222221111111100000000"
 
-      const result = await branchInstance.clearSlot.call(node, 3)
-      assert.equal(toHex(result), newNode)
+      const result = await branchInstance.clearSlot(node, 3)
+      expect(ethers.utils.hexlify(result)).to.be.equal(newNode)
     })
   })
 
-  describe("setSlot()", async () => {
+  describe("setSlot", async () => {
     it("Changes the correct slot", async () => {
       newNode =
         "0x7777777766666666555555554444444412345678222222221111111100000000"
       w = 0x12345678
 
-      const modified = await branchInstance.setSlot.call(node, 3, w)
-      newSlot = await branchInstance.getSlot.call(modified, 3)
-      assert.equal(toHex(modified), newNode)
+      const modified = await branchInstance.setSlot(node, 3, w)
+      newSlot = await branchInstance.getSlot(modified, 3)
+      expect(ethers.utils.hexlify(modified)).to.be.equal(newNode)
     })
   })
 
-  describe("sumWeight()", async () => {
+  describe("sumWeight", async () => {
     it("Returns the correct weight", async () => {
-      const weight = await branchInstance.sumWeight.call(node)
-      expected = 0x77777777 * 4
-      assert.equal(weight, expected)
+      const weight = await branchInstance.sumWeight(node)
+      const expected = 0x77777777 * 4
+      expect(weight).to.be.equal(expected)
     })
   })
 })

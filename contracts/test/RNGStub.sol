@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-import '../../contracts/RNG.sol';
+import "../../contracts/RNG.sol";
 
 contract RNGStub {
     function bitsRequired(uint range) public pure returns (uint) {
