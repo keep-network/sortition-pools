@@ -1,6 +1,6 @@
 name: Test Solidity
 
-on: 
+on:
   push:
   schedule:
     - cron: '0 0 * * *'
@@ -17,9 +17,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Run tests
-        # Runs ganache in background
         run: |
-          npm run buidler-vm & 
           npm test
         env:
           CI: true

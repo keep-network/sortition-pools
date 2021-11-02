@@ -1,22 +1,18 @@
-const Position = artifacts.require("./contracts/Position.sol")
-const PositionStub = artifacts.require("PositionStub.sol")
+const { expect } = require("chai")
 const utils = require("./utils")
 const params = require("./params")
 
-const DEPLOY = [
-  { name: "Position", contract: Position },
-  { name: "PositionStub", contract: PositionStub },
-]
-
-contract("Position", (accounts) => {
+describe("Position", async () => {
   let positionInstance
   let childPosition
   let parentPosition
   let fullPosition
 
-  before(async () => {
-    deployed = await utils.deploySystem(DEPLOY)
-    positionInstance = deployed.PositionStub
+  beforeEach(async () => {
+    const PositionStub = await ethers.getContractFactory("PositionStub")
+    positionInstance = await PositionStub.deploy()
+    await positionInstance.deployed()
+
     fullPosition = utils
       .range(params.levels)
       .map((n) => (n + 1) % params.slotCount << (n * params.slotBits))
@@ -28,27 +24,24 @@ contract("Position", (accounts) => {
       .reduce(utils.sumReducer)
   })
 
-  describe("slot()", async () => {
+  describe("slot", async () => {
     it("Returns the last bits", async () => {
-      const result = await positionInstance.slot.call(fullPosition)
-      assert.equal(result, childPosition)
+      const result = await positionInstance.slot(fullPosition)
+      expect(result).to.be.equal(childPosition)
     })
   })
 
-  describe("parent()", async () => {
+  describe("parent", async () => {
     it("Returns the first bits", async () => {
-      const result = await positionInstance.parent.call(fullPosition)
-      assert.equal(result, parentPosition)
+      const result = await positionInstance.parent(fullPosition)
+      expect(result).to.be.equal(parentPosition)
     })
   })
 
-  describe("child()", async () => {
+  describe("child", async () => {
     it("Returns the child address", async () => {
-      const result = await positionInstance.child.call(
-        parentPosition,
-        childPosition,
-      )
-      assert.equal(result, fullPosition)
+      const result = await positionInstance.child(parentPosition, childPosition)
+      expect(result).to.be.equal(fullPosition)
     })
   })
 })
