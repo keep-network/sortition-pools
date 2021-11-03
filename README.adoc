@@ -4,12 +4,10 @@ Sortition pool is a logarithmic data structure
 used to store the pool of eligible operators weighted by their stakes.
 In the Keep network the stake consists of staked KEEP tokens.
 It allows to select a group of operators
-based on the provided pseudo-random seed
-and optional bonding requirements.
+based on the provided pseudo-random seed.
 
 Each privileged application has its own sortition pool
-and eligibility is checked when an operator is selected,
-rejecting and removing ineligible operators from the pool.
+and is responsible for maintaining operator weights up-to-date.
 
 A sortition pool provides instant selection results
 and is less affected by censorship that the ticket selection,
@@ -18,41 +16,11 @@ Additionally, miners and other actors that can predict the selection seed
 (due to frontrunning the beacon or a public cached seed being used)
 may be able to manipulate selection outcomes to some degree
 by selectively updating the pool.
-To mitigate this,
-operators who have joined the pool too recently are ineligible for selection,
-and the pool and its RNG have been designed
-to reduce the degrees of freedom available to such an adversary.
-The fewer outdated operators there are in the pool,
-the less attack surface the pool presents,
-so proactive maintenance is also helpful.
+To mitigate this, application using sortition pool should lock
+sortition pool state before seed used for the new selection is
+known and should unlock the pool once the selection process is
+over, keeping in mind potential timeouts and result challenges.
 
-== Overview
-
-An operator enters a sortition pool by opting in.
-The pool checks their eligible tokens stake
-(including operator status and authorization to slash stakes),
-and optionally available bonding value
-(including authorization to seize bonds).
-The operator pays the transaction fees for the pool update.
-
-Keeping these pools up to date cannot be done eagerly
-as proliferation of privileged customers could be used
-to perform DOS attacks by increasing the cost of such updates.
-When a sortition pool prospectively selects an operator,
-the selected operator's eligibility status and weight are checked.
-If the information is out of date
-in a way that updating it would be detrimental to the operator,
-the operator is removed from the pool
-and a new operator is selected from the updated pool.
-This is to incentivize operators to keep their information up to date.
-
-The number of operator selections required to get _n_ valid non-unique members
-averages _n / (1 - e)_ where _e_ equals the fraction of weight in the pool
-belonging to operators whose information is detrimentally out of date.
-If 50% of the pool weight is outdated, the average number of selections is 6,
-roughly 2% of ECDSA keeps would require 12 or more operator selections,
-and more than 20 selections would be extremely rare.
-Sortition pools that are used more often would be less outdated.
 
 == Optimized higher arity trees
 
@@ -107,157 +75,3 @@ This means that we can store up to 2 mibioperators (a bit over 2 million)
 in the sortition tree.
 If the minimum stake is at least `TOKEN_SUPPLY / 2**21`, 
 the pool will always be able to accommodate all possible operators.
-
-== Usage
-
-=== Bonded Sortition Pool
-
-==== Creating a pool
-
-----
-import "@keep-network/sortition-pools/contracts/api/IStaking.sol";
-import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
-import "@keep-network/sortition-pools/contracts/BondedSortitionPool.sol";
-import "@keep-network/sortition-pools/contracts/BondedSortitionPoolFactory.sol";
-
-(...)
-
-BondedSortitionPoolFactory sortitionPoolFactory;
-
-(...)
-
-address poolAddress = sortitionPoolFactory.createSortitionPool(
-  IStaking(keepStakingContract),
-  IBonding(keepBondingContract),
-  minimumStake,
-  minimumBond,
-  poolWeightDivisor
-);
-
-BondedSortitionPool pool = BondedSortitionPool(poolAddress);
-----
-
-==== Joining the pool
-
-----
-if (!pool.isOperatorInPool(operator)) {
-  pool.joinPool(operator);
-}
-----
-
-==== Updating status
-
-----
-if (!pool.isOperatorUpToDate(operator)) {
-  pool.updateOperatorStatus(operator);
-}
-----
-
-==== Selecting unique signers
-
-----
-address[] memory members = pool.selectSetGroup(
-  groupSize,
-  bytes32(groupSelectionSeed),
-  minimumStake,
-  memberBond
-);
-----        
-
-=== Sortition Pool with no bonding
-
-==== Creating a pool
-
-----
-import "@keep-network/sortition-pools/contracts/SortitionPool.sol";
-import "@keep-network/sortition-pools/contracts/SortitionPoolFactory.sol";
-
-(...)
-
-SortitionPoolFactory sortitionPoolFactory;
-
-(...)
-
-address poolAddress = sortitionPoolFactory.createSortitionPool(
-  IStaking(keepStakingContract),
-  minimumStake
-);
-
-SortitionPool pool = SortitionPool(poolAddress);
-----
-
-==== Joining the pool
-
-----
-if (!pool.isOperatorInPool(operator)) {
-  pool.joinPool(operator);
-}
-----
-
-==== Updating status
-
-----
-if (!pool.isOperatorUpToDate(operator)) {
-  pool.updateOperatorStatus(operator);
-}
-----
-
-==== Selecting non-unique signers
-
-----
-address[] memory members = pool.selectGroup(
-  groupSize,
-  bytes32(groupSelectionSeed),
-  minimumStake
-);
-----  
-
-=== Fully Backed Sortition Pool
-
-==== Creating a pool
-
-----
-import "@keep-network/sortition-pools/contracts/api/IBonding.sol";
-import "@keep-network/sortition-pools/contracts/FullyBackedSortitionPool.sol";
-import "@keep-network/sortition-pools/contracts/FullyBackedSortitionPoolFactory.sol";
-
-(...)
-
-FullyBackedSortitionPoolFactory sortitionPoolFactory;
-
-(...)
-
-address poolAddress = sortitionPoolFactory.createSortitionPool(
-  IBonding(keepBondingContract),
-  minimumStake,
-  bondWeightDivisor
-);
-
-FullyBackedSortitionPool pool = FullyBackedSortitionPool(poolAddress);
-----
-
-==== Joining the pool
-
-----
-if (!pool.isOperatorInPool(operator)) {
-  pool.joinPool(operator);
-}
-----
-
-==== Updating status
-
-----
-if (!pool.isOperatorUpToDate(operator)) {
-  pool.updateOperatorStatus(operator);
-}
-----
-
-==== Selecting unique signers
-
-----
-address[] memory members = pool.selectSetGroup(
-  groupSize,
-  bytes32(groupSelectionSeed),
-  memberBond
-);
-----      
