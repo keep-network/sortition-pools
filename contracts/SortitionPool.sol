@@ -3,13 +3,14 @@ pragma solidity 0.8.6;
 import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
+import "./Rewards.sol";
 import "./api/IStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree {
+contract SortitionPool is SortitionTree, Rewards {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
@@ -39,6 +40,16 @@ contract SortitionPool is SortitionTree {
     );
   }
 
+  function payReward(uint256 amount) public {
+    Rewards.addRewards(uint96(amount), root.sumWeight());
+  }
+
+  function withdrawRewards(address operator) public returns (uint256) {
+    Rewards.updateOperatorRewards(operator, getPoolWeight(operator));
+    uint96 earned = Rewards.withdrawOperatorRewards(operator);
+    return uint256(earned);
+  }
+
   /// @notice Add an operator to the pool,
   /// reverting if the operator is already present.
   function joinPool(address operator) public {
@@ -46,6 +57,9 @@ contract SortitionPool is SortitionTree {
     require(eligibleWeight > 0, "Operator not eligible");
 
     insertOperator(operator, eligibleWeight);
+
+    Rewards.operatorRewards[operator].accumulated = Rewards
+      .globalRewardAccumulator;
   }
 
   /// @notice Update the operator's weight if present and eligible,
@@ -55,6 +69,8 @@ contract SortitionPool is SortitionTree {
     uint256 inPoolWeight = getPoolWeight(operator);
 
     require(eligibleWeight != inPoolWeight, "Operator already up to date");
+
+    Rewards.updateOperatorRewards(operator, inPoolWeight);
 
     if (eligibleWeight == 0) {
       removeOperator(operator);
