@@ -125,7 +125,7 @@ contract SortitionTree {
     return id;
   }
 
-  function insertOperator(address operator, uint256 weight) internal {
+  function _insertOperator(address operator, uint256 weight) internal {
     require(
       !isOperatorRegistered(operator),
       "Operator is already registered in the pool"
@@ -147,7 +147,7 @@ contract SortitionTree {
     flaggedLeafPosition[operator] = position.setFlag();
   }
 
-  function removeOperator(address operator) internal {
+  function _removeOperator(address operator) internal {
     uint256 flaggedPosition = getFlaggedLeafPosition(operator);
     require(flaggedPosition != 0, "Operator is not registered in the pool");
     uint256 unflaggedPosition = flaggedPosition.unsetFlag();

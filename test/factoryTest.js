@@ -60,8 +60,8 @@ describe("SortitionPoolFactory", () => {
       await staking.setStake(alice.address, 22000)
       await staking.setStake(bob.address, 24000)
 
-      await sortitionPool1.joinPool(alice.address)
-      await sortitionPool2.joinPool(bob.address)
+      await sortitionPool1.insertOperator(alice.address)
+      await sortitionPool2.insertOperator(bob.address)
 
       await helpers.time.mineBlocks(11)
 
