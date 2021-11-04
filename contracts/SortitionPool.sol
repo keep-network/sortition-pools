@@ -25,6 +25,11 @@ contract SortitionPool is SortitionTree {
 
   PoolParams internal poolParams;
 
+  event OwnershipTransferred(
+    address indexed previousOwner,
+    address indexed newOwner
+  );
+
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
@@ -93,6 +98,19 @@ contract SortitionPool is SortitionTree {
     } else {
       updateOperator(operator, eligibleWeight);
     }
+  }
+
+  /// @notice Transfers the ownership of the sortition pool.
+  /// @dev Can be called only by the contract owner.
+  /// @param newOwner Address of the new pool owner.
+  function transferOwnership(address newOwner) public {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+    require(newOwner != address(0), "New owner is the zero address");
+
+    address oldOwner = poolParams.owner;
+    poolParams.owner = newOwner;
+
+    emit OwnershipTransferred(oldOwner, newOwner);
   }
 
   /// @notice Return whether the operator is eligible for the pool.

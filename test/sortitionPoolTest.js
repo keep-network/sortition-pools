@@ -14,12 +14,14 @@ describe("SortitionPool", () => {
   let bob
   let carol
   let owner
+  let newOwner
 
   beforeEach(async () => {
     alice = await ethers.getSigner(0)
     bob = await ethers.getSigner(1)
     carol = await ethers.getSigner(2)
     owner = await ethers.getSigner(9)
+    newOwner = await ethers.getSigner(10)
 
     const StakingContractStub = await ethers.getContractFactory(
       "StakingContractStub",
@@ -130,6 +132,51 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).removeOperators([bobID, carolID]),
+        ).to.be.revertedWith("Caller is not the owner")
+      })
+    })
+  })
+
+  describe("transferOwnership", () => {
+    context("when called by the owner", () => {
+      context("when new owner is a non-zero address", () => {
+        let tx
+
+        beforeEach(async () => {
+          tx = await pool.connect(owner).transferOwnership(newOwner.address)
+        })
+
+        it("should set the new owner", async () => {
+          // There is no view function to check the current owner so we perform
+          // an indirect check by calling an owner-only method i.e. the
+          // owner transfer ownership to itself.
+          await expect(
+            pool.connect(newOwner).transferOwnership(newOwner.address),
+          ).to.not.be.reverted
+        })
+
+        it("should emit OwnershipTransferred event", async () => {
+          await expect(tx)
+            .to.emit(pool, "OwnershipTransferred")
+            .withArgs(owner.address, newOwner.address)
+        })
+      })
+
+      context("when new owner is the zero address", () => {
+        it("should revert", async () => {
+          await expect(
+            pool
+              .connect(owner)
+              .transferOwnership("0x0000000000000000000000000000000000000000"),
+          ).to.be.revertedWith("New owner is the zero address")
+        })
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).transferOwnership(alice.address),
         ).to.be.revertedWith("Caller is not the owner")
       })
     })
