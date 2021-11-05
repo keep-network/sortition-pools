@@ -11,19 +11,20 @@ contract RewardsStub is Rewards {
         operators.push(operator);
         operatorWeight[operator] = weight;
         operatorRewards[operator].accumulated = globalRewardAccumulator;
+        updateOperatorRewards(operator, uint32(weight));
     }
 
     function syncRewards(address operator) public {
-        updateOperatorRewards(operator, operatorWeight[operator]);
+        updateOperatorRewards(operator, uint32(operatorWeight[operator]));
     }
 
     function updateOperatorWeight(address operator, uint256 newWeight) public {
-        updateOperatorRewards(operator, operatorWeight[operator]);
+        updateOperatorRewards(operator, uint32(newWeight));
         operatorWeight[operator] = newWeight;
     }
 
     function payReward(uint256 rewardAmount) public {
-        addRewards(uint96(rewardAmount), getPoolWeight());
+        addRewards(uint96(rewardAmount), uint32(getPoolWeight()));
     }
 
     function withdrawRewards(address operator) public {

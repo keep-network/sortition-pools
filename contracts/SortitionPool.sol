@@ -41,11 +41,11 @@ contract SortitionPool is SortitionTree, Rewards {
   }
 
   function payReward(uint256 amount) public {
-    Rewards.addRewards(uint96(amount), root.sumWeight());
+    Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
   }
 
   function withdrawRewards(address operator) public returns (uint256) {
-    Rewards.updateOperatorRewards(operator, getPoolWeight(operator));
+    Rewards.updateOperatorRewards(operator, uint32(getPoolWeight(operator)));
     uint96 earned = Rewards.withdrawOperatorRewards(operator);
     return uint256(earned);
   }
@@ -70,7 +70,7 @@ contract SortitionPool is SortitionTree, Rewards {
 
     require(eligibleWeight != inPoolWeight, "Operator already up to date");
 
-    Rewards.updateOperatorRewards(operator, inPoolWeight);
+    Rewards.updateOperatorRewards(operator, uint32(inPoolWeight));
 
     if (eligibleWeight == 0) {
       removeOperator(operator);

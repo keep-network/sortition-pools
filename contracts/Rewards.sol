@@ -35,6 +35,13 @@ contract Rewards {
     // The amount the operator could withdraw may equal `available`
     // or it may be greater, if more rewards have been paid in since then.
     uint96 available;
+    // If nonzero, the operator is ineligible for rewards
+    // and may only re-enable rewards after the specified timestamp.
+    // XXX: unsigned 32-bit integer unix seconds, will break around 2106
+    uint32 ineligibleUntil;
+    // Locally cached weight of the operator,
+    // used to reduce the cost of setting operators ineligible.
+    uint32 weight;
   }
 
   // The global accumulator of how much rewards
@@ -46,28 +53,35 @@ contract Rewards {
   // the difference is recorded as rounding dust
   // and added to the next reward.
   uint96 internal rewardRoundingDust;
+  // The total weight of all operators in the pool
+  // who are ineligible for rewards.
+  uint32 internal totalIneligibleWeight;
 
   mapping(address => OperatorRewards) internal operatorRewards;
 
   /// @notice Internal function for updating the global state of rewards.
-  function addRewards(uint96 rewardAmount, uint256 currentPoolWeight) internal {
+  function addRewards(uint96 rewardAmount, uint32 currentPoolWeight) internal {
     require(currentPoolWeight >= 0, "No recipients in pool");
 
+    uint96 rewardWeight = uint96(currentPoolWeight - totalIneligibleWeight);
+
     uint96 totalAmount = rewardAmount + rewardRoundingDust;
-    uint96 perWeightReward = totalAmount / uint96(currentPoolWeight);
-    uint96 newRoundingDust = totalAmount % uint96(currentPoolWeight);
+    uint96 perWeightReward = totalAmount / rewardWeight;
+    uint96 newRoundingDust = totalAmount % rewardWeight;
 
     globalRewardAccumulator += perWeightReward;
     rewardRoundingDust = newRoundingDust;
   }
 
   /// @notice Internal function for updating the operator's reward state.
-  function updateOperatorRewards(address operator, uint256 oldWeight) internal {
+  function updateOperatorRewards(address operator, uint32 newWeight) internal {
     uint96 acc = globalRewardAccumulator;
-    OperatorRewards storage o = operatorRewards[operator];
-    uint96 accruedRewards = (acc - o.accumulated) * uint96(oldWeight);
+    OperatorRewards memory o = operatorRewards[operator];
+    uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
     o.available += accruedRewards;
     o.accumulated = acc;
+    o.weight = newWeight;
+    operatorRewards[operator] = o;
   }
 
   /// @notice Set the amount of withdrawable tokens to zero
