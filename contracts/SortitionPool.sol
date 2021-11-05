@@ -21,9 +21,16 @@ contract SortitionPool is SortitionTree {
     uint256 minimumStake;
     uint256 poolWeightDivisor;
     address owner;
+    bool locked;
   }
 
   PoolParams internal poolParams;
+
+  /// @notice Reverts if called while pool is locked.
+  modifier onlyUnlocked() {
+    require(!poolParams.locked, "Sortition pool locked");
+    _;
+  }
 
   constructor(
     IStaking _stakingContract,
@@ -35,15 +42,33 @@ contract SortitionPool is SortitionTree {
       _stakingContract,
       _minimumStake,
       _poolWeightDivisor,
-      _poolOwner
+      _poolOwner,
+      false
     );
+  }
+
+  /// @notice Locks the sortition pool. In locked state, members cannot be
+  ///         inserted and removed from the pool. Members statuses cannot
+  ///         be updated as well.
+  /// @dev Can be called only by the contract owner.
+  function lock() public {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+    poolParams.locked = true;
+  }
+
+  /// @notice Unlocks the sortition pool. Removes all restrictions set by
+  ///         the `lock` method.
+  /// @dev Can be called only by the contract owner.
+  function unlock() public {
+    require(msg.sender == poolParams.owner, "Caller is not the owner");
+    poolParams.locked = false;
   }
 
   /// @notice Inserts an operator to the pool,
   /// reverting if the operator is already present.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the inserted operator.
-  function insertOperator(address operator) public {
+  function insertOperator(address operator) public onlyUnlocked {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
     uint256 eligibleWeight = getEligibleWeight(operator);
@@ -55,7 +80,7 @@ contract SortitionPool is SortitionTree {
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the removed operator.
-  function removeOperator(uint32 id) public {
+  function removeOperator(uint32 id) public onlyUnlocked {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
     _removeOperator(getIDOperator(id));
@@ -64,7 +89,7 @@ contract SortitionPool is SortitionTree {
   /// @notice Removes given operators from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param ids IDs of the removed operators.
-  function removeOperators(uint32[] calldata ids) public {
+  function removeOperators(uint32[] calldata ids) public onlyUnlocked {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
     address[] memory operators = getIDOperators(ids);
@@ -78,7 +103,7 @@ contract SortitionPool is SortitionTree {
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the updated operator.
-  function updateOperatorStatus(uint32 id) public {
+  function updateOperatorStatus(uint32 id) public onlyUnlocked {
     require(msg.sender == poolParams.owner, "Caller is not the owner");
 
     address operator = getIDOperator(id);
@@ -165,6 +190,11 @@ contract SortitionPool is SortitionTree {
       selectedAddresses[i] = selected.array[i].operator();
     }
     return selectedAddresses;
+  }
+
+  /// @return True if pool is currently locked, false otherwise.
+  function isLocked() public view returns (bool) {
+    return poolParams.locked;
   }
 
   /// @notice Return the eligible weight of the operator,

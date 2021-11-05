@@ -39,32 +39,93 @@ describe("SortitionPool", () => {
     await pool.deployed()
   })
 
-  describe("insertOperator", () => {
+  describe("lock", () => {
     context("when called by the owner", () => {
-      context("when operator is eligible", () => {
-        beforeEach(async () => {
-          await staking.setStake(alice.address, 20000)
-          await pool.connect(owner).insertOperator(alice.address)
+      beforeEach(async () => {
+        // Pool is unlocked by default.
+        await pool.connect(owner).lock()
+      })
+
+      it("should lock the pool", async () => {
+        expect(await pool.isLocked()).to.be.true
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(pool.connect(alice).lock()).to.be.revertedWith(
+          "Caller is not the owner",
+        )
+      })
+    })
+  })
+
+  describe("unlock", () => {
+    beforeEach(async () => {
+      // Pool is unlocked by default so we need to lock it explicitly.
+      await pool.connect(owner).lock()
+    })
+
+    context("when called by the owner", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).unlock()
+      })
+
+      it("should lock the pool", async () => {
+        expect(await pool.isLocked()).to.be.false
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(pool.connect(alice).unlock()).to.be.revertedWith(
+          "Caller is not the owner",
+        )
+      })
+    })
+  })
+
+  describe("insertOperator", () => {
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        context("when operator is eligible", () => {
+          beforeEach(async () => {
+            await staking.setStake(alice.address, 20000)
+            await pool.connect(owner).insertOperator(alice.address)
+          })
+
+          it("should insert the operator to the pool", async () => {
+            expect(await pool.isOperatorInPool(alice.address)).to.be.true
+          })
         })
 
-        it("should insert the operator to the pool", async () => {
-          expect(await pool.isOperatorInPool(alice.address)).to.be.true
+        context("when operator is not eligible", () => {
+          it("should revert", async () => {
+            await expect(
+              pool.connect(owner).insertOperator(alice.address),
+            ).to.be.revertedWith("Operator not eligible")
+          })
         })
       })
 
-      context("when operator is not eligible", () => {
+      context("when called by a non-owner", () => {
         it("should revert", async () => {
           await expect(
-            pool.connect(owner).insertOperator(alice.address),
-          ).to.be.revertedWith("Operator not eligible")
+            pool.connect(alice).insertOperator(alice.address),
+          ).to.be.revertedWith("Caller is not the owner")
         })
       })
     })
-    context("when called by a non-owner", () => {
+
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
       it("should revert", async () => {
         await expect(
-          pool.connect(alice).insertOperator(alice.address),
-        ).to.be.revertedWith("Caller is not the owner")
+          pool.connect(owner).insertOperator(alice.address),
+        ).to.be.revertedWith("Sortition pool locked")
       })
     })
   })
@@ -78,21 +139,35 @@ describe("SortitionPool", () => {
       aliceID = await pool.getOperatorID(alice.address)
     })
 
-    context("when called by the owner", () => {
-      beforeEach(async () => {
-        await pool.connect(owner).removeOperator(aliceID)
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        beforeEach(async () => {
+          await pool.connect(owner).removeOperator(aliceID)
+        })
+
+        it("should remove the operator from the pool", async () => {
+          expect(await pool.isOperatorInPool(alice.address)).to.be.false
+        })
       })
 
-      it("should remove the operator from the pool", async () => {
-        expect(await pool.isOperatorInPool(alice.address)).to.be.false
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool.connect(alice).removeOperator(aliceID),
+          ).to.be.revertedWith("Caller is not the owner")
+        })
       })
     })
 
-    context("when called by a non-owner", () => {
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
       it("should revert", async () => {
         await expect(
-          pool.connect(alice).removeOperator(aliceID),
-        ).to.be.revertedWith("Caller is not the owner")
+          pool.connect(owner).removeOperator(aliceID),
+        ).to.be.revertedWith("Sortition pool locked")
       })
     })
   })
@@ -114,23 +189,98 @@ describe("SortitionPool", () => {
       carolID = await pool.getOperatorID(carol.address)
     })
 
-    context("when called by the owner", () => {
-      beforeEach(async () => {
-        await pool.connect(owner).removeOperators([bobID, carolID])
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        beforeEach(async () => {
+          await pool.connect(owner).removeOperators([bobID, carolID])
+        })
+
+        it("should remove given operators from the pool", async () => {
+          expect(await pool.isOperatorInPool(alice.address)).to.be.true
+          expect(await pool.isOperatorInPool(bob.address)).to.be.false
+          expect(await pool.isOperatorInPool(carol.address)).to.be.false
+        })
       })
 
-      it("should remove given operators from the pool", async () => {
-        expect(await pool.isOperatorInPool(alice.address)).to.be.true
-        expect(await pool.isOperatorInPool(bob.address)).to.be.false
-        expect(await pool.isOperatorInPool(carol.address)).to.be.false
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool.connect(alice).removeOperators([bobID, carolID]),
+          ).to.be.revertedWith("Caller is not the owner")
+        })
       })
     })
 
-    context("when called by a non-owner", () => {
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
       it("should revert", async () => {
         await expect(
-          pool.connect(alice).removeOperators([bobID, carolID]),
-        ).to.be.revertedWith("Caller is not the owner")
+          pool.connect(owner).removeOperators([bobID, carolID]),
+        ).to.be.revertedWith("Sortition pool locked")
+      })
+    })
+  })
+
+  describe("updateOperatorStatus", () => {
+    let aliceID
+    let bobID
+
+    beforeEach(async () => {
+      await staking.setStake(alice.address, 2000)
+      await staking.setStake(bob.address, 4000000)
+      await pool.connect(owner).insertOperator(alice.address)
+      await pool.connect(owner).insertOperator(bob.address)
+
+      aliceID = await pool.getOperatorID(alice.address)
+      bobID = await pool.getOperatorID(bob.address)
+
+      await staking.setStake(bob.address, 390000)
+      await staking.setStake(alice.address, 1000)
+
+      await helpers.time.mineBlocks(11)
+    })
+
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        beforeEach(async () => {
+          await pool.connect(owner).updateOperatorStatus(bobID)
+          await pool.connect(owner).updateOperatorStatus(aliceID)
+        })
+
+        it("should update operators status", async () => {
+          const group = await pool.connect(owner).selectGroup(5, seed)
+          await pool.connect(owner).nonViewSelectGroup(5, seed)
+          expect(group).to.deep.equal([
+            bob.address,
+            bob.address,
+            bob.address,
+            bob.address,
+            bob.address,
+          ])
+        })
+      })
+
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool.connect(alice).updateOperatorStatus(aliceID),
+          ).to.be.revertedWith("Caller is not the owner")
+        })
+      })
+    })
+
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
+      it("should revert", async () => {
+        await expect(
+          pool.connect(owner).updateOperatorStatus(aliceID),
+        ).to.be.revertedWith("Sortition pool locked")
       })
     })
   })
@@ -225,41 +375,6 @@ describe("SortitionPool", () => {
         const group = await pool.connect(owner).selectGroup(5, seed)
         await pool.connect(owner).nonViewSelectGroup(5, seed)
         expect(group.length).to.be.equal(5)
-      })
-    })
-
-    context("when the owner updates outdated operators statuses", (async) => {
-      let aliceID
-      let bobID
-
-      beforeEach(async () => {
-        await staking.setStake(alice.address, 2000)
-        await staking.setStake(bob.address, 4000000)
-        await pool.connect(owner).insertOperator(alice.address)
-        await pool.connect(owner).insertOperator(bob.address)
-
-        aliceID = await pool.getOperatorID(alice.address)
-        bobID = await pool.getOperatorID(bob.address)
-
-        await staking.setStake(bob.address, 390000)
-        await staking.setStake(alice.address, 1000)
-
-        await helpers.time.mineBlocks(11)
-
-        await pool.connect(owner).updateOperatorStatus(bobID)
-        await pool.connect(owner).updateOperatorStatus(aliceID)
-      })
-
-      it("should update operators status", async () => {
-        const group = await pool.connect(owner).selectGroup(5, seed)
-        await pool.connect(owner).nonViewSelectGroup(5, seed)
-        expect(group).to.deep.equal([
-          bob.address,
-          bob.address,
-          bob.address,
-          bob.address,
-          bob.address,
-        ])
       })
     })
 
