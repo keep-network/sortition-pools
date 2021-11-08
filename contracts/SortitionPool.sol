@@ -4,12 +4,13 @@ import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./api/IStaking.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree {
+contract SortitionPool is SortitionTree, Ownable {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
@@ -20,7 +21,6 @@ contract SortitionPool is SortitionTree {
     IStaking stakingContract;
     uint256 minimumStake;
     uint256 poolWeightDivisor;
-    address owner;
   }
 
   PoolParams internal poolParams;
@@ -28,14 +28,12 @@ contract SortitionPool is SortitionTree {
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
-    uint256 _poolWeightDivisor,
-    address _poolOwner
+    uint256 _poolWeightDivisor
   ) {
     poolParams = PoolParams(
       _stakingContract,
       _minimumStake,
-      _poolWeightDivisor,
-      _poolOwner
+      _poolWeightDivisor
     );
   }
 
@@ -43,9 +41,7 @@ contract SortitionPool is SortitionTree {
   /// reverting if the operator is already present.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the inserted operator.
-  function insertOperator(address operator) public {
-    require(msg.sender == poolParams.owner, "Caller is not the owner");
-
+  function insertOperator(address operator) public onlyOwner {
     uint256 eligibleWeight = getEligibleWeight(operator);
     require(eligibleWeight > 0, "Operator not eligible");
 
@@ -55,18 +51,14 @@ contract SortitionPool is SortitionTree {
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the removed operator.
-  function removeOperator(uint32 id) public {
-    require(msg.sender == poolParams.owner, "Caller is not the owner");
-
+  function removeOperator(uint32 id) public onlyOwner {
     _removeOperator(getIDOperator(id));
   }
 
   /// @notice Removes given operators from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param ids IDs of the removed operators.
-  function removeOperators(uint32[] calldata ids) public {
-    require(msg.sender == poolParams.owner, "Caller is not the owner");
-
+  function removeOperators(uint32[] calldata ids) public onlyOwner {
     address[] memory operators = getIDOperators(ids);
 
     for (uint256 i = 0; i < operators.length; i++) {
@@ -78,9 +70,7 @@ contract SortitionPool is SortitionTree {
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the updated operator.
-  function updateOperatorStatus(uint32 id) public {
-    require(msg.sender == poolParams.owner, "Caller is not the owner");
-
+  function updateOperatorStatus(uint32 id) public onlyOwner {
     address operator = getIDOperator(id);
 
     uint256 eligibleWeight = getEligibleWeight(operator);
@@ -134,10 +124,9 @@ contract SortitionPool is SortitionTree {
   function selectGroup(uint256 groupSize, bytes32 seed)
     public
     view
+    onlyOwner
     returns (address[] memory)
   {
-    require(msg.sender == poolParams.owner, "Only owner may select groups");
-
     uint256 _root = root;
 
     DynamicArray.UintArray memory selected;
@@ -174,7 +163,7 @@ contract SortitionPool is SortitionTree {
     PoolParams memory params = poolParams;
     uint256 operatorStake = params.stakingContract.eligibleStake(
       operator,
-      params.owner
+      owner()
     );
     if (operatorStake < params.minimumStake) {
       return 0;

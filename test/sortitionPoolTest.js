@@ -10,16 +10,18 @@ describe("SortitionPool", () => {
   let staking
   let pool
 
+  let deployer
+  let owner
   let alice
   let bob
   let carol
-  let owner
 
   beforeEach(async () => {
-    alice = await ethers.getSigner(0)
-    bob = await ethers.getSigner(1)
-    carol = await ethers.getSigner(2)
-    owner = await ethers.getSigner(9)
+    deployer = await ethers.getSigner(0)
+    owner = await ethers.getSigner(1)
+    alice = await ethers.getSigner(2)
+    bob = await ethers.getSigner(3)
+    carol = await ethers.getSigner(4)
 
     const StakingContractStub = await ethers.getContractFactory(
       "StakingContractStub",
@@ -34,9 +36,10 @@ describe("SortitionPool", () => {
       staking.address,
       minStake,
       poolWeightDivisor,
-      owner.address,
     )
     await pool.deployed()
+
+    await pool.connect(deployer).transferOwnership(owner.address)
   })
 
   describe("insertOperator", () => {
@@ -64,7 +67,7 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).insertOperator(alice.address),
-        ).to.be.revertedWith("Caller is not the owner")
+        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
   })
@@ -92,7 +95,7 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).removeOperator(aliceID),
-        ).to.be.revertedWith("Caller is not the owner")
+        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
   })
@@ -130,7 +133,7 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).removeOperators([bobID, carolID]),
-        ).to.be.revertedWith("Caller is not the owner")
+        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
   })
@@ -166,7 +169,7 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).selectGroup(3, seed),
-        ).to.be.revertedWith("Only owner may select groups")
+        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
 
