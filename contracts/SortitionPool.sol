@@ -17,6 +17,10 @@ contract SortitionPool is SortitionTree, Ownable {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
+  /// @notice Governance delay that needs to pass before any risk manager
+  ///         parameter change initiated by the governance takes effect.
+  uint256 public constant GOVERNANCE_DELAY = 48 hours;
+
   IStaking public immutable stakingContract;
 
   uint256 public immutable poolWeightDivisor;
@@ -33,6 +37,19 @@ contract SortitionPool is SortitionTree, Ownable {
   /// @notice Reverts if called while pool is locked.
   modifier onlyUnlocked() {
     require(!isLocked, "Sortition pool locked");
+    _;
+  }
+
+  /// @notice Reverts if called before the governance delay elapses.
+  /// @param changeInitiatedTimestamp Timestamp indicating the beginning
+  ///        of the change.
+  modifier onlyAfterGovernanceDelay(uint256 changeInitiatedTimestamp) {
+    require(changeInitiatedTimestamp > 0, "Change not initiated");
+    require(
+      /* solhint-disable-next-line not-rely-on-time */
+      block.timestamp - changeInitiatedTimestamp >= GOVERNANCE_DELAY,
+      "Governance delay has not elapsed"
+    );
     _;
   }
 
@@ -133,7 +150,7 @@ contract SortitionPool is SortitionTree, Ownable {
   function finalizeMinimumStakeUpdate()
     external
     onlyOwner
-    onlyAfterGovernanceDelay(minimumStakeChangeInitiated, GOVERNANCE_DELAY)
+    onlyAfterGovernanceDelay(minimumStakeChangeInitiated)
   {
     minimumStake = newMinimumStake;
     emit MinimumStakeUpdated(newMinimumStake);
