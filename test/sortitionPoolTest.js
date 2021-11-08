@@ -1,6 +1,6 @@
 const chai = require("chai")
 const expect = chai.expect
-const { helpers, ethers } = require("hardhat")
+const { ethers } = require("hardhat")
 
 describe("SortitionPool", () => {
   const seed =
