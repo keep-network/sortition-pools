@@ -17,31 +17,50 @@ contract SortitionPool is SortitionTree, Ownable {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
-  struct PoolParams {
-    IStaking stakingContract;
-    uint256 minimumStake;
-    uint256 poolWeightDivisor;
-  }
+  IStaking public immutable stakingContract;
 
-  PoolParams internal poolParams;
+  uint256 public immutable poolWeightDivisor;
+
+  uint256 public minimumStake;
+
+  bool public isLocked;
+
+  /// @notice Reverts if called while pool is locked.
+  modifier onlyUnlocked() {
+    require(!isLocked, "Sortition pool locked");
+    _;
+  }
 
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
     uint256 _poolWeightDivisor
   ) {
-    poolParams = PoolParams(
-      _stakingContract,
-      _minimumStake,
-      _poolWeightDivisor
-    );
+    stakingContract = _stakingContract;
+    minimumStake = _minimumStake;
+    poolWeightDivisor = _poolWeightDivisor;
+  }
+
+  /// @notice Locks the sortition pool. In locked state, members cannot be
+  ///         inserted and removed from the pool. Members statuses cannot
+  ///         be updated as well.
+  /// @dev Can be called only by the contract owner.
+  function lock() public onlyOwner {
+    isLocked = true;
+  }
+
+  /// @notice Unlocks the sortition pool. Removes all restrictions set by
+  ///         the `lock` method.
+  /// @dev Can be called only by the contract owner.
+  function unlock() public onlyOwner {
+    isLocked = false;
   }
 
   /// @notice Inserts an operator to the pool,
   /// reverting if the operator is already present.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the inserted operator.
-  function insertOperator(address operator) public onlyOwner {
+  function insertOperator(address operator) public onlyOwner onlyUnlocked {
     uint256 eligibleWeight = getEligibleWeight(operator);
     require(eligibleWeight > 0, "Operator not eligible");
 
@@ -51,14 +70,18 @@ contract SortitionPool is SortitionTree, Ownable {
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the removed operator.
-  function removeOperator(uint32 id) public onlyOwner {
+  function removeOperator(uint32 id) public onlyOwner onlyUnlocked {
     _removeOperator(getIDOperator(id));
   }
 
   /// @notice Removes given operators from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param ids IDs of the removed operators.
-  function removeOperators(uint32[] calldata ids) public onlyOwner {
+  function removeOperators(uint32[] calldata ids)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
     address[] memory operators = getIDOperators(ids);
 
     for (uint256 i = 0; i < operators.length; i++) {
@@ -70,7 +93,7 @@ contract SortitionPool is SortitionTree, Ownable {
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the updated operator.
-  function updateOperatorStatus(uint32 id) public onlyOwner {
+  function updateOperatorStatus(uint32 id) public onlyOwner onlyUnlocked {
     address operator = getIDOperator(id);
 
     uint256 eligibleWeight = getEligibleWeight(operator);
@@ -83,6 +106,13 @@ contract SortitionPool is SortitionTree, Ownable {
     } else {
       updateOperator(operator, eligibleWeight);
     }
+  }
+
+  /// @notice Updates the minimum stake value,
+  /// @dev Can be called only by the contract owner.
+  /// @param newMinimumStake New minimum stake value.
+  function updateMinimumStake(uint256 newMinimumStake) external onlyOwner {
+    minimumStake = newMinimumStake;
   }
 
   /// @notice Return whether the operator is eligible for the pool.
@@ -160,14 +190,10 @@ contract SortitionPool is SortitionTree, Ownable {
   /// which may differ from the weight in the pool.
   /// Return 0 if ineligible.
   function getEligibleWeight(address operator) internal view returns (uint256) {
-    PoolParams memory params = poolParams;
-    uint256 operatorStake = params.stakingContract.eligibleStake(
-      operator,
-      owner()
-    );
-    if (operatorStake < params.minimumStake) {
+    uint256 operatorStake = stakingContract.eligibleStake(operator, owner());
+    if (operatorStake < minimumStake) {
       return 0;
     }
-    return operatorStake / params.poolWeightDivisor;
+    return operatorStake / poolWeightDivisor;
   }
 }
