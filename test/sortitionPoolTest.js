@@ -237,8 +237,6 @@ describe("SortitionPool", () => {
       aliceID = await pool.getOperatorID(alice.address)
 
       await staking.setStake(alice.address, 1000)
-
-      await helpers.time.mineBlocks(11)
     })
 
     context("when sortition pool is unlocked", () => {
