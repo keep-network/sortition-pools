@@ -270,7 +270,7 @@ describe("SortitionPool", () => {
         it("should revert", async () => {
           await expect(
             pool.connect(alice).updateOperatorStatus(aliceID),
-          ).to.be.revertedWith("Caller is not the owner")
+          ).to.be.revertedWith("Ownable: caller is not the owner")
         })
       })
     })
