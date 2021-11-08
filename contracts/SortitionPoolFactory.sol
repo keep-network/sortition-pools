@@ -15,16 +15,15 @@ contract SortitionPoolFactory {
     uint256 minimumStake,
     uint256 poolWeightDivisor
   ) public returns (address) {
-    address sortitionPool = address(
-      new SortitionPool(
-        stakingContract,
-        minimumStake,
-        poolWeightDivisor,
-        msg.sender
-      )
+    SortitionPool sortitionPool = new SortitionPool(
+      stakingContract,
+      minimumStake,
+      poolWeightDivisor
     );
 
-    emit SortitionPoolCreated(sortitionPool);
-    return sortitionPool;
+    sortitionPool.transferOwnership(msg.sender);
+
+    emit SortitionPoolCreated(address(sortitionPool));
+    return address(sortitionPool);
   }
 }

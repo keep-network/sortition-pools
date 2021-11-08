@@ -6,16 +6,8 @@ contract SortitionPoolStub is SortitionPool {
   constructor(
     IStaking _stakingContract,
     uint256 _minimumStake,
-    uint256 _poolWeightDivisor,
-    address _poolOwner
-  )
-    SortitionPool(
-      _stakingContract,
-      _minimumStake,
-      _poolWeightDivisor,
-      _poolOwner
-    )
-  {}
+    uint256 _poolWeightDivisor
+  ) SortitionPool(_stakingContract, _minimumStake, _poolWeightDivisor) {}
 
   function nonViewSelectGroup(uint256 groupSize, bytes32 seed)
     public

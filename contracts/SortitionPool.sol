@@ -4,12 +4,13 @@ import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./api/IStaking.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree {
+contract SortitionPool is SortitionTree, Ownable {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
