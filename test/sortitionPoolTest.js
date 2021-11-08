@@ -288,6 +288,109 @@ describe("SortitionPool", () => {
     })
   })
 
+  describe("beginMinimumStakeUpdate", () => {
+    context("when the caller is the owner", () => {
+      const currentMinimumStake = minStake
+      const newMinimumStake = 4000
+      let tx
+
+      beforeEach(async () => {
+        tx = await pool.connect(owner).beginMinimumStakeUpdate(newMinimumStake)
+      })
+
+      it("should not update the minimum stake immediately", async () => {
+        expect(await pool.minimumStake()).to.be.equal(currentMinimumStake)
+      })
+
+      it("should start the governance delay timer", async () => {
+        const blockTimestamp = (await ethers.provider.getBlock(tx.blockNumber))
+          .timestamp
+
+        expect(await pool.minimumStakeChangeInitiated()).to.be.equal(
+          blockTimestamp,
+        )
+      })
+
+      it("should emit the MinimumStakeUpdateStarted event", async () => {
+        const blockTimestamp = (await ethers.provider.getBlock(tx.blockNumber))
+          .timestamp
+        await expect(tx)
+          .to.emit(pool, "MinimumStakeUpdateStarted")
+          .withArgs(newMinimumStake, blockTimestamp)
+      })
+    })
+
+    context("when the caller is not the owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).beginMinimumStakeUpdate(4000),
+        ).to.be.revertedWith("Ownable: caller is not the owner")
+      })
+    })
+  })
+
+  describe("finalizeMinimumStakeUpdate", () => {
+    const newMinimumStake = 4000
+
+    context(
+      "when the update process is initialized, governance delay passed, " +
+        "and the caller is the owner",
+      () => {
+        let tx
+
+        beforeEach(async () => {
+          await pool.connect(owner).beginMinimumStakeUpdate(newMinimumStake)
+
+          await helpers.time.increaseTime(172800) // +48h contract governance delay
+
+          tx = await pool.connect(owner).finalizeMinimumStakeUpdate()
+        })
+
+        it("should update the minimum stake", async () => {
+          expect(await pool.minimumStake()).to.be.equal(newMinimumStake)
+        })
+
+        it("should emit MinimumStakeUpdated event", async () => {
+          await expect(tx)
+            .to.emit(pool, "MinimumStakeUpdated")
+            .withArgs(newMinimumStake)
+        })
+
+        it("should reset the governance delay timer", async () => {
+          expect(await pool.minimumStakeChangeInitiated()).to.be.equal(0)
+        })
+      },
+    )
+
+    context("when the governance delay is not passed", () => {
+      it("should revert", async () => {
+        await pool.connect(owner).beginMinimumStakeUpdate(newMinimumStake)
+
+        await helpers.time.increaseTime(169200) // +47h
+
+        await expect(
+          pool.connect(owner).finalizeMinimumStakeUpdate(),
+        ).to.be.revertedWith("Governance delay has not elapsed")
+      })
+    })
+
+    context("when the caller is not the owner", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(alice).finalizeMinimumStakeUpdate(),
+        ).to.be.revertedWith("Ownable: caller is not the owner")
+      })
+    })
+
+    context("when the update process is not initialized", () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(owner).finalizeMinimumStakeUpdate(),
+        ).to.be.revertedWith("Change not initiated")
+      })
+    })
+  })
+
   describe("selectGroup", async () => {
     context("when called by owner", () => {
       beforeEach(async () => {
