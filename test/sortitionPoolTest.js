@@ -229,18 +229,13 @@ describe("SortitionPool", () => {
 
   describe("updateOperatorStatus", () => {
     let aliceID
-    let bobID
 
     beforeEach(async () => {
       await staking.setStake(alice.address, 2000)
-      await staking.setStake(bob.address, 4000000)
       await pool.connect(owner).insertOperator(alice.address)
-      await pool.connect(owner).insertOperator(bob.address)
 
       aliceID = await pool.getOperatorID(alice.address)
-      bobID = await pool.getOperatorID(bob.address)
 
-      await staking.setStake(bob.address, 390000)
       await staking.setStake(alice.address, 1000)
 
       await helpers.time.mineBlocks(11)
@@ -249,20 +244,11 @@ describe("SortitionPool", () => {
     context("when sortition pool is unlocked", () => {
       context("when called by the owner", () => {
         beforeEach(async () => {
-          await pool.connect(owner).updateOperatorStatus(bobID)
           await pool.connect(owner).updateOperatorStatus(aliceID)
         })
 
-        it("should update operators status", async () => {
-          const group = await pool.connect(owner).selectGroup(5, seed)
-          await pool.connect(owner).nonViewSelectGroup(5, seed)
-          expect(group).to.deep.equal([
-            bob.address,
-            bob.address,
-            bob.address,
-            bob.address,
-            bob.address,
-          ])
+        it("should update operator status", async () => {
+          expect(await pool.isOperatorUpToDate(alice.address)).to.be.true
         })
       })
 
