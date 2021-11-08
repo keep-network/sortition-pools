@@ -17,39 +17,17 @@ contract SortitionPool is SortitionTree, Ownable {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
-  /// @notice Governance delay that needs to pass before any risk manager
-  ///         parameter change initiated by the governance takes effect.
-  uint256 public constant GOVERNANCE_DELAY = 48 hours;
-
   IStaking public immutable stakingContract;
 
   uint256 public immutable poolWeightDivisor;
 
   uint256 public minimumStake;
-  uint256 public newMinimumStake;
-  uint256 public minimumStakeChangeInitiated;
 
   bool public isLocked;
-
-  event MinimumStakeUpdateStarted(uint256 minimumStake, uint256 timestamp);
-  event MinimumStakeUpdated(uint256 minimumStake);
 
   /// @notice Reverts if called while pool is locked.
   modifier onlyUnlocked() {
     require(!isLocked, "Sortition pool locked");
-    _;
-  }
-
-  /// @notice Reverts if called before the governance delay elapses.
-  /// @param changeInitiatedTimestamp Timestamp indicating the beginning
-  ///        of the change.
-  modifier onlyAfterGovernanceDelay(uint256 changeInitiatedTimestamp) {
-    require(changeInitiatedTimestamp > 0, "Change not initiated");
-    require(
-      /* solhint-disable-next-line not-rely-on-time */
-      block.timestamp - changeInitiatedTimestamp >= GOVERNANCE_DELAY,
-      "Governance delay has not elapsed"
-    );
     _;
   }
 
@@ -130,32 +108,11 @@ contract SortitionPool is SortitionTree, Ownable {
     }
   }
 
-  /// @notice Begins the minimum stake update process.
+  /// @notice Updates the minimum stake value,
   /// @dev Can be called only by the contract owner.
-  /// @param _newMinimumStake New minimum stake value.
-  function beginMinimumStakeUpdate(uint256 _newMinimumStake)
-    external
-    onlyOwner
-  {
-    newMinimumStake = _newMinimumStake;
-    /* solhint-disable not-rely-on-time */
-    minimumStakeChangeInitiated = block.timestamp;
-    emit MinimumStakeUpdateStarted(_newMinimumStake, block.timestamp);
-    /* solhint-enable not-rely-on-time */
-  }
-
-  /// @notice Finalizes the minimum stake update process.
-  /// @dev Can be called only by the contract owner, after the governance
-  ///      delay elapses.
-  function finalizeMinimumStakeUpdate()
-    external
-    onlyOwner
-    onlyAfterGovernanceDelay(minimumStakeChangeInitiated)
-  {
+  /// @param newMinimumStake New minimum stake value.
+  function updateMinimumStake(uint256 newMinimumStake) external onlyOwner {
     minimumStake = newMinimumStake;
-    emit MinimumStakeUpdated(newMinimumStake);
-    newMinimumStake = 0;
-    minimumStakeChangeInitiated = 0;
   }
 
   /// @notice Return whether the operator is eligible for the pool.
