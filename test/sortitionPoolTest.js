@@ -35,7 +35,7 @@ describe("SortitionPool", () => {
     pool = await SortitionPoolStub.deploy(
       staking.address,
       minStake,
-      poolWeightDivisor
+      poolWeightDivisor,
     )
     await pool.deployed()
 

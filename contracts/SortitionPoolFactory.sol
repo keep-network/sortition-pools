@@ -15,12 +15,11 @@ contract SortitionPoolFactory {
     uint256 minimumStake,
     uint256 poolWeightDivisor
   ) public returns (address) {
-    SortitionPool sortitionPool =
-      new SortitionPool(
-        stakingContract,
-        minimumStake,
-        poolWeightDivisor
-      );
+    SortitionPool sortitionPool = new SortitionPool(
+      stakingContract,
+      minimumStake,
+      poolWeightDivisor
+    );
 
     sortitionPool.transferOwnership(msg.sender);
 

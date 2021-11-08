@@ -7,13 +7,7 @@ contract SortitionPoolStub is SortitionPool {
     IStaking _stakingContract,
     uint256 _minimumStake,
     uint256 _poolWeightDivisor
-  )
-    SortitionPool(
-      _stakingContract,
-      _minimumStake,
-      _poolWeightDivisor
-    )
-  {}
+  ) SortitionPool(_stakingContract, _minimumStake, _poolWeightDivisor) {}
 
   function nonViewSelectGroup(uint256 groupSize, bytes32 seed)
     public
