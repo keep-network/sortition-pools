@@ -8,7 +8,9 @@ describe("SortitionPoolFactory", () => {
   const minStake = 2000
   const poolWeightDivisor = 2000
   let alice
+  let aliceID
   let bob
+  let bobID
   let staking
   let factory
 
@@ -63,13 +65,16 @@ describe("SortitionPoolFactory", () => {
       await sortitionPool1.insertOperator(alice.address)
       await sortitionPool2.insertOperator(bob.address)
 
+      aliceID = await sortitionPool1.getOperatorID(alice.address)
+      bobID = await sortitionPool2.getOperatorID(bob.address)
+
       await helpers.time.mineBlocks(11)
 
       const group1 = await sortitionPool1.selectGroup(2, seed)
-      expect(group1).to.deep.equal([alice.address, alice.address])
+      expect(group1).to.deep.equal([aliceID, aliceID])
 
       const group2 = await sortitionPool2.selectGroup(2, seed)
-      expect(group2).to.deep.equal([bob.address, bob.address])
+      expect(group2).to.deep.equal([bobID, bobID])
     })
   })
 })

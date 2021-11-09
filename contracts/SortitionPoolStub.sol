@@ -11,7 +11,7 @@ contract SortitionPoolStub is SortitionPool {
 
   function nonViewSelectGroup(uint256 groupSize, bytes32 seed)
     public
-    returns (address[] memory)
+    returns (uint32[] memory)
   {
     return selectGroup(groupSize, seed);
   }
