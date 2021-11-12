@@ -1,5 +1,7 @@
 const RewardsStub = artifacts.require("RewardsStub.sol")
 
+const { time } = require("@openzeppelin/test-helpers")
+
 contract("Rewards", (accounts) => {
   let rewards
   const alice = accounts[0]
@@ -142,6 +144,113 @@ contract("Rewards", (accounts) => {
 
       assert.equal(aliceRewards.toNumber(), 1300)
       assert.equal(bobRewards.toNumber(), 1700)
+    })
+
+    it("permits making operators ineligible", async () => {
+      await rewards.addOperator(alice, 10)
+      await rewards.addOperator(bob, 90)
+
+      // Reward to both
+      // Alice: 10; Bob: 90
+      await rewards.payReward(100)
+
+      await rewards.makeIneligible(bob, 10)
+
+      const iWeight = await rewards.getIneligibleWeight.call()
+      assert.equal(iWeight.toNumber(), 90)
+
+      // Reward only to Alice
+      // Alice: 110; Bob: 90
+      await rewards.payReward(100)
+
+      await rewards.withdrawRewards(alice)
+      const aliceRewards = await rewards.getWithdrawnRewards.call(alice)
+      await rewards.withdrawRewards(bob)
+      const bobRewards = await rewards.getWithdrawnRewards.call(bob)
+
+      assert.equal(aliceRewards.toNumber(), 110)
+      assert.equal(bobRewards.toNumber(), 90)
+    })
+
+    it("permits restoring operator eligibility", async () => {
+      await rewards.addOperator(alice, 10)
+      await rewards.addOperator(bob, 90)
+
+      // Reward to both
+      // Alice: 10; Bob: 90
+      await rewards.payReward(100)
+
+      await rewards.makeIneligible(bob, 10)
+
+      // Reward only to Alice
+      // Alice: 110; Bob: 90
+      await rewards.payReward(100)
+
+      await time.increase(11)
+
+      await rewards.makeEligible(bob)
+
+      const iWeight = await rewards.getIneligibleWeight.call()
+      assert.equal(iWeight.toNumber(), 0)
+
+      // Reward to both
+      // Alice: 120; Bob: 180
+      await rewards.payReward(100)
+
+      await rewards.withdrawRewards(alice)
+      const aliceRewards = await rewards.getWithdrawnRewards.call(alice)
+      await rewards.withdrawRewards(bob)
+      const bobRewards = await rewards.getWithdrawnRewards.call(bob)
+
+      assert.equal(aliceRewards.toNumber(), 120)
+      assert.equal(bobRewards.toNumber(), 180)
+    })
+
+    it("won't restore eligibility prematurely", async () => {
+      await rewards.addOperator(alice, 10)
+
+      await rewards.makeIneligible(alice, 10)
+
+      try {
+        await rewards.makeEligible(alice)
+      } catch (error) {
+        assert.include(error.message, "Operator still ineligible")
+        return
+      }
+
+      assert.fail("Expected throw not received")
+    })
+
+    it("permits changing ineligible operator weight", async () => {
+      await rewards.addOperator(alice, 10)
+      await rewards.addOperator(bob, 90)
+
+      await rewards.makeIneligible(bob, 10)
+
+      await rewards.updateOperatorWeight(bob, 40)
+
+      const iWeight = await rewards.getIneligibleWeight.call()
+      assert.equal(iWeight.toNumber(), 40)
+
+      // Reward only to Alice
+      // Alice: 100; Bob: 0
+      await rewards.payReward(100)
+
+      await time.increase(11)
+
+      await rewards.makeEligible(bob)
+
+      // Reward to both
+      // Alice: 120; Bob: 80
+      await rewards.payReward(100)
+
+      await rewards.withdrawRewards(alice)
+      const aliceRewards = await rewards.getWithdrawnRewards.call(alice)
+      await rewards.withdrawRewards(bob)
+      const bobRewards = await rewards.getWithdrawnRewards.call(bob)
+
+      assert.equal(aliceRewards.toNumber(), 120)
+      assert.equal(bobRewards.toNumber(), 80)
     })
   })
 })

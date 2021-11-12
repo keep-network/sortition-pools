@@ -32,6 +32,15 @@ contract RewardsStub is Rewards {
         withdrawnRewards[operator] += uint256(withdrawOperatorRewards(operator));
     }
 
+    function makeIneligible(address operator, uint32 duration) public {
+        uint96 acc = globalRewardAccumulator;
+        setIneligible(operator, uint32(block.timestamp) + duration, acc);
+    }
+
+    function makeEligible(address operator) public {
+        restoreEligibility(operator);
+    }
+
     function getWithdrawnRewards(address operator) public view returns (uint256) {
         return withdrawnRewards[operator];
     }
@@ -61,5 +70,9 @@ contract RewardsStub is Rewards {
 
     function getRoundingDust() public view returns (uint256) {
         return uint256(rewardRoundingDust);
+    }
+
+    function getIneligibleWeight() public view returns (uint256) {
+        return uint256(totalIneligibleWeight);
     }
 }

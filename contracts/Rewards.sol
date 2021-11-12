@@ -77,8 +77,18 @@ contract Rewards {
   function updateOperatorRewards(address operator, uint32 newWeight) internal {
     uint96 acc = globalRewardAccumulator;
     OperatorRewards memory o = operatorRewards[operator];
-    uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
-    o.available += accruedRewards;
+    if (o.ineligibleUntil == 0) {
+      // If operator is not ineligible, update their earned rewards
+      uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
+      o.available += accruedRewards;
+    } else {
+      // If ineligible, update total ineligible weight
+      uint32 iWeight = totalIneligibleWeight;
+      iWeight -= o.weight;
+      iWeight += newWeight;
+      totalIneligibleWeight = iWeight;
+    }
+    // In any case, update their accumulator and weight
     o.accumulated = acc;
     o.weight = newWeight;
     operatorRewards[operator] = o;
@@ -95,6 +105,31 @@ contract Rewards {
     OperatorRewards storage o = operatorRewards[operator];
     withdrawable = o.available;
     o.available = 0;
+  }
+
+  function setIneligible(
+    address operator,
+    uint32 until,
+    uint96 globalAcc
+  ) internal {
+    OperatorRewards memory o = operatorRewards[operator];
+    uint96 accruedRewards = (globalAcc - o.accumulated) * uint96(o.weight);
+    o.available += accruedRewards;
+    o.accumulated = globalAcc;
+    o.ineligibleUntil = until;
+    operatorRewards[operator] = o;
+    totalIneligibleWeight += o.weight;
+  }
+
+  function restoreEligibility(address operator) internal {
+    OperatorRewards memory o = operatorRewards[operator];
+    // solhint-disable-next-line not-rely-on-time
+    require(o.ineligibleUntil <= block.timestamp, "Operator still ineligible");
+    uint96 acc = globalRewardAccumulator;
+    o.accumulated = acc;
+    o.ineligibleUntil = 0;
+    totalIneligibleWeight -= o.weight;
+    operatorRewards[operator] = o;
   }
 
   /// @notice Calculate the amount of tokens the operator could withdraw now
