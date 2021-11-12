@@ -181,7 +181,7 @@ contract SortitionPool is SortitionTree, Ownable {
     uint32[] memory selectedIDs = new uint32[](groupSize);
 
     for (uint256 i = 0; i < groupSize; i++) {
-      selectedIDs[i] = getOperatorID(selected.array[i].operator());
+      selectedIDs[i] = uint32(selected.array[i].id());
     }
     return selectedIDs;
   }
