@@ -55,9 +55,9 @@ library Leaf {
     return ((leaf >> ID_WIDTH) & BLOCKHEIGHT_MAX);
   }
 
-  function id(uint256 leaf) internal pure returns (uint256) {
+  function id(uint256 leaf) internal pure returns (uint32) {
     // Id is stored in the 32 least significant bits.
     // Bitwise AND ensures that we only get the contents of those bits.
-    return (leaf & ID_MAX);
+    return uint32(leaf & ID_MAX);
   }
 }
