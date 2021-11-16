@@ -166,7 +166,7 @@ contract SortitionPool is SortitionTree, Ownable {
     public
     view
     onlyOwner
-    returns (address[] memory)
+    returns (uint32[] memory)
   {
     uint256 _root = root;
 
@@ -189,12 +189,12 @@ contract SortitionPool is SortitionTree, Ownable {
       selected.arrayPush(leaf);
     }
 
-    address[] memory selectedAddresses = new address[](groupSize);
+    uint32[] memory selectedIDs = new uint32[](groupSize);
 
     for (uint256 i = 0; i < groupSize; i++) {
-      selectedAddresses[i] = selected.array[i].operator();
+      selectedIDs[i] = selected.array[i].id();
     }
-    return selectedAddresses;
+    return selectedIDs;
   }
 
   /// @notice Return the eligible weight of the operator,
