@@ -108,6 +108,17 @@ contract SortitionPool is SortitionTree, Ownable {
     }
   }
 
+  /// @notice Ban rewards for given operators for given period of time.
+  /// @dev Can be called only by the contract owner.
+  /// @param operators IDs of banned operators.
+  /// @param duration Duration of the ban in seconds.
+  function banRewards(uint32[] calldata operators, uint256 duration)
+    external
+    onlyOwner
+  {
+    // TODO: Implementation
+  }
+
   /// @notice Updates the minimum stake value,
   /// @dev Can be called only by the contract owner.
   /// @param newMinimumStake New minimum stake value.
