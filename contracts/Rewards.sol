@@ -107,18 +107,41 @@ contract Rewards {
     o.available = 0;
   }
 
-  function setIneligible(
-    address operator,
-    uint32 until,
-    uint96 globalAcc
-  ) internal {
-    OperatorRewards memory o = operatorRewards[operator];
-    uint96 accruedRewards = (globalAcc - o.accumulated) * uint96(o.weight);
-    o.available += accruedRewards;
-    o.accumulated = globalAcc;
-    o.ineligibleUntil = until;
-    operatorRewards[operator] = o;
-    totalIneligibleWeight += o.weight;
+  function setIneligible(address[] memory operators, uint32 until) internal {
+    OperatorRewards memory o = OperatorRewards(0, 0, 0, 0);
+    uint96 globalAcc = globalRewardAccumulator;
+    uint96 accrued = 0;
+    uint256 ineligibleWeightSum = 0;
+
+    for (uint256 i = 0; i < operators.length; i++) {
+      address operator = operators[i];
+      OperatorRewards storage r = operatorRewards[operator];
+      o.available = r.available;
+      o.accumulated = r.accumulated;
+      o.ineligibleUntil = r.ineligibleUntil;
+      o.weight = r.weight;
+
+      if (o.ineligibleUntil != 0) {
+        // If operator is already ineligible,
+        // don't earn rewards or shorten its ineligibility
+        if (o.ineligibleUntil < until) {
+          o.ineligibleUntil = until;
+        }
+      } else {
+        // The operator becomes ineligible -> earn rewards
+        o.ineligibleUntil = until;
+        accrued = (globalAcc - o.accumulated) * uint96(o.weight);
+        o.available += accrued;
+        ineligibleWeightSum += uint256(o.weight);
+      }
+      o.accumulated = globalAcc;
+
+      r.available = o.available;
+      r.accumulated = o.accumulated;
+      r.ineligibleUntil = o.ineligibleUntil;
+      r.weight = o.weight;
+    }
+    totalIneligibleWeight += uint32(ineligibleWeightSum);
   }
 
   function restoreEligibility(address operator) internal {

@@ -2,10 +2,11 @@ const RewardsStub = artifacts.require("RewardsStub.sol")
 
 const { time } = require("@openzeppelin/test-helpers")
 
-contract("Rewards", (accounts) => {
+contract.only("Rewards", (accounts) => {
   let rewards
   const alice = accounts[0]
   const bob = accounts[1]
+  const carol = accounts[2]
 
   before(async () => {})
 
@@ -172,6 +173,36 @@ contract("Rewards", (accounts) => {
       assert.equal(bobRewards.toNumber(), 90)
     })
 
+    it("permits making multiple operators ineligible", async () => {
+      await rewards.addOperator(alice, 10)
+      await rewards.addOperator(bob, 10)
+      await rewards.addOperator(carol, 10)
+
+      // Reward to all
+      // Alice: 10; Bob: 10; Carol: 10
+      await rewards.payReward(30)
+
+      await rewards.massMakeIneligible([bob, carol], 10)
+
+      const iWeight = await rewards.getIneligibleWeight.call()
+      assert.equal(iWeight.toNumber(), 20)
+
+      // Reward only to Alice
+      // Alice: 40; Bob: 10; Carol: 10
+      await rewards.payReward(30)
+
+      await rewards.withdrawRewards(alice)
+      const aliceRewards = await rewards.getWithdrawnRewards.call(alice)
+      await rewards.withdrawRewards(bob)
+      const bobRewards = await rewards.getWithdrawnRewards.call(bob)
+      await rewards.withdrawRewards(carol)
+      const carolRewards = await rewards.getWithdrawnRewards.call(carol)
+
+      assert.equal(aliceRewards.toNumber(), 40)
+      assert.equal(bobRewards.toNumber(), 10)
+      assert.equal(carolRewards.toNumber(), 10)
+    })
+
     it("permits restoring operator eligibility", async () => {
       await rewards.addOperator(alice, 10)
       await rewards.addOperator(bob, 90)
@@ -251,6 +282,42 @@ contract("Rewards", (accounts) => {
 
       assert.equal(aliceRewards.toNumber(), 120)
       assert.equal(bobRewards.toNumber(), 80)
+    })
+
+    it("handles lengthening ineligibility", async () => {
+      await rewards.addOperator(alice, 10)
+
+      await rewards.makeIneligible(alice, 10)
+      await rewards.makeIneligible(alice, 100)
+
+      await time.increase(11)
+
+      try {
+        await rewards.makeEligible(alice)
+      } catch (error) {
+        assert.include(error.message, "Operator still ineligible")
+        return
+      }
+
+      assert.fail("Expected throw not received")
+    })
+
+    it("won't shorten ineligibility", async () => {
+      await rewards.addOperator(alice, 10)
+
+      await rewards.makeIneligible(alice, 100)
+      await rewards.makeIneligible(alice, 10)
+
+      await time.increase(11)
+
+      try {
+        await rewards.makeEligible(alice)
+      } catch (error) {
+        assert.include(error.message, "Operator still ineligible")
+        return
+      }
+
+      assert.fail("Expected throw not received")
     })
   })
 })

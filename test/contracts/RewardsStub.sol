@@ -33,8 +33,13 @@ contract RewardsStub is Rewards {
     }
 
     function makeIneligible(address operator, uint32 duration) public {
-        uint96 acc = globalRewardAccumulator;
-        setIneligible(operator, uint32(block.timestamp) + duration, acc);
+        address[] memory _operators = new address[](1);
+        _operators[0] = operator;
+        setIneligible(_operators, uint32(block.timestamp) + duration);
+    }
+
+    function massMakeIneligible(address[] memory _operators, uint32 duration) public {
+        setIneligible(_operators, uint32(block.timestamp) + duration);
     }
 
     function makeEligible(address operator) public {
