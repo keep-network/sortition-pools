@@ -21,10 +21,8 @@ describe("SortitionPool", () => {
     bob = await ethers.getSigner(3)
     carol = await ethers.getSigner(4)
 
-    const SortitionPoolStub = await ethers.getContractFactory(
-      "SortitionPoolStub",
-    )
-    pool = await SortitionPoolStub.deploy(poolWeightDivisor)
+    const SortitionPool = await ethers.getContractFactory("SortitionPool")
+    pool = await SortitionPool.deploy(poolWeightDivisor)
     await pool.deployed()
 
     await pool.connect(deployer).transferOwnership(owner.address)
@@ -306,7 +304,7 @@ describe("SortitionPool", () => {
 
       it("should return group of expected size", async () => {
         const group = await pool.connect(owner).selectGroup(3, seed)
-        await pool.connect(owner).nonViewSelectGroup(3, seed)
+        await pool.connect(owner).selectGroup(3, seed)
         expect(group.length).to.be.equal(3)
       })
     })
@@ -342,7 +340,7 @@ describe("SortitionPool", () => {
 
         it("should return group of expected size", async () => {
           const group = await pool.connect(owner).selectGroup(5, seed)
-          await pool.connect(owner).nonViewSelectGroup(5, seed)
+          await pool.connect(owner).selectGroup(5, seed)
           expect(group.length).to.be.equal(5)
         })
       },
@@ -359,7 +357,7 @@ describe("SortitionPool", () => {
 
       it("should handle selection effectively", async () => {
         const group = await pool.connect(owner).selectGroup(100, seed)
-        await pool.connect(owner).nonViewSelectGroup(100, seed)
+        await pool.connect(owner).selectGroup(100, seed)
         expect(group.length).to.be.equal(100)
       })
     })
