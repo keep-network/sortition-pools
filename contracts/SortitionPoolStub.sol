@@ -7,13 +7,15 @@ contract SortitionPoolStub is SortitionPool {
     IStaking _stakingContract,
     uint256 _minimumStake,
     uint256 _poolWeightDivisor,
-    address _poolOwner
+    address _poolOwner,
+    address _rewardToken
   )
     SortitionPool(
       _stakingContract,
       _minimumStake,
       _poolWeightDivisor,
-      _poolOwner
+      _poolOwner,
+      _rewardToken
     )
   {}
 

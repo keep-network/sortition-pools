@@ -15,4 +15,12 @@ contract StakingContractStub {
     function setStake(address operator, uint256 stake) public {
         stakedTokens[operator] = stake;
     }
+
+    function rolesOf(address operator)
+        public
+        view
+        returns (address, address, address)
+    {
+        return (operator, operator, operator);
+    }
 }

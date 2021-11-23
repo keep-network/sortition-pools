@@ -32,14 +32,14 @@ contract RewardsStub is Rewards {
         withdrawnRewards[operator] += uint256(withdrawOperatorRewards(operator));
     }
 
-    function makeIneligible(address operator, uint32 duration) public {
+    function makeIneligible(address operator, uint256 duration) public {
         address[] memory _operators = new address[](1);
         _operators[0] = operator;
-        setIneligible(_operators, uint32(block.timestamp) + duration);
+        setIneligible(_operators, block.timestamp + duration);
     }
 
-    function massMakeIneligible(address[] memory _operators, uint32 duration) public {
-        setIneligible(_operators, uint32(block.timestamp) + duration);
+    function massMakeIneligible(address[] memory _operators, uint256 duration) public {
+        setIneligible(_operators, block.timestamp + duration);
     }
 
     function makeEligible(address operator) public {

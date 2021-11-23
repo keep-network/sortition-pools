@@ -56,8 +56,43 @@ contract Rewards {
   // The total weight of all operators in the pool
   // who are ineligible for rewards.
   uint32 internal totalIneligibleWeight;
+  // Ineligibility times are calculated from this offset,
+  // set at contract creation.
+  uint256 internal ineligibleOffsetStart;
 
   mapping(address => OperatorRewards) internal operatorRewards;
+
+  constructor() {
+    // solhint-disable-next-line not-rely-on-time
+    ineligibleOffsetStart = block.timestamp;
+  }
+
+  /// @notice Return whether the operator is eligible for rewards or not.
+  function isEligibleForRewards(address operator) public view returns (bool) {
+    return operatorRewards[operator].ineligibleUntil == 0;
+  }
+
+  /// @notice Return the time the operator's reward eligibility can be restored.
+  function rewardsEligibilityRestorableAt(address operator)
+    public
+    view
+    returns (uint256)
+  {
+    uint32 until = operatorRewards[operator].ineligibleUntil;
+    require(until != 0, "Operator already eligible");
+    return (uint256(until) + ineligibleOffsetStart);
+  }
+
+  /// @notice Return whether the operator is able
+  /// to restore their eligibility for rewards right away.
+  function canRestoreRewardEligibility(address operator)
+    public
+    view
+    returns (bool)
+  {
+    // solhint-disable-next-line not-rely-on-time
+    return rewardsEligibilityRestorableAt(operator) <= block.timestamp;
+  }
 
   /// @notice Internal function for updating the global state of rewards.
   function addRewards(uint96 rewardAmount, uint32 currentPoolWeight) internal {
@@ -107,11 +142,15 @@ contract Rewards {
     o.available = 0;
   }
 
-  function setIneligible(address[] memory operators, uint32 until) internal {
+  /// @notice Set the given operators as ineligible for rewards.
+  /// The operators can restore their eligibility at the given time.
+  function setIneligible(address[] memory operators, uint256 until) internal {
     OperatorRewards memory o = OperatorRewards(0, 0, 0, 0);
     uint96 globalAcc = globalRewardAccumulator;
     uint96 accrued = 0;
     uint256 ineligibleWeightSum = 0;
+    // Record ineligibility as seconds after contract creation
+    uint32 _until = uint32(until - ineligibleOffsetStart);
 
     for (uint256 i = 0; i < operators.length; i++) {
       address operator = operators[i];
@@ -124,12 +163,12 @@ contract Rewards {
       if (o.ineligibleUntil != 0) {
         // If operator is already ineligible,
         // don't earn rewards or shorten its ineligibility
-        if (o.ineligibleUntil < until) {
-          o.ineligibleUntil = until;
+        if (o.ineligibleUntil < _until) {
+          o.ineligibleUntil = _until;
         }
       } else {
         // The operator becomes ineligible -> earn rewards
-        o.ineligibleUntil = until;
+        o.ineligibleUntil = _until;
         accrued = (globalAcc - o.accumulated) * uint96(o.weight);
         o.available += accrued;
         ineligibleWeightSum += uint256(o.weight);
@@ -144,10 +183,11 @@ contract Rewards {
     totalIneligibleWeight += uint32(ineligibleWeightSum);
   }
 
+  /// @notice Restore the given operator's eligibility for rewards.
   function restoreEligibility(address operator) internal {
     OperatorRewards memory o = operatorRewards[operator];
     // solhint-disable-next-line not-rely-on-time
-    require(o.ineligibleUntil <= block.timestamp, "Operator still ineligible");
+    require(canRestoreRewardEligibility(operator), "Operator still ineligible");
     uint96 acc = globalRewardAccumulator;
     o.accumulated = acc;
     o.ineligibleUntil = 0;

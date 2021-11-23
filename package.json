@@ -36,7 +36,8 @@
   },
   "homepage": "https://github.com/keep-network/sortition-pools#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0"
+    "@openzeppelin/contracts": "^4.3.0",
+    "@thesis/solidity-contracts": "github:thesis/solidity-contracts#4985bcf"
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.5",

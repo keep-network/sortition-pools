@@ -1,5 +1,8 @@
 pragma solidity 0.8.6;
 
+import "@thesis/solidity-contracts/contracts/token/IERC20WithPermit.sol";
+import "@thesis/solidity-contracts/contracts/token/IReceiveApproval.sol";
+
 import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
@@ -10,7 +13,7 @@ import "./api/IStaking.sol";
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree, Rewards {
+contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
@@ -22,6 +25,7 @@ contract SortitionPool is SortitionTree, Rewards {
     uint256 minimumStake;
     uint256 poolWeightDivisor;
     address owner;
+    IERC20WithPermit rewardToken;
   }
 
   PoolParams internal poolParams;
@@ -30,24 +34,34 @@ contract SortitionPool is SortitionTree, Rewards {
     IStaking _stakingContract,
     uint256 _minimumStake,
     uint256 _poolWeightDivisor,
-    address _poolOwner
+    address _poolOwner,
+    address _rewardToken
   ) {
     poolParams = PoolParams(
       _stakingContract,
       _minimumStake,
       _poolWeightDivisor,
-      _poolOwner
+      _poolOwner,
+      IERC20WithPermit(_rewardToken)
     );
   }
 
-  function payReward(uint256 amount) public {
+  function receiveApproval(
+    address sender,
+    uint256 amount,
+    address token,
+    bytes calldata
+  ) external override {
+    require(token == address(poolParams.rewardToken), "Unsupported token");
+    IERC20WithPermit(token).transferFrom(sender, address(this), amount);
     Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
   }
 
-  function withdrawRewards(address operator) public returns (uint256) {
+  function withdrawRewards(address operator) public {
     Rewards.updateOperatorRewards(operator, uint32(getPoolWeight(operator)));
     uint96 earned = Rewards.withdrawOperatorRewards(operator);
-    return uint256(earned);
+    (, address beneficiary, ) = poolParams.stakingContract.rolesOf(operator);
+    poolParams.rewardToken.transfer(beneficiary, uint256(earned));
   }
 
   /// @notice Add an operator to the pool,
@@ -58,8 +72,7 @@ contract SortitionPool is SortitionTree, Rewards {
 
     insertOperator(operator, eligibleWeight);
 
-    Rewards.operatorRewards[operator].accumulated = Rewards
-      .globalRewardAccumulator;
+    Rewards.updateOperatorRewards(operator, uint32(eligibleWeight));
   }
 
   /// @notice Update the operator's weight if present and eligible,
@@ -77,6 +90,20 @@ contract SortitionPool is SortitionTree, Rewards {
     } else {
       updateOperator(operator, eligibleWeight);
     }
+  }
+
+  function setRewardIneligibility(address[] calldata operators, uint256 until)
+    public
+  {
+    require(
+      msg.sender == poolParams.owner,
+      "Only owner may set operators ineligible"
+    );
+    Rewards.setIneligible(operators, until);
+  }
+
+  function restoreRewardEligibility(address operator) public {
+    Rewards.restoreEligibility(operator);
   }
 
   /// @notice Return whether the operator is eligible for the pool.

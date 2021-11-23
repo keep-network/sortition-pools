@@ -2,7 +2,7 @@ const RewardsStub = artifacts.require("RewardsStub.sol")
 
 const { time } = require("@openzeppelin/test-helpers")
 
-contract.only("Rewards", (accounts) => {
+contract("Rewards", (accounts) => {
   let rewards
   const alice = accounts[0]
   const bob = accounts[1]

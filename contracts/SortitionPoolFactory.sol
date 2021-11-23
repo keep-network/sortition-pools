@@ -11,7 +11,8 @@ contract SortitionPoolFactory {
   function createSortitionPool(
     IStaking stakingContract,
     uint256 minimumStake,
-    uint256 poolWeightDivisor
+    uint256 poolWeightDivisor,
+    address rewardToken
   ) public returns (address) {
     return
       address(
@@ -19,7 +20,8 @@ contract SortitionPoolFactory {
           stakingContract,
           minimumStake,
           poolWeightDivisor,
-          msg.sender
+          msg.sender,
+          rewardToken
         )
       );
   }

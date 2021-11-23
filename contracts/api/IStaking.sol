@@ -11,4 +11,8 @@ interface IStaking {
         address operator,
         address operatorContract
     ) external view returns (uint256);
+
+    function rolesOf(
+        address operator
+    ) external view returns (address, address, address);
 }
