@@ -63,6 +63,25 @@ contract SortitionPool is SortitionTree, Ownable {
     _insertOperator(operator, weight);
   }
 
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible.
+  /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the updated operator.
+  /// @param authorizedStake Operator's authorized stake for the application.
+  function updateOperatorStatus(address operator, uint256 authorizedStake)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
+    uint256 weight = getWeight(authorizedStake);
+
+    if (weight == 0) {
+      _removeOperator(operator);
+    } else {
+      updateOperator(operator, weight);
+    }
+  }
+
   /// @notice Removes an operator from the pool.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the removed operator.
@@ -82,27 +101,6 @@ contract SortitionPool is SortitionTree, Ownable {
 
     for (uint256 i = 0; i < operators.length; i++) {
       _removeOperator(operators[i]);
-    }
-  }
-
-  /// @notice Update the operator's weight if present and eligible,
-  /// or remove from the pool if present and ineligible.
-  /// @dev Can be called only by the contract owner.
-  /// @param id ID of the updated operator.
-  /// @param authorizedStake Operator's authorized stake for the application.
-  function updateOperatorStatus(uint32 id, uint256 authorizedStake)
-    public
-    onlyOwner
-    onlyUnlocked
-  {
-    address operator = getIDOperator(id);
-
-    uint256 weight = getWeight(authorizedStake);
-
-    if (weight == 0) {
-      _removeOperator(operator);
-    } else {
-      updateOperator(operator, weight);
     }
   }
 
