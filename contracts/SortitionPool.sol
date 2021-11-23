@@ -89,21 +89,6 @@ contract SortitionPool is SortitionTree, Ownable {
     _removeOperator(getIDOperator(id));
   }
 
-  /// @notice Removes given operators from the pool.
-  /// @dev Can be called only by the contract owner.
-  /// @param ids IDs of the removed operators.
-  function removeOperators(uint32[] calldata ids)
-    public
-    onlyOwner
-    onlyUnlocked
-  {
-    address[] memory operators = getIDOperators(ids);
-
-    for (uint256 i = 0; i < operators.length; i++) {
-      _removeOperator(operators[i]);
-    }
-  }
-
   /// @notice Ban rewards for given operators for given period of time.
   /// @dev Can be called only by the contract owner.
   /// @param operators IDs of banned operators.
