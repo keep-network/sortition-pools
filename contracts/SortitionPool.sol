@@ -18,8 +18,6 @@ contract SortitionPool is SortitionTree, Ownable {
 
   uint256 public immutable poolWeightDivisor;
 
-  uint256 public minimumStake;
-
   bool public isLocked;
 
   /// @notice Reverts if called while pool is locked.
@@ -98,13 +96,6 @@ contract SortitionPool is SortitionTree, Ownable {
     onlyOwner
   {
     // TODO: Implementation
-  }
-
-  /// @notice Updates the minimum stake value,
-  /// @dev Can be called only by the contract owner.
-  /// @param newMinimumStake New minimum stake value.
-  function updateMinimumStake(uint256 newMinimumStake) external onlyOwner {
-    minimumStake = newMinimumStake;
   }
 
   /// @notice Return whether the operator is present in the pool.

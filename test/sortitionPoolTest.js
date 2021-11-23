@@ -218,28 +218,6 @@ describe("SortitionPool", () => {
     })
   })
 
-  describe("updateMinimumStake", () => {
-    context("when the caller is the owner", () => {
-      const newMinimumStake = 4000
-
-      beforeEach(async () => {
-        await pool.connect(owner).updateMinimumStake(newMinimumStake)
-      })
-
-      it("should update the minimum stake immediately", async () => {
-        expect(await pool.minimumStake()).to.be.equal(newMinimumStake)
-      })
-    })
-
-    context("when the caller is not the owner", () => {
-      it("should revert", async () => {
-        await expect(
-          pool.connect(alice).updateMinimumStake(4000),
-        ).to.be.revertedWith("Ownable: caller is not the owner")
-      })
-    })
-  })
-
   describe("selectGroup", async () => {
     context("when called by owner", () => {
       beforeEach(async () => {
