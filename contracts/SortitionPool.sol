@@ -3,7 +3,6 @@ pragma solidity 0.8.6;
 import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
-import "./api/IStaking.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Sortition Pool
@@ -17,8 +16,6 @@ contract SortitionPool is SortitionTree, Ownable {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
-  IStaking public immutable stakingContract;
-
   uint256 public immutable poolWeightDivisor;
 
   uint256 public minimumStake;
@@ -31,13 +28,7 @@ contract SortitionPool is SortitionTree, Ownable {
     _;
   }
 
-  constructor(
-    IStaking _stakingContract,
-    uint256 _minimumStake,
-    uint256 _poolWeightDivisor
-  ) {
-    stakingContract = _stakingContract;
-    minimumStake = _minimumStake;
+  constructor(uint256 _poolWeightDivisor) {
     poolWeightDivisor = _poolWeightDivisor;
   }
 
@@ -56,15 +47,20 @@ contract SortitionPool is SortitionTree, Ownable {
     isLocked = false;
   }
 
-  /// @notice Inserts an operator to the pool,
-  /// reverting if the operator is already present.
+  /// @notice Inserts an operator to the pool. Reverts if the operator is
+  /// already present.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the inserted operator.
-  function insertOperator(address operator) public onlyOwner onlyUnlocked {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    require(eligibleWeight > 0, "Operator not eligible");
+  /// @param authorizedStake Inserted operator's authorized stake for the application.
+  function insertOperator(address operator, uint256 authorizedStake)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
+    uint256 weight = getWeight(authorizedStake);
+    require(weight > 0, "Operator not eligible");
 
-    _insertOperator(operator, eligibleWeight);
+    _insertOperator(operator, weight);
   }
 
   /// @notice Removes an operator from the pool.
@@ -93,18 +89,20 @@ contract SortitionPool is SortitionTree, Ownable {
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
   /// @param id ID of the updated operator.
-  function updateOperatorStatus(uint32 id) public onlyOwner onlyUnlocked {
+  /// @param authorizedStake Operator's authorized stake for the application.
+  function updateOperatorStatus(uint32 id, uint256 authorizedStake)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
     address operator = getIDOperator(id);
 
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    uint256 inPoolWeight = getPoolWeight(operator);
+    uint256 weight = getWeight(authorizedStake);
 
-    require(eligibleWeight != inPoolWeight, "Operator already up to date");
-
-    if (eligibleWeight == 0) {
+    if (weight == 0) {
       _removeOperator(operator);
     } else {
-      updateOperator(operator, eligibleWeight);
+      updateOperator(operator, weight);
     }
   }
 
@@ -126,11 +124,6 @@ contract SortitionPool is SortitionTree, Ownable {
     minimumStake = newMinimumStake;
   }
 
-  /// @notice Return whether the operator is eligible for the pool.
-  function isOperatorEligible(address operator) public view returns (bool) {
-    return getEligibleWeight(operator) > 0;
-  }
-
   /// @notice Return whether the operator is present in the pool.
   function isOperatorInPool(address operator) public view returns (bool) {
     return getFlaggedLeafPosition(operator) != 0;
@@ -138,8 +131,12 @@ contract SortitionPool is SortitionTree, Ownable {
 
   /// @notice Return whether the operator's weight in the pool
   /// matches their eligible weight.
-  function isOperatorUpToDate(address operator) public view returns (bool) {
-    return getEligibleWeight(operator) == getPoolWeight(operator);
+  function isOperatorUpToDate(address operator, uint256 authorizedStake)
+    public
+    view
+    returns (bool)
+  {
+    return getWeight(authorizedStake) == getPoolWeight(operator);
   }
 
   /// @notice Return the weight of the operator in the pool,
@@ -197,14 +194,7 @@ contract SortitionPool is SortitionTree, Ownable {
     return selectedIDs;
   }
 
-  /// @notice Return the eligible weight of the operator,
-  /// which may differ from the weight in the pool.
-  /// Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view returns (uint256) {
-    uint256 operatorStake = stakingContract.eligibleStake(operator, owner());
-    if (operatorStake < minimumStake) {
-      return 0;
-    }
-    return operatorStake / poolWeightDivisor;
+  function getWeight(uint256 authorization) internal view returns (uint256) {
+    return authorization / poolWeightDivisor;
   }
 }
