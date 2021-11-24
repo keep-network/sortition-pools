@@ -18,8 +18,6 @@ contract SortitionPool is SortitionTree, Ownable {
 
   uint256 public immutable poolWeightDivisor;
 
-  uint256 public minimumStake;
-
   bool public isLocked;
 
   /// @notice Reverts if called while pool is locked.
@@ -63,40 +61,16 @@ contract SortitionPool is SortitionTree, Ownable {
     _insertOperator(operator, weight);
   }
 
-  /// @notice Removes an operator from the pool.
-  /// @dev Can be called only by the contract owner.
-  /// @param id ID of the removed operator.
-  function removeOperator(uint32 id) public onlyOwner onlyUnlocked {
-    _removeOperator(getIDOperator(id));
-  }
-
-  /// @notice Removes given operators from the pool.
-  /// @dev Can be called only by the contract owner.
-  /// @param ids IDs of the removed operators.
-  function removeOperators(uint32[] calldata ids)
-    public
-    onlyOwner
-    onlyUnlocked
-  {
-    address[] memory operators = getIDOperators(ids);
-
-    for (uint256 i = 0; i < operators.length; i++) {
-      _removeOperator(operators[i]);
-    }
-  }
-
   /// @notice Update the operator's weight if present and eligible,
   /// or remove from the pool if present and ineligible.
   /// @dev Can be called only by the contract owner.
-  /// @param id ID of the updated operator.
+  /// @param operator Address of the updated operator.
   /// @param authorizedStake Operator's authorized stake for the application.
-  function updateOperatorStatus(uint32 id, uint256 authorizedStake)
+  function updateOperatorStatus(address operator, uint256 authorizedStake)
     public
     onlyOwner
     onlyUnlocked
   {
-    address operator = getIDOperator(id);
-
     uint256 weight = getWeight(authorizedStake);
 
     if (weight == 0) {
@@ -104,6 +78,13 @@ contract SortitionPool is SortitionTree, Ownable {
     } else {
       updateOperator(operator, weight);
     }
+  }
+
+  /// @notice Removes an operator from the pool.
+  /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the operator to be removed.
+  function removeOperator(address operator) public onlyOwner onlyUnlocked {
+    _removeOperator(operator);
   }
 
   /// @notice Ban rewards for given operators for given period of time.
@@ -115,13 +96,6 @@ contract SortitionPool is SortitionTree, Ownable {
     onlyOwner
   {
     // TODO: Implementation
-  }
-
-  /// @notice Updates the minimum stake value,
-  /// @dev Can be called only by the contract owner.
-  /// @param newMinimumStake New minimum stake value.
-  function updateMinimumStake(uint256 newMinimumStake) external onlyOwner {
-    minimumStake = newMinimumStake;
   }
 
   /// @notice Return whether the operator is present in the pool.

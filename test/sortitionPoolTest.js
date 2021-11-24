@@ -125,17 +125,15 @@ describe("SortitionPool", () => {
   })
 
   describe("removeOperator", () => {
-    let aliceID
-
     beforeEach(async () => {
       await pool.connect(owner).insertOperator(alice.address, 20000)
-      aliceID = await pool.getOperatorID(alice.address)
+      await pool.getOperatorID(alice.address)
     })
 
     context("when sortition pool is unlocked", () => {
       context("when called by the owner", () => {
         beforeEach(async () => {
-          await pool.connect(owner).removeOperator(aliceID)
+          await pool.connect(owner).removeOperator(alice.address)
         })
 
         it("should remove the operator from the pool", async () => {
@@ -146,7 +144,7 @@ describe("SortitionPool", () => {
       context("when called by a non-owner", () => {
         it("should revert", async () => {
           await expect(
-            pool.connect(alice).removeOperator(aliceID),
+            pool.connect(alice).removeOperator(alice.address),
           ).to.be.revertedWith("Ownable: caller is not the owner")
         })
       })
@@ -159,74 +157,22 @@ describe("SortitionPool", () => {
 
       it("should revert", async () => {
         await expect(
-          pool.connect(owner).removeOperator(aliceID),
-        ).to.be.revertedWith("Sortition pool locked")
-      })
-    })
-  })
-
-  describe("removeOperators", () => {
-    let bobID
-    let carolID
-
-    beforeEach(async () => {
-      await pool.connect(owner).insertOperator(alice.address, 20000)
-      await pool.connect(owner).insertOperator(bob.address, 20000)
-      await pool.connect(owner).insertOperator(carol.address, 20000)
-
-      bobID = await pool.getOperatorID(bob.address)
-      carolID = await pool.getOperatorID(carol.address)
-    })
-
-    context("when sortition pool is unlocked", () => {
-      context("when called by the owner", () => {
-        beforeEach(async () => {
-          await pool.connect(owner).removeOperators([bobID, carolID])
-        })
-
-        it("should remove given operators from the pool", async () => {
-          expect(await pool.isOperatorInPool(alice.address)).to.be.true
-          expect(await pool.isOperatorInPool(bob.address)).to.be.false
-          expect(await pool.isOperatorInPool(carol.address)).to.be.false
-        })
-      })
-
-      context("when called by a non-owner", () => {
-        it("should revert", async () => {
-          await expect(
-            pool.connect(alice).removeOperators([bobID, carolID]),
-          ).to.be.revertedWith("Ownable: caller is not the owner")
-        })
-      })
-    })
-
-    context("when sortition pool is locked", () => {
-      beforeEach(async () => {
-        await pool.connect(owner).lock()
-      })
-
-      it("should revert", async () => {
-        await expect(
-          pool.connect(owner).removeOperators([bobID, carolID]),
+          pool.connect(owner).removeOperator(alice.address),
         ).to.be.revertedWith("Sortition pool locked")
       })
     })
   })
 
   describe("updateOperatorStatus", () => {
-    let aliceID
-
     beforeEach(async () => {
       await pool.connect(owner).insertOperator(alice.address, 2000)
-
-      aliceID = await pool.getOperatorID(alice.address)
     })
 
     context("when sortition pool is unlocked", () => {
       context("when called by the owner", () => {
         context("when operator is still eligible", () => {
           beforeEach(async () => {
-            await pool.connect(owner).updateOperatorStatus(aliceID, 5000)
+            await pool.connect(owner).updateOperatorStatus(alice.address, 5000)
           })
 
           it("should update operator status", async () => {
@@ -241,7 +187,7 @@ describe("SortitionPool", () => {
           beforeEach(async () => {
             await pool
               .connect(owner)
-              .updateOperatorStatus(aliceID, poolWeightDivisor - 1)
+              .updateOperatorStatus(alice.address, poolWeightDivisor - 1)
           })
 
           it("should remove operator from the pool", async () => {
@@ -253,7 +199,7 @@ describe("SortitionPool", () => {
       context("when called by a non-owner", () => {
         it("should revert", async () => {
           await expect(
-            pool.connect(alice).updateOperatorStatus(aliceID, 10000),
+            pool.connect(alice).updateOperatorStatus(alice.address, 10000),
           ).to.be.revertedWith("Ownable: caller is not the owner")
         })
       })
@@ -266,30 +212,8 @@ describe("SortitionPool", () => {
 
       it("should revert", async () => {
         await expect(
-          pool.connect(owner).updateOperatorStatus(aliceID, 10000),
+          pool.connect(owner).updateOperatorStatus(alice.address, 10000),
         ).to.be.revertedWith("Sortition pool locked")
-      })
-    })
-  })
-
-  describe("updateMinimumStake", () => {
-    context("when the caller is the owner", () => {
-      const newMinimumStake = 4000
-
-      beforeEach(async () => {
-        await pool.connect(owner).updateMinimumStake(newMinimumStake)
-      })
-
-      it("should update the minimum stake immediately", async () => {
-        expect(await pool.minimumStake()).to.be.equal(newMinimumStake)
-      })
-    })
-
-    context("when the caller is not the owner", () => {
-      it("should revert", async () => {
-        await expect(
-          pool.connect(alice).updateMinimumStake(4000),
-        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
   })
