@@ -219,7 +219,7 @@ describe("SortitionPool", () => {
   })
 
   describe("selectGroup", async () => {
-    context("when called by owner", () => {
+    context("when there is enough operators in pool", () => {
       beforeEach(async () => {
         await pool.connect(owner).insertOperator(alice.address, 20000)
         await pool.connect(owner).insertOperator(bob.address, 22000)
@@ -230,20 +230,6 @@ describe("SortitionPool", () => {
         const group = await pool.connect(owner).selectGroup(3, seed)
         await pool.connect(owner).selectGroup(3, seed)
         expect(group.length).to.be.equal(3)
-      })
-    })
-
-    context("when called by non-owner", () => {
-      beforeEach(async () => {
-        await pool.connect(owner).insertOperator(alice.address, 20000)
-        await pool.connect(owner).insertOperator(bob.address, 22000)
-        await pool.connect(owner).insertOperator(carol.address, 24000)
-      })
-
-      it("should revert", async () => {
-        await expect(
-          pool.connect(alice).selectGroup(3, seed),
-        ).to.be.revertedWith("Ownable: caller is not the owner")
       })
     })
 

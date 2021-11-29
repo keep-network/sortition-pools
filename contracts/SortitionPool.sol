@@ -136,7 +136,6 @@ contract SortitionPool is SortitionTree, Ownable {
   function selectGroup(uint256 groupSize, bytes32 seed)
     public
     view
-    onlyOwner
     returns (uint32[] memory)
   {
     uint256 _root = root;
