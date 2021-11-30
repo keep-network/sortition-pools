@@ -106,6 +106,9 @@ describe("Rewards", () => {
       const bobAcc1 = await rewards.getAccumulator(bob)
       expect(bobAcc1).to.equal(10)
 
+      const aliceRew1 = await rewards.getAccruedRewards(alice)
+      expect(aliceRew1).to.equal(0)
+
       const aliceAcc1 = await rewards.getAccumulator(alice)
       expect(aliceAcc1).to.equal(0)
 
@@ -124,6 +127,9 @@ describe("Rewards", () => {
       const bobAcc2 = await rewards.getAccumulator(bob)
       expect(bobAcc2).to.equal(110)
 
+      const aliceRew2 = await rewards.getAccruedRewards(alice)
+      expect(aliceRew2).to.equal(0)
+
       const aliceAcc2 = await rewards.getAccumulator(alice)
       expect(aliceAcc2).to.equal(0)
 
@@ -139,6 +145,9 @@ describe("Rewards", () => {
 
       const bobAcc3 = await rewards.getAccumulator(bob)
       expect(bobAcc3).to.equal(110)
+
+      const aliceRew3 = await rewards.getAccruedRewards(alice)
+      expect(aliceRew3).to.equal(0)
 
       const aliceAcc3 = await rewards.getAccumulator(alice)
       expect(aliceAcc3).to.equal(0)
