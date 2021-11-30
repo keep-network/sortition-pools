@@ -15,10 +15,6 @@ contract RewardsStub is Rewards {
         updateOperatorRewards(operator, uint32(weight));
     }
 
-    function syncRewards(uint32 operator) public {
-        updateOperatorRewards(operator, uint32(operatorWeight[operator]));
-    }
-
     function updateOperatorWeight(uint32 operator, uint256 newWeight) public {
         updateOperatorRewards(operator, uint32(newWeight));
         operatorWeight[operator] = newWeight;
@@ -29,7 +25,7 @@ contract RewardsStub is Rewards {
     }
 
     function withdrawRewards(uint32 operator) public {
-        syncRewards(operator);
+        updateOperatorRewards(operator, uint32(operatorWeight[operator]));
         withdrawnRewards[operator] += uint256(withdrawOperatorRewards(operator));
     }
 
