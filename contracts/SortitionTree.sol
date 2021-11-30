@@ -83,9 +83,12 @@ contract SortitionTree {
     view
     returns (address[] memory)
   {
+    uint256 idCount = idAddress.length;
+
     address[] memory operators = new address[](ids.length);
     for (uint256 i = 0; i < ids.length; i++) {
-      operators[i] = getIDOperator(ids[i]);
+      uint32 id = ids[i];
+      operators[i] = idCount > id ? idAddress[id] : address(0);
     }
     return operators;
   }
