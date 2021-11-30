@@ -75,9 +75,9 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     rewardToken.transfer(beneficiary, uint256(earned));
   }
 
-  function withdrawIneligible() public onlyOwner {
+  function withdrawIneligible(address recipient) public onlyOwner {
     uint96 earned = Rewards.withdrawIneligibleRewards();
-    rewardToken.transfer(owner(), uint256(earned));
+    rewardToken.transfer(recipient, uint256(earned));
   }
 
   /// @notice Locks the sortition pool. In locked state, members cannot be
