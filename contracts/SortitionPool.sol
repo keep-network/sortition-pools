@@ -23,7 +23,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
-  IStaking stakingContract;
+  IStaking public immutable stakingContract;
 
   IERC20WithPermit public immutable rewardToken;
 
