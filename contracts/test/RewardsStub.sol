@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-import '../../contracts/Rewards.sol';
+import "../../contracts/Rewards.sol";
 
 contract RewardsStub is Rewards {
     address[] internal operators;
@@ -35,10 +35,12 @@ contract RewardsStub is Rewards {
     function makeIneligible(address operator, uint256 duration) public {
         address[] memory _operators = new address[](1);
         _operators[0] = operator;
+        // solhint-disable-next-line not-rely-on-time
         setIneligible(_operators, block.timestamp + duration);
     }
 
     function massMakeIneligible(address[] memory _operators, uint256 duration) public {
+        // solhint-disable-next-line not-rely-on-time
         setIneligible(_operators, block.timestamp + duration);
     }
 

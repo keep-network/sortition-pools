@@ -11,7 +11,6 @@ import "./SortitionTree.sol";
 import "./Rewards.sol";
 import "./api/IStaking.sol";
 
-
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
