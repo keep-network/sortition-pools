@@ -146,7 +146,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   function restoreRewardEligibility(address operator) public {
     uint32 id = getOperatorID(operator);
     Rewards.restoreEligibility(id);
-    emit EligibilityRestored(operator, id);
+    emit RewardEligibilityRestored(operator, id);
   }
 
   /// @notice Return whether the operator is present in the pool.
