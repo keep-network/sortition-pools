@@ -1,24 +1,35 @@
 pragma solidity 0.8.6;
 
-import "./DynamicArray.sol";
+import "@thesis/solidity-contracts/contracts/token/IERC20WithPermit.sol";
+import "@thesis/solidity-contracts/contracts/token/IReceiveApproval.sol";
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./RNG.sol";
 import "./SortitionTree.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Rewards.sol";
+import "./api/IStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree, Ownable {
+contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
-  using DynamicArray for DynamicArray.UintArray;
-  using DynamicArray for DynamicArray.AddressArray;
+
+  IStaking public immutable stakingContract;
+
+  IERC20WithPermit public immutable rewardToken;
 
   uint256 public immutable poolWeightDivisor;
 
   bool public isLocked;
+
+  event IneligibleForRewards(uint32[] ids, uint256 until);
+
+  event RewardEligibilityRestored(address indexed operator, uint32 indexed id);
 
   /// @notice Reverts if called while pool is locked.
   modifier onlyUnlocked() {
@@ -26,8 +37,44 @@ contract SortitionPool is SortitionTree, Ownable {
     _;
   }
 
-  constructor(uint256 _poolWeightDivisor) {
+  /// @notice Reverts if called while pool is unlocked.
+  modifier onlyLocked() {
+    require(isLocked, "Sortition pool unlocked");
+    _;
+  }
+
+  constructor(
+    IStaking _stakingContract,
+    IERC20WithPermit _rewardToken,
+    uint256 _poolWeightDivisor
+  ) {
+    stakingContract = _stakingContract;
+    rewardToken = _rewardToken;
     poolWeightDivisor = _poolWeightDivisor;
+  }
+
+  function receiveApproval(
+    address sender,
+    uint256 amount,
+    address token,
+    bytes calldata
+  ) external override {
+    require(token == address(rewardToken), "Unsupported token");
+    rewardToken.transferFrom(sender, address(this), amount);
+    Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
+  }
+
+  function withdrawRewards(address operator) public {
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(getPoolWeight(operator)));
+    uint96 earned = Rewards.withdrawOperatorRewards(id);
+    (, address beneficiary, ) = stakingContract.rolesOf(operator);
+    rewardToken.transfer(beneficiary, uint256(earned));
+  }
+
+  function withdrawIneligible(address recipient) public onlyOwner {
+    uint96 earned = Rewards.withdrawIneligibleRewards();
+    rewardToken.transfer(recipient, uint256(earned));
   }
 
   /// @notice Locks the sortition pool. In locked state, members cannot be
@@ -59,6 +106,8 @@ contract SortitionPool is SortitionTree, Ownable {
     require(weight > 0, "Operator not eligible");
 
     _insertOperator(operator, weight);
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(weight));
   }
 
   /// @notice Update the operator's weight if present and eligible,
@@ -73,6 +122,9 @@ contract SortitionPool is SortitionTree, Ownable {
   {
     uint256 weight = getWeight(authorizedStake);
 
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(weight));
+
     if (weight == 0) {
       _removeOperator(operator);
     } else {
@@ -80,22 +132,18 @@ contract SortitionPool is SortitionTree, Ownable {
     }
   }
 
-  /// @notice Removes an operator from the pool.
-  /// @dev Can be called only by the contract owner.
-  /// @param operator Address of the operator to be removed.
-  function removeOperator(address operator) public onlyOwner onlyUnlocked {
-    _removeOperator(operator);
-  }
-
-  /// @notice Ban rewards for given operators for given period of time.
-  /// @dev Can be called only by the contract owner.
-  /// @param operators IDs of banned operators.
-  /// @param duration Duration of the ban in seconds.
-  function banRewards(uint32[] calldata operators, uint256 duration)
-    external
+  function setRewardIneligibility(uint32[] calldata operators, uint256 until)
+    public
     onlyOwner
   {
-    // TODO: Implementation
+    Rewards.setIneligible(operators, until);
+    emit IneligibleForRewards(operators, until);
+  }
+
+  function restoreRewardEligibility(address operator) public {
+    uint32 id = getOperatorID(operator);
+    Rewards.restoreEligibility(id);
+    emit RewardEligibilityRestored(operator, id);
   }
 
   /// @notice Return whether the operator is present in the pool.
@@ -136,12 +184,10 @@ contract SortitionPool is SortitionTree, Ownable {
   function selectGroup(uint256 groupSize, bytes32 seed)
     public
     view
+    onlyLocked
     returns (uint32[] memory)
   {
     uint256 _root = root;
-
-    DynamicArray.UintArray memory selected;
-    selected = DynamicArray.uintArray(groupSize);
 
     bytes32 rngState = seed;
     uint256 rngRange = _root.sumWeight();
@@ -150,21 +196,17 @@ contract SortitionPool is SortitionTree, Ownable {
 
     uint256 bits = RNG.bitsRequired(rngRange);
 
-    while (selected.array.length < groupSize) {
+    uint32[] memory selected = new uint32[](groupSize);
+
+    for (uint256 i = 0; i < groupSize; i++) {
       (currentIndex, rngState) = RNG.getIndex(rngRange, rngState, bits);
 
       uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
       uint256 leaf = leaves[leafPosition];
-      selected.arrayPush(leaf);
+      selected[i] = leaf.id();
     }
-
-    uint32[] memory selectedIDs = new uint32[](groupSize);
-
-    for (uint256 i = 0; i < groupSize; i++) {
-      selectedIDs[i] = selected.array[i].id();
-    }
-    return selectedIDs;
+    return selected;
   }
 
   function getWeight(uint256 authorization) internal view returns (uint256) {
