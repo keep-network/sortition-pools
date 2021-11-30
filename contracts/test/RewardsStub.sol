@@ -67,10 +67,6 @@ contract RewardsStub is Rewards {
         return uint256(operatorRewards[operator].available);
     }
 
-    function getAvailableRewards(uint32 operator) public view returns (uint256) {
-        return uint256(availableRewards(operator, operatorWeight[operator]));
-    }
-
     function getGlobalAccumulator() public view returns (uint256) {
         return uint256(globalRewardAccumulator);
     }

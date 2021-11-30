@@ -194,19 +194,4 @@ contract Rewards {
     totalIneligibleWeight -= o.weight;
     operatorRewards[operator] = o;
   }
-
-  /// @notice Calculate the amount of tokens the operator could withdraw now
-  /// if its current weight is `oldWeight`.
-  /// Does not update state, but returns what the results would be.
-  function availableRewards(uint32 operator, uint256 oldWeight)
-    internal
-    view
-    returns (uint96 available)
-  {
-    uint96 acc = globalRewardAccumulator;
-    OperatorRewards storage o = operatorRewards[operator];
-    uint96 accruedRewards = (acc - o.accumulated) * uint96(oldWeight);
-    uint96 previousAvailableRewards = o.available;
-    return accruedRewards + previousAvailableRewards;
-  }
 }
