@@ -32,7 +32,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
 
   event IneligibleForRewards(uint32[] ids, uint256 until);
 
-  event EligibilityRestored(address indexed operator, uint32 indexed id);
+  event RewardEligibilityRestored(address indexed operator, uint32 indexed id);
 
   /// @notice Reverts if called while pool is locked.
   modifier onlyUnlocked() {
