@@ -60,7 +60,7 @@ contract Rewards {
   // set at contract creation.
   uint256 internal ineligibleOffsetStart;
 
-  mapping(address => OperatorRewards) internal operatorRewards;
+  mapping(uint32 => OperatorRewards) internal operatorRewards;
 
   constructor() {
     // solhint-disable-next-line not-rely-on-time
@@ -68,12 +68,12 @@ contract Rewards {
   }
 
   /// @notice Return whether the operator is eligible for rewards or not.
-  function isEligibleForRewards(address operator) public view returns (bool) {
+  function isEligibleForRewards(uint32 operator) public view returns (bool) {
     return operatorRewards[operator].ineligibleUntil == 0;
   }
 
   /// @notice Return the time the operator's reward eligibility can be restored.
-  function rewardsEligibilityRestorableAt(address operator)
+  function rewardsEligibilityRestorableAt(uint32 operator)
     public
     view
     returns (uint256)
@@ -85,7 +85,7 @@ contract Rewards {
 
   /// @notice Return whether the operator is able
   /// to restore their eligibility for rewards right away.
-  function canRestoreRewardEligibility(address operator)
+  function canRestoreRewardEligibility(uint32 operator)
     public
     view
     returns (bool)
@@ -109,7 +109,7 @@ contract Rewards {
   }
 
   /// @notice Internal function for updating the operator's reward state.
-  function updateOperatorRewards(address operator, uint32 newWeight) internal {
+  function updateOperatorRewards(uint32 operator, uint32 newWeight) internal {
     uint96 acc = globalRewardAccumulator;
     OperatorRewards memory o = operatorRewards[operator];
     if (o.ineligibleUntil == 0) {
@@ -133,7 +133,7 @@ contract Rewards {
   /// and return the previous withdrawable amount.
   /// @dev Does not update the withdrawable amount,
   /// but should usually be accompanied by an update.
-  function withdrawOperatorRewards(address operator)
+  function withdrawOperatorRewards(uint32 operator)
     internal
     returns (uint96 withdrawable)
   {
@@ -144,7 +144,7 @@ contract Rewards {
 
   /// @notice Set the given operators as ineligible for rewards.
   /// The operators can restore their eligibility at the given time.
-  function setIneligible(address[] memory operators, uint256 until) internal {
+  function setIneligible(uint32[] memory operators, uint256 until) internal {
     OperatorRewards memory o = OperatorRewards(0, 0, 0, 0);
     uint96 globalAcc = globalRewardAccumulator;
     uint96 accrued = 0;
@@ -153,7 +153,7 @@ contract Rewards {
     uint32 _until = uint32(until - ineligibleOffsetStart);
 
     for (uint256 i = 0; i < operators.length; i++) {
-      address operator = operators[i];
+      uint32 operator = operators[i];
       OperatorRewards storage r = operatorRewards[operator];
       o.available = r.available;
       o.accumulated = r.accumulated;
@@ -184,7 +184,7 @@ contract Rewards {
   }
 
   /// @notice Restore the given operator's eligibility for rewards.
-  function restoreEligibility(address operator) internal {
+  function restoreEligibility(uint32 operator) internal {
     OperatorRewards memory o = operatorRewards[operator];
     // solhint-disable-next-line not-rely-on-time
     require(canRestoreRewardEligibility(operator), "Operator still ineligible");
@@ -198,7 +198,7 @@ contract Rewards {
   /// @notice Calculate the amount of tokens the operator could withdraw now
   /// if its current weight is `oldWeight`.
   /// Does not update state, but returns what the results would be.
-  function availableRewards(address operator, uint256 oldWeight)
+  function availableRewards(uint32 operator, uint256 oldWeight)
     internal
     view
     returns (uint96 available)

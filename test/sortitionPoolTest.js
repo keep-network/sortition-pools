@@ -289,7 +289,8 @@ describe("SortitionPool", () => {
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await pool.connect(owner).insertOperator(bob.address, 20000)
       const now = await helpers.time.lastBlockTime()
-      await pool.connect(owner).setRewardIneligibility([bob.address], now + 100)
+      const bobID = await pool.getOperatorID(bob.address)
+      await pool.connect(owner).setRewardIneligibility([bobID], now + 100)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
       await pool.withdrawRewards(alice.address)
       await pool.withdrawRewards(bob.address)
@@ -304,7 +305,8 @@ describe("SortitionPool", () => {
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await pool.connect(owner).insertOperator(bob.address, 20000)
       const now = await helpers.time.lastBlockTime()
-      await pool.connect(owner).setRewardIneligibility([bob.address], now + 100)
+      const bobID = await pool.getOperatorID(bob.address)
+      await pool.connect(owner).setRewardIneligibility([bobID], now + 100)
 
       await expect(
         pool.restoreRewardEligibility(bob.address),
@@ -317,7 +319,8 @@ describe("SortitionPool", () => {
         const address = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
         await pool.connect(owner).insertOperator(address, 2000 * i)
         if (i % 2 == 0) {
-          evens.push(address)
+          const id = await pool.getOperatorID(address)
+          evens.push(id)
         }
       }
       await pool.connect(owner).lock()

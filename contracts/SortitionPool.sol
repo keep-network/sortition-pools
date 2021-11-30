@@ -64,8 +64,9 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   }
 
   function withdrawRewards(address operator) public {
-    Rewards.updateOperatorRewards(operator, uint32(getPoolWeight(operator)));
-    uint96 earned = Rewards.withdrawOperatorRewards(operator);
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(getPoolWeight(operator)));
+    uint96 earned = Rewards.withdrawOperatorRewards(id);
     (, address beneficiary, ) = stakingContract.rolesOf(operator);
     rewardToken.transfer(beneficiary, uint256(earned));
   }
@@ -99,7 +100,8 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     require(weight > 0, "Operator not eligible");
 
     _insertOperator(operator, weight);
-    Rewards.updateOperatorRewards(operator, uint32(weight));
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(weight));
   }
 
   /// @notice Update the operator's weight if present and eligible,
@@ -114,7 +116,8 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   {
     uint256 weight = getWeight(authorizedStake);
 
-    Rewards.updateOperatorRewards(operator, uint32(weight));
+    uint32 id = getOperatorID(operator);
+    Rewards.updateOperatorRewards(id, uint32(weight));
 
     if (weight == 0) {
       _removeOperator(operator);
@@ -123,7 +126,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     }
   }
 
-  function setRewardIneligibility(address[] calldata operators, uint256 until)
+  function setRewardIneligibility(uint32[] calldata operators, uint256 until)
     public
     onlyOwner
   {
@@ -131,7 +134,8 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   }
 
   function restoreRewardEligibility(address operator) public {
-    Rewards.restoreEligibility(operator);
+    uint32 id = getOperatorID(operator);
+    Rewards.restoreEligibility(id);
   }
 
   /// @notice Return whether the operator is present in the pool.

@@ -10,9 +10,9 @@ describe("Rewards", () => {
   let rewards
 
   beforeEach(async () => {
-    alice = (await ethers.getSigner(0)).address
-    bob = (await ethers.getSigner(1)).address
-    carol = (await ethers.getSigner(2)).address
+    alice = 1
+    bob = 2
+    carol = 3
 
     const RewardsStub = await ethers.getContractFactory("RewardsStub")
     rewards = await RewardsStub.deploy()
