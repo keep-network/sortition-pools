@@ -56,7 +56,7 @@ contract Rewards {
 
   // The amount of rewards that would've been earned by ineligible operators
   // had they not been ineligible.
-  uint96 internal ineligibleEarnedRewards;
+  uint96 public ineligibleEarnedRewards;
 
   // Ineligibility times are calculated from this offset,
   // set at contract creation.
