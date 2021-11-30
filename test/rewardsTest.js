@@ -162,20 +162,20 @@ describe("Rewards", () => {
 
       await rewards.makeIneligible(bob, 10)
 
-      const iWeight = await rewards.getIneligibleWeight()
-      expect(iWeight).to.equal(90)
-
-      // Reward only to Alice
-      // Alice: 110; Bob: 90
+      // Reward only to Alice, Bob's share goes to ineligible pot
+      // Alice: 20; Bob: 90; Ineligible: 90
       await rewards.payReward(100)
 
       await rewards.withdrawRewards(alice)
       const aliceRewards = await rewards.getWithdrawnRewards(alice)
       await rewards.withdrawRewards(bob)
       const bobRewards = await rewards.getWithdrawnRewards(bob)
+      await rewards.withdrawIneligible()
+      const ineligibleRewards = await rewards.getIneligibleRewards()
 
-      expect(aliceRewards).to.equal(110)
+      expect(aliceRewards).to.equal(20)
       expect(bobRewards).to.equal(90)
+      expect(ineligibleRewards).to.equal(90)
     })
 
     it("permits making multiple operators ineligible", async () => {
@@ -189,11 +189,8 @@ describe("Rewards", () => {
 
       await rewards.massMakeIneligible([bob, carol], 10)
 
-      const iWeight = await rewards.getIneligibleWeight()
-      expect(iWeight).to.equal(20)
-
-      // Reward only to Alice
-      // Alice: 40; Bob: 10; Carol: 10
+      // Reward only to Alice, Bob's and Carol's share goes to ineligible
+      // Alice: 20; Bob: 10; Carol: 10; Ineligible: 20
       await rewards.payReward(30)
 
       await rewards.withdrawRewards(alice)
@@ -202,10 +199,13 @@ describe("Rewards", () => {
       const bobRewards = await rewards.getWithdrawnRewards(bob)
       await rewards.withdrawRewards(carol)
       const carolRewards = await rewards.getWithdrawnRewards(carol)
+      await rewards.withdrawIneligible()
+      const ineligibleRewards = await rewards.getIneligibleRewards()
 
-      expect(aliceRewards).to.equal(40)
+      expect(aliceRewards).to.equal(20)
       expect(bobRewards).to.equal(10)
       expect(carolRewards).to.equal(10)
+      expect(ineligibleRewards).to.equal(20)
     })
 
     it("permits restoring operator eligibility", async () => {
@@ -219,27 +219,27 @@ describe("Rewards", () => {
       await rewards.makeIneligible(bob, 10)
 
       // Reward only to Alice
-      // Alice: 110; Bob: 90
+      // Alice: 20; Bob: 90; Ineligible: 90
       await rewards.payReward(100)
 
       await helpers.time.increaseTime(11)
 
       await rewards.makeEligible(bob)
 
-      const iWeight = await rewards.getIneligibleWeight()
-      expect(iWeight).to.equal(0)
-
       // Reward to both
-      // Alice: 120; Bob: 180
+      // Alice: 30; Bob: 180; Ineligible: 90
       await rewards.payReward(100)
 
       await rewards.withdrawRewards(alice)
       const aliceRewards = await rewards.getWithdrawnRewards(alice)
       await rewards.withdrawRewards(bob)
       const bobRewards = await rewards.getWithdrawnRewards(bob)
+      await rewards.withdrawIneligible()
+      const ineligibleRewards = await rewards.getIneligibleRewards()
 
-      expect(aliceRewards).to.equal(120)
+      expect(aliceRewards).to.equal(30)
       expect(bobRewards).to.equal(180)
+      expect(ineligibleRewards).to.equal(90)
     })
 
     it("won't restore eligibility prematurely", async () => {
@@ -260,11 +260,8 @@ describe("Rewards", () => {
 
       await rewards.updateOperatorWeight(bob, 40)
 
-      const iWeight = await rewards.getIneligibleWeight()
-      expect(iWeight).to.equal(40)
-
       // Reward only to Alice
-      // Alice: 100; Bob: 0
+      // Alice: 20; Bob: 0; Ineligible: 80
       await rewards.payReward(100)
 
       await helpers.time.increaseTime(11)
@@ -272,16 +269,19 @@ describe("Rewards", () => {
       await rewards.makeEligible(bob)
 
       // Reward to both
-      // Alice: 120; Bob: 80
+      // Alice: 40; Bob: 80; Ineligible: 80
       await rewards.payReward(100)
 
       await rewards.withdrawRewards(alice)
       const aliceRewards = await rewards.getWithdrawnRewards(alice)
       await rewards.withdrawRewards(bob)
       const bobRewards = await rewards.getWithdrawnRewards(bob)
+      await rewards.withdrawIneligible()
+      const ineligibleRewards = await rewards.getIneligibleRewards()
 
-      expect(aliceRewards).to.equal(120)
+      expect(aliceRewards).to.equal(40)
       expect(bobRewards).to.equal(80)
+      expect(ineligibleRewards).to.equal(80)
     })
 
     it("handles lengthening ineligibility", async () => {

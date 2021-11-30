@@ -53,9 +53,11 @@ contract Rewards {
   // the difference is recorded as rounding dust
   // and added to the next reward.
   uint96 internal rewardRoundingDust;
-  // The total weight of all operators in the pool
-  // who are ineligible for rewards.
-  uint32 internal totalIneligibleWeight;
+
+  // The amount of rewards that would've been earned by ineligible operators
+  // had they not been ineligible.
+  uint96 internal ineligibleEarnedRewards;
+
   // Ineligibility times are calculated from this offset,
   // set at contract creation.
   uint256 internal immutable ineligibleOffsetStart;
@@ -98,11 +100,9 @@ contract Rewards {
   function addRewards(uint96 rewardAmount, uint32 currentPoolWeight) internal {
     require(currentPoolWeight >= 0, "No recipients in pool");
 
-    uint96 rewardWeight = uint96(currentPoolWeight - totalIneligibleWeight);
-
     uint96 totalAmount = rewardAmount + rewardRoundingDust;
-    uint96 perWeightReward = totalAmount / rewardWeight;
-    uint96 newRoundingDust = totalAmount % rewardWeight;
+    uint96 perWeightReward = totalAmount / currentPoolWeight;
+    uint96 newRoundingDust = totalAmount % currentPoolWeight;
 
     globalRewardAccumulator += perWeightReward;
     rewardRoundingDust = newRoundingDust;
@@ -112,16 +112,13 @@ contract Rewards {
   function updateOperatorRewards(uint32 operator, uint32 newWeight) internal {
     uint96 acc = globalRewardAccumulator;
     OperatorRewards memory o = operatorRewards[operator];
+    uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
     if (o.ineligibleUntil == 0) {
       // If operator is not ineligible, update their earned rewards
-      uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
       o.available += accruedRewards;
     } else {
-      // If ineligible, update total ineligible weight
-      uint32 iWeight = totalIneligibleWeight;
-      iWeight -= o.weight;
-      iWeight += newWeight;
-      totalIneligibleWeight = iWeight;
+      // If ineligible, put the rewards into the ineligible pot
+      ineligibleEarnedRewards += accruedRewards;
     }
     // In any case, update their accumulator and weight
     o.accumulated = acc;
@@ -142,13 +139,19 @@ contract Rewards {
     o.available = 0;
   }
 
+  /// @notice Set the amount of ineligible-earned tokens to zero
+  /// and return the previous amount.
+  function withdrawIneligibleRewards() internal returns (uint96 withdrawable) {
+    withdrawable = ineligibleEarnedRewards;
+    ineligibleEarnedRewards = 0;
+  }
+
   /// @notice Set the given operators as ineligible for rewards.
   /// The operators can restore their eligibility at the given time.
   function setIneligible(uint32[] memory operators, uint256 until) internal {
     OperatorRewards memory o = OperatorRewards(0, 0, 0, 0);
     uint96 globalAcc = globalRewardAccumulator;
     uint96 accrued = 0;
-    uint256 ineligibleWeightSum = 0;
     // Record ineligibility as seconds after contract creation
     uint32 _until = uint32(until - ineligibleOffsetStart);
 
@@ -171,7 +174,6 @@ contract Rewards {
         o.ineligibleUntil = _until;
         accrued = (globalAcc - o.accumulated) * uint96(o.weight);
         o.available += accrued;
-        ineligibleWeightSum += uint256(o.weight);
       }
       o.accumulated = globalAcc;
 
@@ -180,18 +182,18 @@ contract Rewards {
       r.ineligibleUntil = o.ineligibleUntil;
       r.weight = o.weight;
     }
-    totalIneligibleWeight += uint32(ineligibleWeightSum);
   }
 
   /// @notice Restore the given operator's eligibility for rewards.
   function restoreEligibility(uint32 operator) internal {
-    OperatorRewards memory o = operatorRewards[operator];
     // solhint-disable-next-line not-rely-on-time
     require(canRestoreRewardEligibility(operator), "Operator still ineligible");
     uint96 acc = globalRewardAccumulator;
+    OperatorRewards memory o = operatorRewards[operator];
+    uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
+    ineligibleEarnedRewards += accruedRewards;
     o.accumulated = acc;
     o.ineligibleUntil = 0;
-    totalIneligibleWeight -= o.weight;
     operatorRewards[operator] = o;
   }
 }

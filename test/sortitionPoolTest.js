@@ -294,10 +294,13 @@ describe("SortitionPool", () => {
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
       await pool.withdrawRewards(alice.address)
       await pool.withdrawRewards(bob.address)
+      await pool.connect(owner).withdrawIneligible()
       const aliceReward = await token.balanceOf(alice.address)
       const bobReward = await token.balanceOf(bob.address)
-      expect(aliceReward).to.equal(300)
+      const ineligibleReward = await token.balanceOf(owner.address)
+      expect(aliceReward).to.equal(100)
       expect(bobReward).to.equal(0)
+      expect(ineligibleReward).to.equal(200)
     })
 
     it("sets operator ineligibility correctly", async () => {

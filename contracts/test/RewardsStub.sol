@@ -6,6 +6,7 @@ contract RewardsStub is Rewards {
     uint32[] internal operators;
     mapping(uint32 => uint256) internal operatorWeight;
     mapping(uint32 => uint256) internal withdrawnRewards;
+    uint256 internal ineligibleRewards;
 
     function addOperator(uint32 operator, uint256 weight) public {
         operators.push(operator);
@@ -30,6 +31,10 @@ contract RewardsStub is Rewards {
     function withdrawRewards(uint32 operator) public {
         syncRewards(operator);
         withdrawnRewards[operator] += uint256(withdrawOperatorRewards(operator));
+    }
+
+    function withdrawIneligible() public {
+        ineligibleRewards += uint256(withdrawIneligibleRewards());
     }
 
     function makeIneligible(uint32 operator, uint256 duration) public {
@@ -75,7 +80,7 @@ contract RewardsStub is Rewards {
         return uint256(rewardRoundingDust);
     }
 
-    function getIneligibleWeight() public view returns (uint256) {
-        return uint256(totalIneligibleWeight);
+    function getIneligibleRewards() public view returns (uint256) {
+        return ineligibleRewards;
     }
 }
