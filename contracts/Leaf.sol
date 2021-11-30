@@ -28,6 +28,8 @@ library Leaf {
     uint256 _creationBlock,
     uint256 _id
   ) internal pure returns (uint256) {
+    assert(_creationBlock <= type(uint64).max);
+    assert(_id <= type(uint32).max);
     // Converting a bytesX type into a larger type
     // adds zero bytes on the right.
     uint256 op = uint256(bytes32(bytes20(_operator)));
@@ -53,9 +55,9 @@ library Leaf {
     return ((leaf >> ID_WIDTH) & BLOCKHEIGHT_MAX);
   }
 
-  function id(uint256 leaf) internal pure returns (uint256) {
+  function id(uint256 leaf) internal pure returns (uint32) {
     // Id is stored in the 32 least significant bits.
     // Bitwise AND ensures that we only get the contents of those bits.
-    return (leaf & ID_MAX);
+    return uint32(leaf & ID_MAX);
   }
 }

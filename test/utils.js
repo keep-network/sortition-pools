@@ -1,16 +1,20 @@
-// eslint-disable-next-line camelcase
-async function deploySystem(deploy_list) {
-  const deployed = {} // name: contract object
-  const linkable = {} // name: linkable address
+// FIXME Retrieves past events. This is a workaround for a known issue described
+//       here: https://github.com/nomiclabs/hardhat/pull/1163
+//       The preferred way of getting events would be using listeners:
+//       https://docs.ethers.io/v5/api/contract/contract/#Contract--events
+function pastEvents(receipt, contract, eventName) {
+  const events = []
 
-  // eslint-disable-next-line camelcase,guard-for-in
-  for (const i in deploy_list) {
-    await deploy_list[i].contract.link(linkable)
-    const contract = await deploy_list[i].contract.new()
-    linkable[deploy_list[i].name] = contract.address
-    deployed[deploy_list[i].name] = contract
+  for (const log of receipt.logs) {
+    if (log.address === contract.address) {
+      const parsedLog = contract.interface.parseLog(log)
+      if (parsedLog.name === eventName) {
+        events.push(parsedLog)
+      }
+    }
   }
-  return deployed
+
+  return events
 }
 
 function range(n) {
@@ -20,7 +24,7 @@ function range(n) {
 const sumReducer = (a, b) => a + b
 
 module.exports = {
-  deploySystem: deploySystem,
+  pastEvents: pastEvents,
   range: range,
   sumReducer: sumReducer,
 }

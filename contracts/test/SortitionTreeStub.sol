@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-import '../../contracts/SortitionTree.sol';
+import "../../contracts/SortitionTree.sol";
 
 contract SortitionTreeStub is SortitionTree {
     using Leaf for uint256;
@@ -21,11 +21,11 @@ contract SortitionTreeStub is SortitionTree {
     }
 
     function publicInsertOperator(address op, uint256 wt) public {
-        insertOperator(op, wt);
+        _insertOperator(op, wt);
     }
 
     function publicRemoveOperator(address op) public {
-        removeOperator(op);
+        _removeOperator(op);
     }
 
     function publicIsOperatorRegistered(address op) public view returns (bool) {

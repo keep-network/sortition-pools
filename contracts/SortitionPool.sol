@@ -3,47 +3,48 @@ pragma solidity 0.8.6;
 import "@thesis/solidity-contracts/contracts/token/IERC20WithPermit.sol";
 import "@thesis/solidity-contracts/contracts/token/IReceiveApproval.sol";
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./Rewards.sol";
 import "./api/IStaking.sol";
 
+
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
+contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
   using DynamicArray for DynamicArray.UintArray;
   using DynamicArray for DynamicArray.AddressArray;
 
-  struct PoolParams {
-    IStaking stakingContract;
-    uint256 minimumStake;
-    uint256 poolWeightDivisor;
-    address owner;
-    IERC20WithPermit rewardToken;
-  }
+  IStaking stakingContract;
 
-  PoolParams internal poolParams;
+  IERC20WithPermit public immutable rewardToken;
+
+  uint256 public immutable poolWeightDivisor;
+
+  bool public isLocked;
+
+  /// @notice Reverts if called while pool is locked.
+  modifier onlyUnlocked() {
+    require(!isLocked, "Sortition pool locked");
+    _;
+  }
 
   constructor(
     IStaking _stakingContract,
-    uint256 _minimumStake,
-    uint256 _poolWeightDivisor,
-    address _poolOwner,
-    address _rewardToken
+    IERC20WithPermit _rewardToken,
+    uint256 _poolWeightDivisor
   ) {
-    poolParams = PoolParams(
-      _stakingContract,
-      _minimumStake,
-      _poolWeightDivisor,
-      _poolOwner,
-      IERC20WithPermit(_rewardToken)
-    );
+    stakingContract = _stakingContract;
+    rewardToken = _rewardToken;
+    poolWeightDivisor = _poolWeightDivisor;
   }
 
   function receiveApproval(
@@ -52,63 +53,80 @@ contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
     address token,
     bytes calldata
   ) external override {
-    require(token == address(poolParams.rewardToken), "Unsupported token");
-    IERC20WithPermit(token).transferFrom(sender, address(this), amount);
+    require(token == address(rewardToken), "Unsupported token");
+    rewardToken.transferFrom(sender, address(this), amount);
     Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
   }
 
   function withdrawRewards(address operator) public {
     Rewards.updateOperatorRewards(operator, uint32(getPoolWeight(operator)));
     uint96 earned = Rewards.withdrawOperatorRewards(operator);
-    (, address beneficiary, ) = poolParams.stakingContract.rolesOf(operator);
-    poolParams.rewardToken.transfer(beneficiary, uint256(earned));
+    (, address beneficiary, ) = stakingContract.rolesOf(operator);
+    rewardToken.transfer(beneficiary, uint256(earned));
   }
 
-  /// @notice Add an operator to the pool,
-  /// reverting if the operator is already present.
-  function joinPool(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    require(eligibleWeight > 0, "Operator not eligible");
+  /// @notice Locks the sortition pool. In locked state, members cannot be
+  ///         inserted and removed from the pool. Members statuses cannot
+  ///         be updated as well.
+  /// @dev Can be called only by the contract owner.
+  function lock() public onlyOwner {
+    isLocked = true;
+  }
 
-    insertOperator(operator, eligibleWeight);
+  /// @notice Unlocks the sortition pool. Removes all restrictions set by
+  ///         the `lock` method.
+  /// @dev Can be called only by the contract owner.
+  function unlock() public onlyOwner {
+    isLocked = false;
+  }
 
-    Rewards.updateOperatorRewards(operator, uint32(eligibleWeight));
+  /// @notice Inserts an operator to the pool. Reverts if the operator is
+  /// already present.
+  /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the inserted operator.
+  /// @param authorizedStake Inserted operator's authorized stake for the application.
+  function insertOperator(address operator, uint256 authorizedStake)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
+    uint256 weight = getWeight(authorizedStake);
+    require(weight > 0, "Operator not eligible");
+
+    _insertOperator(operator, weight);
+    Rewards.updateOperatorRewards(operator, uint32(weight));
   }
 
   /// @notice Update the operator's weight if present and eligible,
   /// or remove from the pool if present and ineligible.
-  function updateOperatorStatus(address operator) public {
-    uint256 eligibleWeight = getEligibleWeight(operator);
-    uint256 inPoolWeight = getPoolWeight(operator);
+  /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the updated operator.
+  /// @param authorizedStake Operator's authorized stake for the application.
+  function updateOperatorStatus(address operator, uint256 authorizedStake)
+    public
+    onlyOwner
+    onlyUnlocked
+  {
+    uint256 weight = getWeight(authorizedStake);
 
-    require(eligibleWeight != inPoolWeight, "Operator already up to date");
+    Rewards.updateOperatorRewards(operator, uint32(weight));
 
-    Rewards.updateOperatorRewards(operator, uint32(inPoolWeight));
-
-    if (eligibleWeight == 0) {
-      removeOperator(operator);
+    if (weight == 0) {
+      _removeOperator(operator);
     } else {
-      updateOperator(operator, eligibleWeight);
+      updateOperator(operator, weight);
     }
   }
 
   function setRewardIneligibility(address[] calldata operators, uint256 until)
     public
+    onlyOwner
   {
-    require(
-      msg.sender == poolParams.owner,
-      "Only owner may set operators ineligible"
-    );
     Rewards.setIneligible(operators, until);
   }
 
   function restoreRewardEligibility(address operator) public {
     Rewards.restoreEligibility(operator);
-  }
-
-  /// @notice Return whether the operator is eligible for the pool.
-  function isOperatorEligible(address operator) public view returns (bool) {
-    return getEligibleWeight(operator) > 0;
   }
 
   /// @notice Return whether the operator is present in the pool.
@@ -118,8 +136,12 @@ contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
 
   /// @notice Return whether the operator's weight in the pool
   /// matches their eligible weight.
-  function isOperatorUpToDate(address operator) public view returns (bool) {
-    return getEligibleWeight(operator) == getPoolWeight(operator);
+  function isOperatorUpToDate(address operator, uint256 authorizedStake)
+    public
+    view
+    returns (bool)
+  {
+    return getWeight(authorizedStake) == getPoolWeight(operator);
   }
 
   /// @notice Return the weight of the operator in the pool,
@@ -145,10 +167,8 @@ contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
   function selectGroup(uint256 groupSize, bytes32 seed)
     public
     view
-    returns (address[] memory)
+    returns (uint32[] memory)
   {
-    require(msg.sender == poolParams.owner, "Only owner may select groups");
-
     uint256 _root = root;
 
     DynamicArray.UintArray memory selected;
@@ -170,26 +190,15 @@ contract SortitionPool is SortitionTree, Rewards, IReceiveApproval {
       selected.arrayPush(leaf);
     }
 
-    address[] memory selectedAddresses = new address[](groupSize);
+    uint32[] memory selectedIDs = new uint32[](groupSize);
 
     for (uint256 i = 0; i < groupSize; i++) {
-      selectedAddresses[i] = selected.array[i].operator();
+      selectedIDs[i] = selected.array[i].id();
     }
-    return selectedAddresses;
+    return selectedIDs;
   }
 
-  /// @notice Return the eligible weight of the operator,
-  /// which may differ from the weight in the pool.
-  /// Return 0 if ineligible.
-  function getEligibleWeight(address operator) internal view returns (uint256) {
-    PoolParams memory params = poolParams;
-    uint256 operatorStake = params.stakingContract.eligibleStake(
-      operator,
-      params.owner
-    );
-    if (operatorStake < params.minimumStake) {
-      return 0;
-    }
-    return operatorStake / params.poolWeightDivisor;
+  function getWeight(uint256 authorization) internal view returns (uint256) {
+    return authorization / poolWeightDivisor;
   }
 }

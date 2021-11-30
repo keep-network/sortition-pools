@@ -1,6 +1,6 @@
 pragma solidity 0.8.6;
 
-import '../../contracts/Branch.sol';
+import "../../contracts/Branch.sol";
 
 contract BranchStub {
   function getSlot(uint node, uint position) public pure returns (uint) {

@@ -1,234 +1,312 @@
-const Branch = artifacts.require("Branch")
-const Position = artifacts.require("Position")
-const Leaf = artifacts.require("Leaf")
-const SortitionPool = artifacts.require("./contracts/SortitionPool.sol")
-const SortitionPoolStub = artifacts.require("./contracts/SortitionPoolStub.sol")
-const TokenStub = artifacts.require("./contracts/TokenStub.sol")
-const StakingContractStub = artifacts.require("StakingContractStub.sol")
+const chai = require("chai")
+const expect = chai.expect
+const { ethers, helpers } = require("hardhat")
 
-const { time } = require("@openzeppelin/test-helpers")
-const { mineBlocks } = require("./mineBlocks")
-
-contract.only("SortitionPool", (accounts) => {
-  const seed = "0xff39d6cca87853892d2854566e883008bc"
-  const minStake = 2000
+describe("SortitionPool", () => {
+  const seed =
+    "0xff39d6cca87853892d2854566e883008bc000000000000000000000000000000"
   const poolWeightDivisor = 2000
+
   let token
   let staking
   let pool
-  const alice = accounts[0]
-  const bob = accounts[1]
-  const carol = accounts[2]
-  const owner = accounts[9]
+
+  let deployer
+  let owner
+  let alice
+  let bob
+  let carol
 
   beforeEach(async () => {
-    SortitionPool.link(Branch)
-    SortitionPool.link(Position)
-    SortitionPool.link(Leaf)
-    token = await TokenStub.new()
-    staking = await StakingContractStub.new()
-    pool = await SortitionPoolStub.new(
-      staking.address,
-      minStake,
-      poolWeightDivisor,
-      owner,
-      token.address,
+    deployer = await ethers.getSigner(0)
+    owner = await ethers.getSigner(1)
+    alice = await ethers.getSigner(2)
+    bob = await ethers.getSigner(3)
+    carol = await ethers.getSigner(4)
+
+    const StakingContractStub = await ethers.getContractFactory(
+      "StakingContractStub",
     )
+    staking = await StakingContractStub.deploy()
+    await staking.deployed()
+
+    const TokenStub = await ethers.getContractFactory("TokenStub")
+    token = await TokenStub.deploy()
+    await token.deployed()
+
+    const SortitionPool = await ethers.getContractFactory("SortitionPool")
+    pool = await SortitionPool.deploy(
+      staking.address,
+      token.address,
+      poolWeightDivisor,
+    )
+    await pool.deployed()
+
+    await pool.connect(deployer).transferOwnership(owner.address)
+  })
+
+  describe("lock", () => {
+    context("when called by the owner", () => {
+      beforeEach(async () => {
+        // Pool is unlocked by default.
+        await pool.connect(owner).lock()
+      })
+
+      it("should lock the pool", async () => {
+        expect(await pool.isLocked()).to.be.true
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(pool.connect(alice).lock()).to.be.revertedWith(
+          "Ownable: caller is not the owner",
+        )
+      })
+    })
+  })
+
+  describe("unlock", () => {
+    beforeEach(async () => {
+      // Pool is unlocked by default so we need to lock it explicitly.
+      await pool.connect(owner).lock()
+    })
+
+    context("when called by the owner", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).unlock()
+      })
+
+      it("should unlock the pool", async () => {
+        expect(await pool.isLocked()).to.be.false
+      })
+    })
+
+    context("when called by a non-owner", () => {
+      it("should revert", async () => {
+        await expect(pool.connect(alice).unlock()).to.be.revertedWith(
+          "Ownable: caller is not the owner",
+        )
+      })
+    })
+  })
+
+  describe("insertOperator", () => {
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        context("when operator is eligible", () => {
+          beforeEach(async () => {
+            await pool
+              .connect(owner)
+              .insertOperator(alice.address, poolWeightDivisor)
+          })
+
+          it("should insert the operator to the pool", async () => {
+            expect(await pool.isOperatorInPool(alice.address)).to.be.true
+          })
+        })
+
+        context("when operator is not eligible", () => {
+          it("should revert", async () => {
+            await expect(
+              pool
+                .connect(owner)
+                .insertOperator(alice.address, poolWeightDivisor - 1),
+            ).to.be.revertedWith("Operator not eligible")
+          })
+        })
+      })
+
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool
+              .connect(alice)
+              .insertOperator(alice.address, poolWeightDivisor),
+          ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+      })
+    })
+
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
+      it("should revert", async () => {
+        await expect(
+          pool.connect(owner).insertOperator(alice.address, 20000),
+        ).to.be.revertedWith("Sortition pool locked")
+      })
+    })
+  })
+
+  describe("updateOperatorStatus", () => {
+    beforeEach(async () => {
+      await pool.connect(owner).insertOperator(alice.address, 2000)
+    })
+
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        context("when operator is still eligible", () => {
+          beforeEach(async () => {
+            await pool.connect(owner).updateOperatorStatus(alice.address, 5000)
+          })
+
+          it("should update operator status", async () => {
+            expect(await pool.isOperatorUpToDate(alice.address, 2000)).to.be
+              .false
+            expect(await pool.isOperatorUpToDate(alice.address, 5000)).to.be
+              .true
+          })
+        })
+
+        context("when operator is no longer eligible", () => {
+          beforeEach(async () => {
+            await pool
+              .connect(owner)
+              .updateOperatorStatus(alice.address, poolWeightDivisor - 1)
+          })
+
+          it("should remove operator from the pool", async () => {
+            expect(await pool.isOperatorInPool(alice.address)).to.be.false
+          })
+        })
+      })
+
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool.connect(alice).updateOperatorStatus(alice.address, 10000),
+          ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+      })
+    })
+
+    context("when sortition pool is locked", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).lock()
+      })
+
+      it("should revert", async () => {
+        await expect(
+          pool.connect(owner).updateOperatorStatus(alice.address, 10000),
+        ).to.be.revertedWith("Sortition pool locked")
+      })
+    })
   })
 
   describe("selectGroup", async () => {
-    it("returns group of expected size", async () => {
-      await staking.setStake(alice, 20000)
-      await staking.setStake(bob, 22000)
-      await staking.setStake(carol, 24000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      await pool.joinPool(carol)
-
-      const group = await pool.selectGroup(3, seed, {
-        from: owner,
+    context("when there is enough operators in pool", () => {
+      beforeEach(async () => {
+        await pool.connect(owner).insertOperator(alice.address, 20000)
+        await pool.connect(owner).insertOperator(bob.address, 22000)
+        await pool.connect(owner).insertOperator(carol.address, 24000)
       })
-      await pool.nonViewSelectGroup(3, seed, { from: owner })
 
-      assert.equal(group.length, 3)
-    })
-
-    it("reverts when called by non-owner", async () => {
-      await staking.setStake(alice, 20000)
-      await staking.setStake(bob, 22000)
-      await staking.setStake(carol, 24000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      await pool.joinPool(carol)
-
-      try {
-        await pool.selectGroup(3, seed, { from: accounts[0] })
-      } catch (error) {
-        assert.include(error.message, "Only owner may select groups")
-        return
-      }
-
-      assert.fail("Expected throw not received")
-    })
-
-    it("reverts when there are no operators in pool", async () => {
-      try {
-        await pool.selectGroup(3, seed, { from: owner })
-      } catch (error) {
-        assert.include(error.message, "Not enough operators in pool")
-        return
-      }
-
-      assert.fail("Expected throw not received")
-    })
-
-    it("returns group of expected size if less operators are registered", async () => {
-      await staking.setStake(alice, 2000)
-      await pool.joinPool(alice)
-
-      const group = await pool.selectGroup(5, seed, {
-        from: owner,
+      it("should return group of expected size", async () => {
+        const group = await pool.connect(owner).selectGroup(3, seed)
+        await pool.connect(owner).selectGroup(3, seed)
+        expect(group.length).to.be.equal(3)
       })
-      await pool.nonViewSelectGroup(5, seed, { from: owner })
-      assert.equal(group.length, 5)
     })
 
-    it("does not remove ineligible operators", async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-
-      await staking.setStake(bob, 1000)
-
-      const group = await pool.selectGroup(5, seed, {
-        from: owner,
+    context("when there are no operators in the pool", async () => {
+      it("should revert", async () => {
+        await expect(
+          pool.connect(owner).selectGroup(3, seed),
+        ).to.be.revertedWith("Not enough operators in pool")
       })
-      await pool.nonViewSelectGroup(5, seed, { from: owner })
-      assert.equal(group.length, 5)
     })
 
-    it("does not remove outdated but eligible operators", async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
+    context(
+      "when the number of operators is less than selected group size",
+      async () => {
+        beforeEach(async () => {
+          await pool.connect(owner).insertOperator(alice.address, 2000)
+        })
 
-      await staking.setStake(bob, 390000)
+        it("should return group of expected size", async () => {
+          const group = await pool.connect(owner).selectGroup(5, seed)
+          await pool.connect(owner).selectGroup(5, seed)
+          expect(group.length).to.be.equal(5)
+        })
+      },
+    )
 
-      const group = await pool.selectGroup(5, seed, {
-        from: owner,
+    context("when group is very large", async () => {
+      beforeEach(async () => {
+        for (i = 101; i < 150; i++) {
+          const address =
+            "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
+          await pool.connect(owner).insertOperator(address, 2000 * i)
+        }
       })
-      await pool.nonViewSelectGroup(5, seed, { from: owner })
-      assert.equal(group.length, 5)
-    })
 
-    it("lets outdated operators update their status", async () => {
-      await staking.setStake(alice, 2000)
-      await staking.setStake(bob, 4000000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-
-      await staking.setStake(bob, 390000)
-      await staking.setStake(alice, 1000)
-
-      await mineBlocks(11)
-
-      await pool.updateOperatorStatus(bob)
-      await pool.updateOperatorStatus(alice)
-
-      const group = await pool.selectGroup(5, seed, {
-        from: owner,
+      it("should handle selection effectively", async () => {
+        const group = await pool.connect(owner).selectGroup(100, seed)
+        await pool.connect(owner).selectGroup(100, seed)
+        expect(group.length).to.be.equal(100)
       })
-      await pool.nonViewSelectGroup(5, seed, { from: owner })
-      assert.deepEqual(group, [bob, bob, bob, bob, bob])
-    })
-
-    it("can select really large groups efficiently", async () => {
-      for (i = 101; i < 150; i++) {
-        const address = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
-        await staking.setStake(address, minStake * i)
-        await pool.joinPool(address)
-      }
-
-      const group = await pool.selectGroup(100, seed, {
-        from: owner,
-      })
-      await pool.nonViewSelectGroup(100, seed, { from: owner })
-      assert.equal(group.length, 100)
     })
   })
 
   describe("pool rewards", async () => {
     it("pays rewards correctly", async () => {
-      await token.mint(owner, 1000)
-      await staking.setStake(alice, 10000)
-      await staking.setStake(bob, 20000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      await token.approveAndCall(pool.address, 300, [], { from: owner })
-      await pool.withdrawRewards(alice)
-      await pool.withdrawRewards(bob)
-      const aliceReward = await token.balanceOf(alice)
-      const bobReward = await token.balanceOf(bob)
-      assert.equal(aliceReward.toNumber(), 100)
-      assert.equal(bobReward.toNumber(), 200)
+      await token.connect(deployer).mint(deployer.address, 1000)
+      await pool.connect(owner).insertOperator(alice.address, 10000)
+      await pool.connect(owner).insertOperator(bob.address, 20000)
+      await token.connect(deployer).approveAndCall(pool.address, 300, [])
+      await pool.withdrawRewards(alice.address)
+      await pool.withdrawRewards(bob.address)
+      const aliceReward = await token.balanceOf(alice.address)
+      const bobReward = await token.balanceOf(bob.address)
+      expect(aliceReward).to.equal(100)
+      expect(bobReward).to.equal(200)
     })
 
     it("doesn't pay to ineligible operators", async () => {
-      await token.mint(owner, 1000)
-      await staking.setStake(alice, 10000)
-      await staking.setStake(bob, 20000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      const now = await time.latest()
-      await pool.setRewardIneligibility([bob], now + 100, { from: owner })
-      await token.approveAndCall(pool.address, 300, [], { from: owner })
-      await pool.withdrawRewards(alice)
-      await pool.withdrawRewards(bob)
-      const aliceReward = await token.balanceOf(alice)
-      const bobReward = await token.balanceOf(bob)
-      assert.equal(aliceReward.toNumber(), 300)
-      assert.equal(bobReward.toNumber(), 0)
+      await token.connect(deployer).mint(deployer.address, 1000)
+      await pool.connect(owner).insertOperator(alice.address, 10000)
+      await pool.connect(owner).insertOperator(bob.address, 20000)
+      const now = await helpers.time.lastBlockTime()
+      await pool.connect(owner).setRewardIneligibility([bob.address], now + 100)
+      await token.connect(deployer).approveAndCall(pool.address, 300, [])
+      await pool.withdrawRewards(alice.address)
+      await pool.withdrawRewards(bob.address)
+      const aliceReward = await token.balanceOf(alice.address)
+      const bobReward = await token.balanceOf(bob.address)
+      expect(aliceReward).to.equal(300)
+      expect(bobReward).to.equal(0)
     })
 
     it("sets operator ineligibility correctly", async () => {
-      await token.mint(owner, 1000)
-      await staking.setStake(alice, 10000)
-      await staking.setStake(bob, 20000)
-      await pool.joinPool(alice)
-      await pool.joinPool(bob)
-      const now = await time.latest()
-      await pool.setRewardIneligibility([bob], now + 100, { from: owner })
-      try {
-        await pool.restoreRewardEligibility(bob)
-      } catch (error) {
-        assert.include(error.message, "Operator still ineligible")
-        return
-      }
+      await token.connect(deployer).mint(deployer.address, 1000)
+      await pool.connect(owner).insertOperator(alice.address, 10000)
+      await pool.connect(owner).insertOperator(bob.address, 20000)
+      const now = await helpers.time.lastBlockTime()
+      await pool.connect(owner).setRewardIneligibility([bob.address], now + 100)
 
-      assert.fail("Expected throw not received")
+      await expect(
+        pool.restoreRewardEligibility(bob.address),
+      ).to.be.revertedWith("Operator still ineligible")
     })
 
     it("can set many operators ineligible", async () => {
       const evens = []
       for (i = 101; i < 150; i++) {
         const address = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + i.toString()
-        await staking.setStake(address, minStake * i)
-        await pool.joinPool(address)
+        await pool.connect(owner).insertOperator(address, 2000 * i)
         if (i % 2 == 0) {
           evens.push(address)
         }
       }
 
-      const now = await time.latest()
-      await pool.setRewardIneligibility(evens, now + 100, { from: owner })
+      const now = await helpers.time.lastBlockTime()
+      await pool.connect(owner).setRewardIneligibility(evens, now + 100)
 
-      const group = await pool.selectGroup(100, seed, {
-        from: owner,
-      })
-      await pool.nonViewSelectGroup(100, seed, { from: owner })
-      assert.equal(group.length, 100)
+      const group = await pool.selectGroup(100, seed)
+      expect(group.length).to.equal(100)
     })
   })
 })
