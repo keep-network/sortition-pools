@@ -5,7 +5,6 @@ import "@thesis/solidity-contracts/contracts/token/IReceiveApproval.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./DynamicArray.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./Rewards.sol";
@@ -19,8 +18,6 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
-  using DynamicArray for DynamicArray.UintArray;
-  using DynamicArray for DynamicArray.AddressArray;
 
   IStaking public immutable stakingContract;
 
@@ -192,9 +189,6 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   {
     uint256 _root = root;
 
-    DynamicArray.UintArray memory selected;
-    selected = DynamicArray.uintArray(groupSize);
-
     bytes32 rngState = seed;
     uint256 rngRange = _root.sumWeight();
     require(rngRange > 0, "Not enough operators in pool");
@@ -202,21 +196,17 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
 
     uint256 bits = RNG.bitsRequired(rngRange);
 
-    while (selected.array.length < groupSize) {
+    uint32[] memory selected = new uint32[](groupSize);
+
+    for (uint256 i = 0; i < groupSize; i++) {
       (currentIndex, rngState) = RNG.getIndex(rngRange, rngState, bits);
 
       uint256 leafPosition = pickWeightedLeaf(currentIndex, _root);
 
       uint256 leaf = leaves[leafPosition];
-      selected.arrayPush(leaf);
+      selected[i] = leaf.id();
     }
-
-    uint32[] memory selectedIDs = new uint32[](groupSize);
-
-    for (uint256 i = 0; i < groupSize; i++) {
-      selectedIDs[i] = selected.array[i].id();
-    }
-    return selectedIDs;
+    return selected;
   }
 
   function getWeight(uint256 authorization) internal view returns (uint256) {
