@@ -58,7 +58,7 @@ contract Rewards {
   uint32 internal totalIneligibleWeight;
   // Ineligibility times are calculated from this offset,
   // set at contract creation.
-  uint256 internal ineligibleOffsetStart;
+  uint256 internal immutable ineligibleOffsetStart;
 
   mapping(uint32 => OperatorRewards) internal operatorRewards;
 
