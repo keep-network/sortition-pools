@@ -36,6 +36,12 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     _;
   }
 
+  /// @notice Reverts if called while pool is unlocked.
+  modifier onlyLocked() {
+    require(isLocked, "Sortition pool unlocked");
+    _;
+  }
+
   constructor(
     IStaking _stakingContract,
     IERC20WithPermit _rewardToken,
@@ -166,6 +172,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   function selectGroup(uint256 groupSize, bytes32 seed)
     public
     view
+    onlyLocked
     returns (uint32[] memory)
   {
     uint256 _root = root;
