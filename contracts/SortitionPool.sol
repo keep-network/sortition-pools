@@ -30,6 +30,10 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
 
   bool public isLocked;
 
+  event IneligibleForRewards(uint32[] ids, uint256 until);
+
+  event EligibilityRestored(address indexed operator, uint32 indexed id);
+
   /// @notice Reverts if called while pool is locked.
   modifier onlyUnlocked() {
     require(!isLocked, "Sortition pool locked");
@@ -136,11 +140,13 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     onlyOwner
   {
     Rewards.setIneligible(operators, until);
+    emit IneligibleForRewards(operators, until);
   }
 
   function restoreRewardEligibility(address operator) public {
     uint32 id = getOperatorID(operator);
     Rewards.restoreEligibility(id);
+    emit EligibilityRestored(operator, id);
   }
 
   /// @notice Return whether the operator is present in the pool.
