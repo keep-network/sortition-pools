@@ -11,7 +11,6 @@ contract RewardsStub is Rewards {
     function addOperator(uint32 operator, uint256 weight) public {
         operators.push(operator);
         operatorWeight[operator] = weight;
-        operatorRewards[operator].accumulated = globalRewardAccumulator;
         updateOperatorRewards(operator, uint32(weight));
     }
 

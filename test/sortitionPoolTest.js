@@ -284,6 +284,23 @@ describe("SortitionPool", () => {
       expect(bobReward).to.equal(200)
     })
 
+    it("handles new and returning operators correctly", async () => {
+      await token.connect(deployer).mint(deployer.address, 1000)
+      await pool.connect(owner).insertOperator(alice.address, 10000)
+      await token.connect(deployer).approveAndCall(pool.address, 300, [])
+      await pool.connect(owner).insertOperator(bob.address, 20000)
+      await pool.connect(owner).updateOperatorStatus(alice.address, 0)
+      await token.connect(deployer).approveAndCall(pool.address, 300, [])
+      await pool.connect(owner).insertOperator(alice.address, 10000)
+      await token.connect(deployer).approveAndCall(pool.address, 300, [])
+      await pool.withdrawRewards(alice.address)
+      await pool.withdrawRewards(bob.address)
+      const aliceReward = await token.balanceOf(alice.address)
+      const bobReward = await token.balanceOf(bob.address)
+      expect(aliceReward).to.equal(400)
+      expect(bobReward).to.equal(500)
+    })
+
     it("doesn't pay to ineligible operators", async () => {
       await token.connect(deployer).mint(deployer.address, 1000)
       await pool.connect(owner).insertOperator(alice.address, 10000)
