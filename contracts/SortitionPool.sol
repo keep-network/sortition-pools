@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./Rewards.sol";
-import "./api/IStaking.sol";
+import "./api/IPoolStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -19,7 +19,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using Leaf for uint256;
   using Position for uint256;
 
-  IStaking public immutable stakingContract;
+  IPoolStaking public immutable stakingContract;
 
   IERC20WithPermit public immutable rewardToken;
 
@@ -44,7 +44,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   }
 
   constructor(
-    IStaking _stakingContract,
+    IPoolStaking _stakingContract,
     IERC20WithPermit _rewardToken,
     uint256 _poolWeightDivisor
   ) {
