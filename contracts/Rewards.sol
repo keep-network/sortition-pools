@@ -1,4 +1,4 @@
-pragma solidity 0.8.6;
+pragma solidity 0.8.9;
 
 /// @title Rewards
 /// @notice Rewards are allocated proportionally to operators
