@@ -105,7 +105,8 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   }
 
   /// @notice Update the operator's weight if present and eligible,
-  /// or remove from the pool if present and ineligible.
+  /// or remove from the pool if present and ineligible. Sets the operator's
+  /// reward weight proportionally to the authorized stake.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the updated operator.
   /// @param authorizedStake Operator's authorized stake for the application.
@@ -114,10 +115,30 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     onlyOwner
     onlyUnlocked
   {
+    updateOperatorStatusAndRewards(operator, authorizedStake, authorizedStake);
+  }
+
+  /// @notice Update the operator's weight if present and eligible,
+  /// or remove from the pool if present and ineligible. Sets the operator's
+  /// reward weight proportionally to the rewarded stake passed as a parameter.
+  /// This function is identical to `updateOperatorStatus` except
+  /// that it allows setting rewards weight different than the in-pool weight.
+  /// This could be helpful for situations when the operator is undelegating and
+  /// they should be removed from the pool while still earning rewards based on
+  /// their previous weight until the undelegation is completed.
+  /// @dev Can be called only by the contract owner.
+  /// @param operator Address of the updated operator.
+  /// @param authorizedStake Operator's authorized stake for the application.
+  /// @param rewardedStake Rewarded stake for the operators.
+  function updateOperatorStatusAndRewards(
+    address operator,
+    uint256 authorizedStake,
+    uint256 rewardedStake
+  ) public onlyOwner onlyUnlocked {
     uint256 weight = getWeight(authorizedStake);
 
     uint32 id = getOperatorID(operator);
-    Rewards.updateOperatorRewards(id, uint32(weight));
+    Rewards.updateOperatorRewards(id, uint32(getWeight(rewardedStake)));
 
     if (weight == 0) {
       _removeOperator(operator);
@@ -166,6 +187,12 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
       uint256 leafWeight = getLeafWeight(leafPosition);
       return leafWeight;
     }
+  }
+
+  /// @notice Return the current reward weight of the operator in the pool.
+  function getRewardWeight(address operator) public view returns (uint32) {
+    uint32 id = getOperatorID(operator);
+    return operatorRewards[id].weight;
   }
 
   /// @notice Selects a new group of operators of the provided size based on

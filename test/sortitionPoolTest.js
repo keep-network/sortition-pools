@@ -147,6 +147,16 @@ describe("SortitionPool", () => {
             expect(await pool.isOperatorUpToDate(alice.address, 5000)).to.be
               .true
           })
+
+          it("should set pool weight proportional to the authorized stake", async () => {
+            // 5000 / 2000 = 2 (pool weight divisor is 2000)
+            expect(await pool.getRewardWeight(alice.address)).to.equal(2)
+          })
+
+          it("should set reward weight proportionally to authorized stake", async () => {
+            // 5000 / 2000 = 2 (pool weight divisor is 2000)
+            expect(await pool.getRewardWeight(alice.address)).to.equal(2)
+          })
         })
 
         context("when operator is no longer eligible", () => {
@@ -158,6 +168,10 @@ describe("SortitionPool", () => {
 
           it("should remove operator from the pool", async () => {
             expect(await pool.isOperatorInPool(alice.address)).to.be.false
+          })
+
+          it("should set reward weight to 0", async () => {
+            expect(await pool.getRewardWeight(alice.address)).to.equal(0)
           })
         })
       })
@@ -180,6 +194,72 @@ describe("SortitionPool", () => {
         await expect(
           pool.connect(owner).updateOperatorStatus(alice.address, 10000),
         ).to.be.revertedWith("Sortition pool locked")
+      })
+    })
+  })
+
+  describe("updateOperatorStatusAndRewards", () => {
+    beforeEach(async () => {
+      await pool.connect(owner).insertOperator(alice.address, 2000)
+    })
+
+    context("when sortition pool is unlocked", () => {
+      context("when called by the owner", () => {
+        context("when operator is still eligible", () => {
+          beforeEach(async () => {
+            await pool
+              .connect(owner)
+              .updateOperatorStatusAndRewards(alice.address, 10000, 20000)
+          })
+
+          it("should update operator status", async () => {
+            expect(await pool.isOperatorUpToDate(alice.address, 2000)).to.be
+              .false
+            expect(await pool.isOperatorUpToDate(alice.address, 10000)).to.be
+              .true
+          })
+
+          it("should set pool weight proportional to the authorized stake", async () => {
+            // 10000 / 2000 = 5 (pool weight divisor is 2000)
+            expect(await pool.getPoolWeight(alice.address)).to.equal(5)
+          })
+
+          it("should set reward weight proportionally to rewarded stake", async () => {
+            // 20000 / 2000 = 10 (pool weight divisor is 2000)
+            expect(await pool.getRewardWeight(alice.address)).to.equal(10)
+          })
+        })
+
+        context("when operator is no longer eligible", () => {
+          beforeEach(async () => {
+            await pool
+              .connect(owner)
+              .updateOperatorStatusAndRewards(
+                alice.address,
+                poolWeightDivisor - 1,
+                6000,
+              )
+          })
+
+          it("should remove operator from the pool", async () => {
+            expect(await pool.isOperatorInPool(alice.address)).to.be.false
+          })
+
+          it("should set reward weight proportionally to rewarded stake", async () => {
+            // 6000 / 2000 = 3 (pool weight divisor is 2000)
+            expect(await pool.getRewardWeight(alice.address)).to.equal(3)
+          })
+        })
+      })
+
+      context("when called by a non-owner", () => {
+        it("should revert", async () => {
+          await expect(
+            pool
+              .connect(alice)
+              .updateOperatorStatusAndRewards(alice.address, 10000, 5000),
+          ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
       })
     })
   })
