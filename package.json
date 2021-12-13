@@ -12,7 +12,6 @@
   ],
   "scripts": {
     "build": "hardhat compile",
-    "ganache": "echo 'GANACHE IS NO LONGER USED; use buidler-vm script instead'",
     "test": "hardhat test",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:fix": "npm run lint:fix:js && npm run lint:fix:sol",
