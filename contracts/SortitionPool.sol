@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./Rewards.sol";
-import "./api/IPoolStaking.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
@@ -18,8 +17,6 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
-
-  IPoolStaking public immutable stakingContract;
 
   IERC20WithPermit public immutable rewardToken;
 
@@ -43,12 +40,7 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     _;
   }
 
-  constructor(
-    IPoolStaking _stakingContract,
-    IERC20WithPermit _rewardToken,
-    uint256 _poolWeightDivisor
-  ) {
-    stakingContract = _stakingContract;
+  constructor(IERC20WithPermit _rewardToken, uint256 _poolWeightDivisor) {
     rewardToken = _rewardToken;
     poolWeightDivisor = _poolWeightDivisor;
   }
@@ -64,11 +56,13 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
   }
 
-  function withdrawRewards(address operator) public {
+  function withdrawRewards(address operator, address beneficiary)
+    public
+    onlyOwner
+  {
     uint32 id = getOperatorID(operator);
     Rewards.updateOperatorRewards(id, uint32(getPoolWeight(operator)));
     uint96 earned = Rewards.withdrawOperatorRewards(id);
-    (, address beneficiary, ) = stakingContract.rolesOf(operator);
     rewardToken.transfer(beneficiary, uint256(earned));
   }
 
