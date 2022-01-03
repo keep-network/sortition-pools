@@ -1,6 +1,6 @@
 name: Run linters
 
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
   lint-js:
