@@ -20,19 +20,8 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "12.x"
+          cache: "npm"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-solidity-node-modules
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       - name: Bump up package version
         id: npm-version-bump
