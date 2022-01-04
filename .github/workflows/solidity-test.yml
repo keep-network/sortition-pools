@@ -4,18 +4,22 @@ on:
   push:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
+      
       - uses: actions/setup-node@v1
         with:
-          node-version: "11.x"
+          node-version: "14.x"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm install
+
       - name: Run tests
         run: |
           npm test
