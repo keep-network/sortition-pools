@@ -27,11 +27,11 @@ jobs:
         id: npm-version-bump
         uses: keep-network/npm-version-bump@v2
         with:
-          environment: dev
+          environment: pre
           branch: ${{ github.ref }}
           commit: ${{ github.sha }}
 
       - name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access=public --tag=dev
+        run: npm publish --access=public --tag=pre
