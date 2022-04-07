@@ -8,7 +8,6 @@ describe("SortitionPool", () => {
   const poolWeightDivisor = 2000
 
   let token
-  let staking
   let pool
 
   let deployer
@@ -16,30 +15,19 @@ describe("SortitionPool", () => {
   let alice
   let bob
   let carol
+  let aliceBeneficiary
+  let bobBeneficiary
 
   beforeEach(async () => {
-    deployer = await ethers.getSigner(0)
-    owner = await ethers.getSigner(1)
-    alice = await ethers.getSigner(2)
-    bob = await ethers.getSigner(3)
-    carol = await ethers.getSigner(4)
-
-    const StakingContractStub = await ethers.getContractFactory(
-      "StakingContractStub",
-    )
-    staking = await StakingContractStub.deploy()
-    await staking.deployed()
+    ;[deployer, owner, alice, bob, carol, aliceBeneficiary, bobBeneficiary] =
+      await ethers.getSigners()
 
     const TokenStub = await ethers.getContractFactory("TokenStub")
     token = await TokenStub.deploy()
     await token.deployed()
 
     const SortitionPool = await ethers.getContractFactory("SortitionPool")
-    pool = await SortitionPool.deploy(
-      staking.address,
-      token.address,
-      poolWeightDivisor,
-    )
+    pool = await SortitionPool.deploy(token.address, poolWeightDivisor)
     await pool.deployed()
 
     await pool.connect(deployer).transferOwnership(owner.address)
@@ -271,15 +259,25 @@ describe("SortitionPool", () => {
   })
 
   describe("pool rewards", async () => {
+    it("can only be withdrawn by the owner", async () => {
+      await expect(
+        pool.connect(bob).withdrawRewards(bob.address, bobBeneficiary.address),
+      ).to.be.revertedWith("Ownable: caller is not the owner")
+    })
+
     it("pays rewards correctly", async () => {
       await token.connect(deployer).mint(deployer.address, 1000)
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await pool.connect(owner).insertOperator(bob.address, 20000)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool.withdrawRewards(alice.address)
-      await pool.withdrawRewards(bob.address)
-      const aliceReward = await token.balanceOf(alice.address)
-      const bobReward = await token.balanceOf(bob.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(alice.address, aliceBeneficiary.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(bob.address, bobBeneficiary.address)
+      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
+      const bobReward = await token.balanceOf(bobBeneficiary.address)
       expect(aliceReward).to.equal(100)
       expect(bobReward).to.equal(200)
     })
@@ -293,10 +291,14 @@ describe("SortitionPool", () => {
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool.withdrawRewards(alice.address)
-      await pool.withdrawRewards(bob.address)
-      const aliceReward = await token.balanceOf(alice.address)
-      const bobReward = await token.balanceOf(bob.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(alice.address, aliceBeneficiary.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(bob.address, bobBeneficiary.address)
+      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
+      const bobReward = await token.balanceOf(bobBeneficiary.address)
       expect(aliceReward).to.equal(400)
       expect(bobReward).to.equal(500)
     })
@@ -309,11 +311,15 @@ describe("SortitionPool", () => {
       const bobID = await pool.getOperatorID(bob.address)
       await pool.connect(owner).setRewardIneligibility([bobID], now + 100)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool.withdrawRewards(alice.address)
-      await pool.withdrawRewards(bob.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(alice.address, aliceBeneficiary.address)
+      await pool
+        .connect(owner)
+        .withdrawRewards(bob.address, bobBeneficiary.address)
       await pool.connect(owner).withdrawIneligible(carol.address)
-      const aliceReward = await token.balanceOf(alice.address)
-      const bobReward = await token.balanceOf(bob.address)
+      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
+      const bobReward = await token.balanceOf(bobBeneficiary.address)
       const ineligibleReward = await token.balanceOf(carol.address)
       expect(aliceReward).to.equal(100)
       expect(bobReward).to.equal(0)
