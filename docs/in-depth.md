@@ -200,3 +200,21 @@ Oscar: [105, 120)
 Pearl: [120, 136)
 ```
 And we observe that 81 falls into Mike's range!
+
+The example uses digits instead of bits, and uses 4 operators per storage slot
+number instead of 8, but the *intuition* is the same. Even though we're having
+to iterate through operators less efficiently than in the binary tree example,
+we're interacting far less with storage (especially "read" calls), which ends
+up being the main gas bottleneck.
+
+### Token Precision
+
+Clever readers might point out that tokens have 18 decimals of precision and
+the total supply of T tokens is 10B, which takes `log_base_2(1e28) = 94` bits
+to store. The good news for us is that we only care about generating relative
+probability, and we have a minimum stake, which makes 32 bits enough for
+practical purposes. As in, if you have `10000.000000000000000001` tokens, all
+the system is doing is using that amount to generate a probability that you are
+selected. So yes, by losing precision on the token amounts we lose precision on
+the relative probabilities, but the precision loss is so insificant as to be
+irrelevant.
