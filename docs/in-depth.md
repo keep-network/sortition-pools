@@ -45,7 +45,7 @@ function chooseOperator(operators) {
 chooseOperator({"Alice": 30, "Bob": 20, "Carol": 40, "David": 50})
 ```
 
-In english, we figure out the total weight of the pool, and then generate a
+In English, we figure out the total weight of the pool, and then generate a
 random number in `[0, totalWeight)`. Then, we assign a sort of cumulative
 distribution to each of the operators: Alice is picked if that random number is
 in `[0, 30)`, Bob is picked if the random number is in `[20, 50)`, Carol is
@@ -129,7 +129,8 @@ optimize we can leverage storing the stake as a 32-bit number inside of a
 uint256, which ultimately allows us to store `256/32=8` operator's stakes in a single
 uint256.
 
-To reason about this in decimal I'll use digits instead of bits, and 4 slots instead of 8 to keep things compact.
+To reason about this in decimal, I'll use digits instead of bits, and 4 slots
+instead of 8 to keep things compact.
 
 Imagine that we know that the biggest numbers we need to work with are 4 digits
 long, but we're allowed to store it in a number that is *16* digits long. We
@@ -217,5 +218,5 @@ probability, and we have a minimum stake, which makes 32 bits enough for
 practical purposes. As in, if you have `10000.000000000000000001` tokens, all
 the system is doing is using that amount to generate a probability that you are
 selected. So yes, by losing precision on the token amounts we lose precision on
-the relative probabilities, but the precision loss is so insificant as to be
+the relative probabilities, but the precision loss is so insignificant as to be
 irrelevant.
