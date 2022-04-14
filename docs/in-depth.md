@@ -94,9 +94,12 @@ example below), 8 operators with a 4-layer, and `2^n` operators with a
 
 Once this data structure is created, we can execute the following algorithm:
 
-1. Generate a random number: `Math.floor(Math.random() * rootValue)`, since the root is the total weight
-2. If the left number is greater than the random number, take the branch. Go to Step 2.
-3. Take the right branch and decrease the random number by the left number. Go to Step 2.
+1. Generate a random number: `Math.floor(Math.random() * rootValue)`, since the
+   root is the total weight
+2. If the left child's value is greater than the random number, take the branch. Go to
+   Step 2.
+3. Take the right branch and decrease the random number by the left number. Go
+   to Step 2.
 
 Eventually you hit a leaf node, and when you do, that's your operator. This
 algorithm is able to execute in `log_base_2(operators.size)` time (the number
