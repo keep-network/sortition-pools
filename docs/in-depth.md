@@ -53,7 +53,7 @@ picked if the random number is in `[50, 90)`, and David is picked if the random
 number is in `[90, 140)`.
 
 Say our random number was 64. We know that's in Carol's range, but how do we
-determine that? First, we check if 64 > Alice's 30, and it isn't, so we
+determine that? First, we check if Alice's 30 > 64, and it isn't, so we
 subtract 30 from 64 and move to Bob. Bob's 20 still isn't greater than the
 remaining 34, so we subtract 20 and move to Carol. Carol's 40 is greater than
 the remaining 14 so we're finished.
