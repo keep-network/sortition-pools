@@ -5,15 +5,15 @@ from that naive solution.
 ### Original Problem and Naive Approach
 
 Say that we have a list of operators like `[Alice, Bob, Carol, David]`, and
-each operator has a different amount of stake in the pool `{Alice: 20, Bob: 30:
+each operator has a different amount of stake in the pool `{Alice: 30, Bob: 20:
 Carol: 40: David: 50}`. We need to select a group of operators (say, 3), where
 each operator selected has a chance to be selected equal to their *portion* of
 the total amount of stake in the pool. It's okay to select one operator
 multiple times. We might end up with a group that looks like `[David,
 Carol, David]`.
 
-In our example, the chance that we select Alice is `20 / (20 + 30 + 40 + 50) =
-0.143`.
+In our example, the chance that we select Alice is `30 / (30 + 20 + 40 + 50) =
+0.214`.
 
 In order to select a single *slot* in our group, we might write something simple like:
 
@@ -42,20 +42,20 @@ function chooseOperator(operators) {
   }
   return chosenOperator
 }
-chooseOperator({"Alice": 20, "Bob": 30, "Carol": 40, "David": 50})
+chooseOperator({"Alice": 30, "Bob": 20, "Carol": 40, "David": 50})
 ```
 
 In english, we figure out the total weight of the pool, and then generate a
 random number in `[0, totalWeight)`. Then, we assign a sort of cumulative
 distribution to each of the operators: Alice is picked if that random number is
-in `[0, 20)`, Bob is picked if the random number is in `[20, 50)`, Carol is
+in `[0, 30)`, Bob is picked if the random number is in `[20, 50)`, Carol is
 picked if the random number is in `[50, 90)`, and David is picked if the random
 number is in `[90, 140)`.
 
 Say our random number was 64. We know that's in Carol's range, but how do we
-determine that? First, we check if 64 > Alice's 20, and it isn't, so we
-subtract 20 from 64 and move to Bob. Bob's 30 still isn't greater than the
-remaining 44, so we subtract 30 and move to Carol. Carol's 40 is greater than
+determine that? First, we check if 64 > Alice's 30, and it isn't, so we
+subtract 30 from 64 and move to Bob. Bob's 20 still isn't greater than the
+remaining 34, so we subtract 20 and move to Carol. Carol's 40 is greater than
 the remaining 14 so we're finished.
 
 If we need to generate `numOperators` amount of operators, then we just loop:
@@ -68,7 +68,7 @@ let group = []
   }
   return group
 }
-chooseOperators({"Alice": 20, "Bob": 30, "Carol": 40, "David": 50}, 3)
+chooseOperators({"Alice": 30, "Bob": 20, "Carol": 40, "David": 50}, 3)
 ```
 
 This just works! In applications where performance doesn't matter and we don't
@@ -111,7 +111,7 @@ Here's a worked example with our original operator team. The names have been abb
    ┌┤A+B: 50 │         ┌┤C+D: 90 │
    │└──────┬─┘         │└──────┬─┘
 ┌──┴───┐┌──┴───┐    ┌──┴───┐┌──┴───┐
-│A: 20 ││B: 30 │    │C: 40 ││D: 50 │
+│A: 30 ││B: 20 │    │C: 40 ││D: 50 │
 └──────┘└──────┘    └──────┘└──────┘
 ```
 
@@ -137,7 +137,7 @@ might often write that an operator's stake is `42`, but if we're using a
 those zeroes.
 
 Instead, we can say "every 4 digits belong to an operator", and then represent
-our original 4 operators like: `0020003000400050`. Then, we restructure the
+our original 4 operators like: `0030002000400050`. Then, we restructure the
 tree. Each layer has 4 times the number of nodes as the previous layer, and
 each leaf represents 4 operators. To figure out which node we should
 descend into next, we solve the naive version of the problem, but by
