@@ -48,7 +48,7 @@ chooseOperator({"Alice": 30, "Bob": 20, "Carol": 40, "David": 50})
 In English, we figure out the total weight of the pool, and then generate a
 random number in `[0, totalWeight)`. Then, we assign a sort of cumulative
 distribution to each of the operators: Alice is picked if that random number is
-in `[0, 30)`, Bob is picked if the random number is in `[20, 50)`, Carol is
+in `[0, 30)`, Bob is picked if the random number is in `[30, 50)`, Carol is
 picked if the random number is in `[50, 90)`, and David is picked if the random
 number is in `[90, 140)`.
 
