@@ -87,9 +87,10 @@ weight of the branches below it, and the leaves are the individual operators
 with their individual weights, then we have a bigger data structure that is
 *much* faster to search.
 
-We can represent 2 operators with a 1-layer tree, 4 operators with a 2-layer
-tree, 8 operators with a 3-layer, and `2^n` operators with a `n`-layer tree. In
-order to represent our 1000 operators, we need 10 layers.
+We can represent 2 operators with a 2-layer tree (the root layer and then 2
+operators in the next layer), 4 operators with a 3-layer tree (shown in an
+example below), 8 operators with a 4-layer, and `2^n` operators with a
+`n+1`-layer tree. In order to represent our 1000 operators, we need 11 layers.
 
 Once this data structure is created, we can execute the following algorithm:
 
@@ -122,7 +123,7 @@ left node of `50`, so we take the right branch: `C+D` and reduce our number to
 ### Storing Multiple Operators In One `uint256`
 
 We're most of the way there, but each read operation is expensive. At ~2000
-operators, we'd need 11 layers, which is 11 reads (and keep in mind, we need to
+operators, we'd need 12 layers, which is 12 reads (and keep in mind, we need to
 repeat this process a number of times equal to the group size). To further
 optimize we can leverage storing the stake as a 32-bit number inside of a
 uint256, which ultimately allows us to store `256/32=8` operator's stakes in a single
