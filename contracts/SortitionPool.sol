@@ -140,6 +140,12 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     emit RewardEligibilityRestored(operator, id);
   }
 
+  /// @notice Returns the amount of rewards withdrawable for the given operator.
+  function getAvailableRewards(address operator) public view returns (uint96) {
+    uint32 id = getOperatorID(operator);
+    return availableRewards(id);
+  }
+
   /// @notice Return whether the operator is present in the pool.
   function isOperatorInPool(address operator) public view returns (bool) {
     return getFlaggedLeafPosition(operator) != 0;

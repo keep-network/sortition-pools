@@ -318,5 +318,70 @@ describe("Rewards", () => {
         "Operator still ineligible",
       )
     })
+
+    it("returns correct amount of available rewards", async () => {
+      await rewards.addOperator(alice, 10)
+      await rewards.addOperator(bob, 10)
+      await rewards.addOperator(carol, 10)
+
+      // Reward to all
+      // Alice: 10; Bob: 10; Carol: 10
+      await rewards.payReward(30)
+
+      let aliceReward = await rewards.getAvailableRewards(alice)
+      expect(aliceReward).to.equal(10)
+      let bobRewards = await rewards.getAvailableRewards(bob)
+      expect(bobRewards).to.equal(10)
+      let carolRewards = await rewards.getAvailableRewards(carol)
+      expect(carolRewards).to.equal(10)
+
+      // Alice withdraws her rewards
+      // Alice: 0; Bob: 10; Carol: 10
+      await rewards.withdrawRewards(alice)
+
+      aliceReward = await rewards.getAvailableRewards(alice)
+      expect(aliceReward).to.equal(0)
+      bobRewards = await rewards.getAvailableRewards(bob)
+      expect(bobRewards).to.equal(10)
+      carolRewards = await rewards.getAvailableRewards(carol)
+      expect(carolRewards).to.equal(10)
+
+      // Reward to all
+      // Alice: 10; Bob: 20; Carol: 20
+      await rewards.payReward(30)
+
+      aliceReward = await rewards.getAvailableRewards(alice)
+      expect(aliceReward).to.equal(10)
+      bobRewards = await rewards.getAvailableRewards(bob)
+      expect(bobRewards).to.equal(20)
+      carolRewards = await rewards.getAvailableRewards(carol)
+      expect(carolRewards).to.equal(20)
+
+      // Bob goes ineligible.
+      await rewards.makeIneligible(bob, 10)
+
+      // Reward to all
+      // Alice: 20; Bob: 20; Carol: 30
+      await rewards.payReward(30)
+
+      aliceReward = await rewards.getAvailableRewards(alice)
+      expect(aliceReward).to.equal(20)
+      bobRewards = await rewards.getAvailableRewards(bob)
+      expect(bobRewards).to.equal(20)
+      carolRewards = await rewards.getAvailableRewards(carol)
+      expect(carolRewards).to.equal(30)
+
+      // Bob and Carol withdraws their rewards
+      // Alice: 20; Bob: 0; Carol: 0
+      await rewards.withdrawRewards(bob)
+      await rewards.withdrawRewards(carol)
+
+      aliceReward = await rewards.getAvailableRewards(alice)
+      expect(aliceReward).to.equal(20)
+      bobRewards = await rewards.getAvailableRewards(bob)
+      expect(bobRewards).to.equal(0)
+      carolRewards = await rewards.getAvailableRewards(carol)
+      expect(carolRewards).to.equal(0)
+    })
   })
 })
