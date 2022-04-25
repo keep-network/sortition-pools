@@ -74,6 +74,9 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     return earned;
   }
 
+  /// @notice Withdraws rewards not allocated to operators marked as ineligible
+  ///         to the given recipient address.
+  /// @dev Can be called only by the owner.
   function withdrawIneligible(address recipient) public onlyOwner {
     uint96 earned = Rewards.withdrawIneligibleRewards();
     rewardToken.transfer(recipient, uint256(earned));
