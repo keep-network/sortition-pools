@@ -49,6 +49,10 @@ followed by 32 1's. The bitwise `&` clears out everything but the last 32
 significant bits of `_id`, leaving us with 224 0's and 32 significant bits
 stored in `uid`.
 
+Note: Since we assert that `_id` fits within `uint32.max`, the above bitwise
+`&` *shouldn't* ever do anything, but we do it anyway out of an abundance of
+caution.
+
 `BLOCKHEIGHT_MAX = 2^64 - 1` is represented as 64 1s, which as a `uint256` is
 192 0's followed by 64 1's. the bitwise `&` clears out everything but the last
 64 significant bits of `_creationBlock`, and then we shift those bits to the
