@@ -7,7 +7,9 @@ branch node is a `uint256`, and the branch structure is implemented as a
 `mapping(uint256 => mapping(uint256 => uint256))`. The first index represents
 the layer, and the second index represents the position within the layer.
 
-The first branch layer has 8 branches, and every subsequent layer has 8x the number of branches as the previous layer, so 
+The first branch layer has 8 branches, and every subsequent layer has 8x the
+number of branches as the previous layer, so each layer consists of the
+following number of nodes:
 
 1) node layer: 1
 2) branch layer 1: 8
