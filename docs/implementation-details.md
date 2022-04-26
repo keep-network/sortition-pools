@@ -37,10 +37,10 @@ function make(
 
 The `Leaf.make` takes in an operator address, the block it was created in, and
 a monotonically increasing id for unique operators. We convert the operator
-address to a bytes20, and then convert it to a bytes32 (which pads the extra 12
-bytes with 0's on the *right*), and then convert the whole thing into a
-`uint256`. This means that we have 160 bits that matter on the left, and 96 0's
-on the right stored in `op`.
+address to a `bytes20`, and then convert it to a `bytes32` (which pads the
+extra 12 bytes with 0's on the *right*), and then convert the whole thing into
+a `uint256`. This means that we have 160 bits that matter on the left, and 96
+0's on the right stored in `op`.
 
 `ID_MAX = 2^32 - 1` is represented as 32 1's, which as a `uint256` is 224 0's
 followed by 32 1's. The bitwise `&` clears out everything but the last 32
