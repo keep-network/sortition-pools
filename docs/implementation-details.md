@@ -66,6 +66,7 @@ the last 32 bits. If we want to know the creation block, we should look at bits
 `[160, 224)` (which we can do by right-shifting and then applying a bitwise
 `&`).
 
+### Branch And Root Deserialization And Serialization
 TODO: Branch / Root Serialization and Deserialization
 
 ### Joining and Leaving The Pool
@@ -110,6 +111,7 @@ weight directly. That branch's total weight will change, which will update it's
 slot in that branch's parent, and so on, all the way up to the root.
 
 For an in-depth explanation of how this information is structured, refer to the
-Branch and Root Deserialization and Serialization section.
+[Branch and Root Deserialization and
+Serialization](#branch-and-root-deserialization-and-serialization) section.
 
 TODO: Selecting A Random Group
