@@ -2,7 +2,12 @@ const chai = require("chai")
 const expect = chai.expect
 const { ethers, helpers } = require("hardhat")
 
-async function withdrawRewards(pool, owner, operatorAddress, beneficiaryAddress) {
+async function withdrawRewards(
+  pool,
+  owner,
+  operatorAddress,
+  beneficiaryAddress,
+) {
   const tx = await pool
     .connect(owner)
     .withdrawRewards(operatorAddress, beneficiaryAddress)
@@ -269,7 +274,7 @@ describe("SortitionPool", () => {
   describe("pool rewards", async () => {
     it("can only be withdrawn by the owner", async () => {
       await expect(
-        withdrawRewards(pool, bob, bob.address, bobBeneficiary.address)
+        withdrawRewards(pool, bob, bob.address, bobBeneficiary.address),
       ).to.be.revertedWith("Ownable: caller is not the owner")
     })
 
@@ -282,8 +287,18 @@ describe("SortitionPool", () => {
       const aliceExpectedReward = 100
       const bobExpectedReward = 200
 
-      const aliceReward = await withdrawRewards(pool, owner, alice.address, aliceBeneficiary.address)
-      const bobReward = await withdrawRewards(pool, owner, bob.address, bobBeneficiary.address)
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
       expect(aliceReward).to.equal(aliceExpectedReward)
       expect(bobReward).to.equal(bobExpectedReward)
 
@@ -305,8 +320,18 @@ describe("SortitionPool", () => {
       const aliceExpectedReward = 400
       const bobExpectedReward = 500
 
-      const aliceReward = await withdrawRewards(pool, owner, alice.address, aliceBeneficiary.address)
-      const bobReward = await withdrawRewards(pool, owner, bob.address, bobBeneficiary.address)
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
       expect(aliceReward).to.equal(aliceExpectedReward)
       expect(bobReward).to.equal(bobExpectedReward)
 
@@ -327,8 +352,18 @@ describe("SortitionPool", () => {
       const aliceExpectedReward = 100
       const bobExpectedReward = 0
 
-      const aliceReward = await withdrawRewards(pool, owner, alice.address, aliceBeneficiary.address)
-      const bobReward = await withdrawRewards(pool, owner, bob.address, bobBeneficiary.address)
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
       expect(aliceReward).to.equal(aliceExpectedReward)
       expect(bobReward).to.equal(bobExpectedReward)
 
