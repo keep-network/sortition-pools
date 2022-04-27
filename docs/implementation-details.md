@@ -130,5 +130,50 @@ right-most 32 bits, and then do a bitwise `&` with `2^32 - 1`, which is 224 0's
 and 32 1s. This has the effect of erasing everything but the 32 relevant bits,
 allowing us to read *only* the slot.
 
+### Joining and Leaving The Pool
+
+Operators join the pool according to two pieces of state: `rightmostLeaf` and
+`emptyLeaves`. `rightmostLeaf` is an always-increasing counter that starts at 0
+and increases each time an operator needs to join the pool. Eventually,
+`rightmostLeaf` will exceed `2,097,152`, which is the size of the leaf layer,
+and we'll ignore it forever, and instead rely on `emptyLeaves`.
+
+`emptyLeaves` is an array that is appended to with the position of the operator
+who *leaves* the pool. Once `rightmostLeaf` is useless, we `pop` `emptyLeaves`,
+insert the new operator in that position, and repeat. We should never run out
+of positions with this strategy because the number of leaves far exceeds the
+total token supply divided by the minimum stake.
+
+Here's a sample event log with state, using a max leaf length of `4` instead of
+`2097152` for brevity.
+
+```
+state 1) slots: [-, -, -, -], rightmostLeaf: 0, emptyLeaves: []
+event: A joins
+state 2) slots: [A, -, -, -], rightmostLeaf: 1, emptyLeaves: []
+event: B joins
+state 3) slots: [A, B, -, -], rightmostLeaf: 2, emptyLeaves: []
+event: C joins
+state 4) slots: [A, B, C, -], rightmostLeaf: 3, emptyLeaves: []
+event: B leaves
+state 5) slots: [A, -, C, -], rightmostLeaf: 3, emptyLeaves: [1]
+event: D joins
+state 6) slots: [A, -, C, D], rightmostLeaf: 4, emptyLeaves: [1] // rightmostLeaf is forever useless now
+event: A leaves
+state 7) slots: [-, -, C, D], rightmostLeaf: 4, emptyLeaves: [1, 0]
+event: E joins
+state 8) slots: [E, -, C, D], rightmostLeaf: 4, emptyLeaves: [1]
+```
+
+Each time an operator joins or leaves the pool, we need to update all of the
+branches on the path from the operator to the root, as well as the root. The
+branch with the operator as a child will have its slot updated with the child's
+weight directly. That branch's total weight will change, which will update it's
+slot in that branch's parent, and so on, all the way up to the root.
+
+For an in-depth explanation of how this information is structured, refer to the
+[Branch and Root Deserialization and
+Serialization](#branch-and-root-deserialization-and-serialization) section.
+
 TODO: Joining and Leaving The Pool
 TODO: Selecting A Random Group
