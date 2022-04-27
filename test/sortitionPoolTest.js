@@ -2,19 +2,6 @@ const chai = require("chai")
 const expect = chai.expect
 const { ethers, helpers } = require("hardhat")
 
-async function withdrawRewards(
-  pool,
-  owner,
-  operatorAddress,
-  beneficiaryAddress,
-) {
-  const tx = await pool
-    .connect(owner)
-    .withdrawRewards(operatorAddress, beneficiaryAddress)
-  const withdrawLogs = await tx.wait()
-  return parseInt(withdrawLogs.logs[0].data)
-}
-
 describe("SortitionPool", () => {
   const seed =
     "0xff39d6cca87853892d2854566e883008bc000000000000000000000000000000"
@@ -272,6 +259,19 @@ describe("SortitionPool", () => {
   })
 
   describe("pool rewards", async () => {
+    async function withdrawRewards(
+      pool,
+      owner,
+      operatorAddress,
+      beneficiaryAddress,
+    ) {
+      const tx = await pool
+        .connect(owner)
+        .withdrawRewards(operatorAddress, beneficiaryAddress)
+      const withdrawLogs = await tx.wait()
+      return parseInt(withdrawLogs.logs[0].data)
+    }
+
     it("can only be withdrawn by the owner", async () => {
       await expect(
         withdrawRewards(pool, bob, bob.address, bobBeneficiary.address),
