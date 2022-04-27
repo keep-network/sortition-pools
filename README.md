@@ -29,6 +29,8 @@ group.
 ## Important Facts
 
 + The max number of operators is `2,097,152`
++ The sortition pool is [optimistic](#optimisic-group-selection)! The on-chain
+  code is only run in the case of a challenge.
 
 FIXME: fill this in with information about:
 
@@ -45,3 +47,19 @@ To mitigate this, application using sortition pool should lock sortition pool
 state before seed used for the new selection is known and should unlock the
 pool once the selection process is over, keeping in mind potential timeouts and
 result challenges.
+
+## Optimistic Group Selection
+
+When an application (like the [Random
+Beacon](https://github.com/keep-network/keep-core/tree/main/solidity/random-beacon#group-creation))
+needs a new group, sortition is performed off-chain according to the same
+algorithm that would be performed on-chain, and the results are submitted
+on-chain.
+
+Then, we enter a challenge period where anyone can claim that the submitted
+results are inaccurate. If this happens, the on-chain sortition pool runs the
+same group selection with the same seed and validates the results.
+
+If the submission was invalid, the challenger is rewarded and the submitter is
+punished, and we can accept another submission. If the submission was valid,
+the challenger is punished and the submitter is unaffected.
