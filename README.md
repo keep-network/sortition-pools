@@ -62,4 +62,5 @@ same group selection with the same seed and validates the results.
 
 If the submission was invalid, the challenger is rewarded and the submitter is
 punished, and we can accept another submission. If the submission was valid,
-the challenger is punished and the submitter is unaffected.
+the challenger loses out on their gas, the submitter is unaffected, and the
+submission is accepted.
