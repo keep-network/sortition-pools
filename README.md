@@ -43,7 +43,7 @@ Miners and other actors that can predict the selection seed (due
 to frontrunning the beacon or a public cached seed being used) may be able to
 manipulate selection outcomes to some degree by selectively updating the pool.
 
-To mitigate this, application using sortition pool should lock sortition pool
+To mitigate this, applications using sortition pool should lock sortition pool
 state before seed used for the new selection is known and should unlock the
 pool once the selection process is over, keeping in mind potential timeouts and
 result challenges.
