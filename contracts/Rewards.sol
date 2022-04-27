@@ -34,6 +34,8 @@ contract Rewards {
     // The amount of rewards collected by the operator after the latest update.
     // The amount the operator could withdraw may equal `available`
     // or it may be greater, if more rewards have been paid in since then.
+    // To evaulate the most recent amount including rewards potentially paid
+    // since the last update, use `availableRewards` function.
     uint96 available;
     // If nonzero, the operator is ineligible for rewards
     // and may only re-enable rewards after the specified timestamp.
@@ -195,5 +197,22 @@ contract Rewards {
     o.accumulated = acc;
     o.ineligibleUntil = 0;
     operatorRewards[operator] = o;
+  }
+
+  /// @notice Returns the amount of rewards currently available for withdrawal
+  ///         for the given operator.
+  function availableRewards(uint32 operator) internal view returns (uint96) {
+    uint96 acc = globalRewardAccumulator;
+    OperatorRewards memory o = operatorRewards[operator];
+    if (o.ineligibleUntil == 0) {
+      // If operator is not ineligible, calculate newly accrued rewards and add
+      // them to the available ones, calculated during the last update.
+      uint96 accruedRewards = (acc - o.accumulated) * uint96(o.weight);
+      return o.available + accruedRewards;
+    } else {
+      // If ineligible, return only the rewards calculated during the last
+      // update.
+      return o.available;
+    }
   }
 }

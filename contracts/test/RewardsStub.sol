@@ -48,6 +48,10 @@ contract RewardsStub is Rewards {
         restoreEligibility(operator);
     }
 
+    function getAvailableRewards(uint32 operator) public view returns (uint96) {
+      return availableRewards(operator);
+    }
+
     function getWithdrawnRewards(uint32 operator) public view returns (uint256) {
         return withdrawnRewards[operator];
     }
