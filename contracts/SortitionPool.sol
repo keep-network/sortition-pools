@@ -56,16 +56,27 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     Rewards.addRewards(uint96(amount), uint32(root.sumWeight()));
   }
 
+  /// @notice Withdraws all available rewards for the given operator to the
+  ///         given beneficiary.
+  /// @dev Can be called only be the owner. Does not validate if the provided
+  ///      beneficiary is associated with the provided operator - this needs to
+  ///      be done by the owner calling this function.
+  /// @return The amount of rewards withdrawn in this call.
   function withdrawRewards(address operator, address beneficiary)
     public
     onlyOwner
+    returns (uint96)
   {
     uint32 id = getOperatorID(operator);
     Rewards.updateOperatorRewards(id, uint32(getPoolWeight(operator)));
     uint96 earned = Rewards.withdrawOperatorRewards(id);
     rewardToken.transfer(beneficiary, uint256(earned));
+    return earned;
   }
 
+  /// @notice Withdraws rewards not allocated to operators marked as ineligible
+  ///         to the given recipient address.
+  /// @dev Can be called only by the owner.
   function withdrawIneligible(address recipient) public onlyOwner {
     uint96 earned = Rewards.withdrawIneligibleRewards();
     rewardToken.transfer(recipient, uint256(earned));
@@ -138,6 +149,12 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     uint32 id = getOperatorID(operator);
     Rewards.restoreEligibility(id);
     emit RewardEligibilityRestored(operator, id);
+  }
+
+  /// @notice Returns the amount of rewards withdrawable for the given operator.
+  function getAvailableRewards(address operator) public view returns (uint96) {
+    uint32 id = getOperatorID(operator);
+    return availableRewards(id);
   }
 
   /// @notice Return whether the operator is present in the pool.
