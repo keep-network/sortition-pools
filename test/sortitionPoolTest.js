@@ -265,11 +265,11 @@ describe("SortitionPool", () => {
       operatorAddress,
       beneficiaryAddress,
     ) {
-      const tx = await pool
+      const amount = await pool
         .connect(owner)
-        .withdrawRewards(operatorAddress, beneficiaryAddress)
-      const withdrawLogs = await tx.wait()
-      return parseInt(withdrawLogs.logs[0].data)
+        .callStatic.withdrawRewards(operatorAddress, beneficiaryAddress)
+      await pool.connect(owner).withdrawRewards(operatorAddress, beneficiaryAddress)
+      return amount
     }
 
     it("can only be withdrawn by the owner", async () => {
