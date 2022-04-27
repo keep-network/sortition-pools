@@ -76,6 +76,59 @@ the last 32 bits. If we want to know the creation block, we should look at bits
 `[160, 224)` (which we can do by right-shifting and then applying a bitwise
 `&`).
 
-TODO: Branch / Root Serialization and Deserialization
+### Branch And Root Deserialization And Serialization
+
+The branch and root nodes are a `uint256` divided into 8 virtual "slots", where
+each slot is given 32 sequential bits. The leftmost 32 bits is slot 8, and
+represents the 8th child, and the rightmost 32 bits is slot 1, and represents
+the 1st child.
+
+Say that we have 8 leaf nodes with the following names, weights, and 32-bit
+binary representations of those weights:
+```
+Alice, 58123,   00000000000000001110001100001011
+Bob, 19234,     00000000000000000100101100100010
+Carol, 374974,  00000000000001011011100010111110
+David, 55766,   00000000000000001101100111010110
+Erin, 611237,   00000000000010010101001110100101
+Frank, 38663,   00000000000000001001011100000111
+Gretta, 427810, 00000000000001101000011100100010
+Harold, 232974, 00000000000000111000111000001110
+```
+
+Then the tree looks like:
+```
+                           ┌─────────────────────────────┐
+                           │0000000000000011100011100000 │
+                           │1110000000000000011010000111 │
+                           │0010001000000000000000001001 │
+                           │0111000001110000000000001001 │
+                           │0101001110100101000000000000 │
+   ┌──────┌──────┌───────┌─┤0000110110011101011000000000 ├┐
+   │      │      │       │ │0000010110111000101111100000 ││
+   │      │      │       │ │0000000000000100101100100010 ││
+   │      │      │       │ │0000000000000000111000110000 ││
+   │      │      │       │ │1011                         ││
+   │      │      │       │ └─────┬──────┬────────┬───────┘│
+┌──┴───┐┌─┴──┐┌──┴───┐┌──┴───┐┌──┴──┐┌──┴───┐┌───┴───┐┌───┴───┐
+│Alice ││Bob ││Carol ││David ││Erin ││Frank ││Gretta ││Harold │
+└──────┘└────┘└──────┘└──────┘└─────┘└──────┘└───────┘└───────┘
+```
+
+The weight of that branch node is the *sum* of all of the slots, eg `58123 +
+19234 + 374974 + 55766 + 611237 + 38663 + 427810 + 232974 = 1818781`.
+Represented in 32-bit binary that's
+
+```
+00000000000110111100000010011101
+```
+Which is what would go in the associated slot of this node's parent. This
+pattern recurses until we reach the root node.
+
+In order to read a particular slot, we right-shift until the 32 bits are the
+right-most 32 bits, and then do a bitwise `&` with `2^32 - 1`, which is 224 0's
+and 32 1s. This has the effect of erasing everything but the 32 relevant bits,
+allowing us to read *only* the slot.
+
 TODO: Joining and Leaving The Pool
 TODO: Selecting A Random Group
