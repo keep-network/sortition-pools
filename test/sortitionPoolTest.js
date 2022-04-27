@@ -268,7 +268,9 @@ describe("SortitionPool", () => {
       const amount = await pool
         .connect(owner)
         .callStatic.withdrawRewards(operatorAddress, beneficiaryAddress)
-      await pool.connect(owner).withdrawRewards(operatorAddress, beneficiaryAddress)
+      await pool
+        .connect(owner)
+        .withdrawRewards(operatorAddress, beneficiaryAddress)
       return amount
     }
 
