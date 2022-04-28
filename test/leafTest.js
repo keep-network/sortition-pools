@@ -11,7 +11,7 @@ describe("Leaf", () => {
   })
 
   describe("make", async () => {
-    it("constructs a leaf", async () => {
+    it("constructs a leaf with proper structure (address, creationBlock, id)", async () => {
       // We store a leaf as a uint256, which is 256 bits. We pack the address
       // in the first 160 bits, the creation block in the 64 bits after that,
       // and the operator's id in the final 32 bits. Each hex character
