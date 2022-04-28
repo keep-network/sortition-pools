@@ -18,7 +18,8 @@ library Leaf {
     uint256 uid = _id & Constants.ID_MAX;
     // Erase all but the 64 least significant bits,
     // then shift left by 32 bits to make room for the id
-    uint256 cb = (_creationBlock & Constants.BLOCKHEIGHT_MAX) << Constants.ID_WIDTH;
+    uint256 cb = (_creationBlock & Constants.BLOCKHEIGHT_MAX) <<
+      Constants.ID_WIDTH;
     // Bitwise OR them all together to get
     // [address operator || uint64 creationBlock || uint32 id]
     return (op | cb | uid);
