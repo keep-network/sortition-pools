@@ -48,14 +48,15 @@ describe("Leaf", () => {
         },
       ]
 
-      testData.forEach(async (test) => {
+      for (let i = 0; i < testData.length; i++) {
+        const test = testData[i]
         const leaf = await leafInstance.make(
           test.address,
           test.creationBlock,
           test.id,
         )
         expect(leaf).to.equal(test.expectation)
-      })
+      }
     })
   })
 
