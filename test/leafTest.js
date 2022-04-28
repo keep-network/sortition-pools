@@ -82,10 +82,11 @@ describe("Leaf", () => {
         },
       ]
 
-      testData.forEach(async (test) => {
+      for (let i = 0; i < testData.length; i++) {
+        const test = testData[i]
         const operator = await leafInstance.operator(BigNumber.from(test.leaf))
         expect(operator).to.equal(test.operator)
-      })
+      }
     })
   })
 
