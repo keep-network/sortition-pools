@@ -143,11 +143,11 @@ describe("Leaf", () => {
           id: "0xCA009",
         },
       ]
-
-      testData.forEach(async (test) => {
-        const leaf = await leafInstance.creationBlock(BigNumber.from(test.leaf))
-        expect(leaf).to.equal(test.id)
-      })
+      for (let i = 0; i < testData.length; i++) {
+        const test = testData[i]
+        const leaf = await leafInstance.id(BigNumber.from(test.leaf))
+        expect(leaf).to.equal(parseInt(test.id, 16))
+      }
     })
   })
 })
