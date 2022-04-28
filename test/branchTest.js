@@ -31,7 +31,10 @@ describe("Branch", () => {
       ]
       for (let slot = 0; slot < 8; slot++) {
         const result = await branchInstance.getSlot(node, slot)
-        expect(result).to.equal(expectations[slot])
+        expect(result).to.equal(
+          expectations[slot],
+          `unexpected result at position ${slot}`,
+        )
       }
     })
   })
@@ -51,7 +54,10 @@ describe("Branch", () => {
 
       for (let slot = 0; slot < 8; slot++) {
         const result = await branchInstance.clearSlot(node, slot)
-        expect(ethers.utils.hexlify(result)).to.equal(expectations[slot])
+        expect(ethers.utils.hexlify(result)).to.equal(
+          expectations[slot],
+          `unexpected result at position ${slot}`,
+        )
       }
 
       // verify that clearing slot 0 actually works!
@@ -80,10 +86,16 @@ describe("Branch", () => {
       ]
       for (let slot = 0; slot < 8; slot++) {
         const result = await branchInstance.setSlot(node, slot, newWeight)
-        expect(ethers.utils.hexlify(result)).to.equal(expectations[slot])
+        expect(ethers.utils.hexlify(result)).to.equal(
+          expectations[slot],
+          `unexpected result at position ${slot}`,
+        )
 
         const newSlot = await branchInstance.getSlot(result, slot)
-        expect(newSlot).to.equal(newWeight)
+        expect(newSlot).to.equal(
+          newWeight,
+          `unexpected result at position ${slot}`,
+        )
       }
     })
   })
