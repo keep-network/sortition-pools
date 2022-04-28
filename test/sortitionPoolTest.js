@@ -259,9 +259,24 @@ describe("SortitionPool", () => {
   })
 
   describe("pool rewards", async () => {
+    async function withdrawRewards(
+      pool,
+      owner,
+      operatorAddress,
+      beneficiaryAddress,
+    ) {
+      const amount = await pool
+        .connect(owner)
+        .callStatic.withdrawRewards(operatorAddress, beneficiaryAddress)
+      await pool
+        .connect(owner)
+        .withdrawRewards(operatorAddress, beneficiaryAddress)
+      return amount
+    }
+
     it("can only be withdrawn by the owner", async () => {
       await expect(
-        pool.connect(bob).withdrawRewards(bob.address, bobBeneficiary.address),
+        withdrawRewards(pool, bob, bob.address, bobBeneficiary.address),
       ).to.be.revertedWith("Ownable: caller is not the owner")
     })
 
@@ -270,16 +285,29 @@ describe("SortitionPool", () => {
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await pool.connect(owner).insertOperator(bob.address, 20000)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool
-        .connect(owner)
-        .withdrawRewards(alice.address, aliceBeneficiary.address)
-      await pool
-        .connect(owner)
-        .withdrawRewards(bob.address, bobBeneficiary.address)
-      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
-      const bobReward = await token.balanceOf(bobBeneficiary.address)
-      expect(aliceReward).to.equal(100)
-      expect(bobReward).to.equal(200)
+
+      const aliceExpectedReward = 100
+      const bobExpectedReward = 200
+
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
+      expect(aliceReward).to.equal(aliceExpectedReward)
+      expect(bobReward).to.equal(bobExpectedReward)
+
+      const aliceBalance = await token.balanceOf(aliceBeneficiary.address)
+      const bobBalance = await token.balanceOf(bobBeneficiary.address)
+      expect(aliceBalance).to.equal(aliceExpectedReward)
+      expect(bobBalance).to.equal(bobExpectedReward)
     })
 
     it("handles new and returning operators correctly", async () => {
@@ -291,16 +319,28 @@ describe("SortitionPool", () => {
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
       await pool.connect(owner).insertOperator(alice.address, 10000)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool
-        .connect(owner)
-        .withdrawRewards(alice.address, aliceBeneficiary.address)
-      await pool
-        .connect(owner)
-        .withdrawRewards(bob.address, bobBeneficiary.address)
-      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
-      const bobReward = await token.balanceOf(bobBeneficiary.address)
-      expect(aliceReward).to.equal(400)
-      expect(bobReward).to.equal(500)
+      const aliceExpectedReward = 400
+      const bobExpectedReward = 500
+
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
+      expect(aliceReward).to.equal(aliceExpectedReward)
+      expect(bobReward).to.equal(bobExpectedReward)
+
+      const aliceBalance = await token.balanceOf(aliceBeneficiary.address)
+      const bobBalance = await token.balanceOf(bobBeneficiary.address)
+      expect(aliceBalance).to.equal(aliceExpectedReward)
+      expect(bobBalance).to.equal(bobExpectedReward)
     })
 
     it("doesn't pay to ineligible operators", async () => {
@@ -311,18 +351,30 @@ describe("SortitionPool", () => {
       const bobID = await pool.getOperatorID(bob.address)
       await pool.connect(owner).setRewardIneligibility([bobID], now + 100)
       await token.connect(deployer).approveAndCall(pool.address, 300, [])
-      await pool
-        .connect(owner)
-        .withdrawRewards(alice.address, aliceBeneficiary.address)
-      await pool
-        .connect(owner)
-        .withdrawRewards(bob.address, bobBeneficiary.address)
+      const aliceExpectedReward = 100
+      const bobExpectedReward = 0
+
+      const aliceReward = await withdrawRewards(
+        pool,
+        owner,
+        alice.address,
+        aliceBeneficiary.address,
+      )
+      const bobReward = await withdrawRewards(
+        pool,
+        owner,
+        bob.address,
+        bobBeneficiary.address,
+      )
+      expect(aliceReward).to.equal(aliceExpectedReward)
+      expect(bobReward).to.equal(bobExpectedReward)
+
       await pool.connect(owner).withdrawIneligible(carol.address)
-      const aliceReward = await token.balanceOf(aliceBeneficiary.address)
-      const bobReward = await token.balanceOf(bobBeneficiary.address)
+      const aliceBalance = await token.balanceOf(aliceBeneficiary.address)
+      const bobBalance = await token.balanceOf(bobBeneficiary.address)
       const ineligibleReward = await token.balanceOf(carol.address)
-      expect(aliceReward).to.equal(100)
-      expect(bobReward).to.equal(0)
+      expect(aliceBalance).to.equal(aliceExpectedReward)
+      expect(bobBalance).to.equal(bobExpectedReward)
       expect(ineligibleReward).to.equal(200)
     })
 
