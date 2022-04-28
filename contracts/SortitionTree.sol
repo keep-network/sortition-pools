@@ -91,7 +91,7 @@ contract SortitionTree {
     return idAddress.length > id ? idAddress[id] : address(0);
   }
 
-  /// @notice Gets the operator addresses corresponding to the given ID 
+  /// @notice Gets the operator addresses corresponding to the given ID
   /// numbers. A zero address means the ID number has not been allocated yet.
   /// This function works just like getIDOperator except that it allows to fetch
   /// operator addresses for multiple IDs in one call.
