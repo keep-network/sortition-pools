@@ -1,23 +1,9 @@
 pragma solidity 0.8.9;
 
 import "./Leaf.sol";
+import "./Constants.sol";
 
 library RNG {
-  ////////////////////////////////////////////////////////////////////////////
-  // Parameters for configuration
-
-  // How many bits a position uses per level of the tree;
-  // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 private constant SLOT_BITS = 3;
-  ////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Derived constants, do not touch
-  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 private constant WEIGHT_WIDTH = 256 / SLOT_COUNT;
-
-  ////////////////////////////////////////////////////////////////////////////
-
   /// @notice Get an index in the range `[0 .. range-1]`
   /// and the new state of the RNG,
   /// using the provided `state` of the RNG.
@@ -76,7 +62,7 @@ library RNG {
         return 0;
       }
 
-      uint256 bits = WEIGHT_WIDTH - 1;
+      uint256 bits = Constants.WEIGHT_WIDTH - 1;
 
       // Left shift by `bits`,
       // so we have a 1 in the (bits + 1)th least significant bit
