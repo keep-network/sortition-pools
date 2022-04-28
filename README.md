@@ -29,13 +29,11 @@ group.
 ## Important Facts
 
 + The max number of operators is `2,097,152`
-+ The sortition pool is [optimistic](#optimisic-group-selection)! The on-chain
-  code is only run in the case of a challenge.
-
-FIXME: fill this in with information about:
-
-+ how long it takes to create a group of 100 operators
-+ how much gas it takes
++ The sortition pool is for general purpose group selection. Feel free to use
+  or fork it!
++ The sortition pool can be [optimistic](#optimisic-group-selection)! The
+  on-chain code then is only run in the case that the selection submission is
+  challenged.
 
 ## Safe Use
 
