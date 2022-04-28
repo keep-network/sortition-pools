@@ -41,8 +41,8 @@ contract SortitionTree {
   // branches[2][6]. Mappings are used in place of arrays for efficiency.
   mapping(uint256 => mapping(uint256 => uint256)) internal branches;
 
-  // A mapping from index => leaf, acting as an array. For example, to access
-  // the 42nd (0-index) leaf, call leaves[42].
+  // A 0-index mapping from index => leaf, acting as an array. For example, to
+  // access the 42nd leaf, call leaves[41].
   mapping(uint256 => uint256) internal leaves;
 
   // the flagged (see setFlag() and unsetFlag() in Position.sol) positions
