@@ -56,7 +56,10 @@ describe("Leaf", () => {
           test.creationBlock,
           test.id,
         )
-        expect(leaf).to.equal(test.expectation)
+        expect(leaf).to.equal(
+          test.expectation,
+          `unexpected result for text index ${i}`,
+        )
       }
     })
   })
@@ -87,7 +90,10 @@ describe("Leaf", () => {
       for (let i = 0; i < testData.length; i++) {
         const test = testData[i]
         const operator = await leafInstance.operator(BigNumber.from(test.leaf))
-        expect(operator).to.equal(test.operator)
+        expect(operator).to.equal(
+          test.operator,
+          `unexpected result for text index ${i}`,
+        )
       }
     })
   })
@@ -120,7 +126,10 @@ describe("Leaf", () => {
         const creationBlock = await leafInstance.creationBlock(
           BigNumber.from(test.leaf),
         )
-        expect(creationBlock).to.equal(test.creationBlock)
+        expect(creationBlock).to.equal(
+          test.creationBlock,
+          `unexpected result for text index ${i}`,
+        )
       }
     })
   })
@@ -150,7 +159,10 @@ describe("Leaf", () => {
       for (let i = 0; i < testData.length; i++) {
         const test = testData[i]
         const id = await leafInstance.id(BigNumber.from(test.leaf))
-        expect(id).to.equal(parseInt(test.id, 16))
+        expect(id).to.equal(
+          parseInt(test.id, 16),
+          `unexpected result for text index ${i}`,
+        )
       }
     })
   })
