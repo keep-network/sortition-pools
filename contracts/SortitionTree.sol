@@ -36,9 +36,13 @@ contract SortitionTree {
   // level7 2M
   uint256 internal root;
 
-  // A mapping from layer => (index => branch). For example, to access the 6th
-  // (0-index) branch in the 2nd layer (right below the root node), call
-  // branches[2][6]. Mappings are used in place of arrays for efficiency.
+  // A 2-index mapping from layer => (index (0-index) => branch). For example,
+  // to access the 6th branch in the 2nd layer (right below the root node; the
+  // first branch layer), call branches[2][5]. Mappings are used in place of
+  // arrays for efficiency. The root is the first layer, the branches occupy
+  // layers 2 through 7, and layer 8 is for the leaves. Following this
+  // convention, the first index in `branches` is `2`, and the last index is
+  // `7`.
   mapping(uint256 => mapping(uint256 => uint256)) internal branches;
 
   // A 0-index mapping from index => leaf, acting as an array. For example, to
