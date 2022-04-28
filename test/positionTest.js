@@ -61,9 +61,52 @@ describe("Position", async () => {
   })
 
   describe("parent", async () => {
-    it("Returns the first bits", async () => {
-      const result = await positionInstance.parent(fullPosition)
-      expect(result).to.be.equal(parentPosition)
+    it("Returns the associated parent position for a child position", async () => {
+      // Sample Cases
+      //
+      // The first 8 positions get the first parent, the next 8 positions get
+      // the second parent, and so on. The formula to find a parent position
+      // based on a child position is `position / 8`.
+
+      const testData = [
+        {
+          position: 196831,
+          parent: 24603,
+        },
+        {
+          position: 238968,
+          parent: 29871,
+        },
+        {
+          position: 31002,
+          parent: 3875,
+        },
+        {
+          position: 1617940,
+          parent: 202242,
+        },
+      ]
+      for (let i = 0; i < testData.length; i++) {
+        const test = testData[i]
+        const parent = await positionInstance.parent(test.position)
+        expect(parent).to.equal(
+          test.parent,
+          `unexpected result for test index ${i}`,
+        )
+      }
+
+      // Generative Testing
+      const numSamples = 100
+      for (let i = 0; i < numSamples; i++) {
+        // generate a random position in [0, maxPosition)
+        const position = Math.floor(Math.random() * maxPosition)
+        const parent = await positionInstance.parent(position)
+        const expectation = Math.floor(position / 8)
+        expect(parent).to.equal(
+          expectation,
+          `unexpected result for position ${position}`,
+        )
+      }
     })
   })
 
