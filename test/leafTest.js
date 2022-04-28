@@ -113,8 +113,10 @@ describe("Leaf", () => {
       ]
 
       testData.forEach(async (test) => {
-        const leaf = await leafInstance.creationBlock(BigNumber.from(test.leaf))
-        expect(leaf).to.equal(test.creationBlock)
+        const creationBlock = await leafInstance.creationBlock(
+          BigNumber.from(test.leaf),
+        )
+        expect(creationBlock).to.equal(test.creationBlock)
       })
     })
   })
