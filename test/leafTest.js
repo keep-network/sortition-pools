@@ -17,7 +17,8 @@ describe("Leaf", () => {
       // and the operator's id in the final 32 bits. Each hex character
       // represents 4 bits, so a 40-character hex representation of an eth
       // address is the exact 160 bits we need. A number (like a creation block
-      // or id) gets left-padded with zeros to fill the exact bit count.
+      // or id) is little-endian and gets left-padded with zeros to fill the
+      // exact bit count.
       const testData = [
         {
           address: "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
