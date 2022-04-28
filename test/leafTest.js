@@ -83,8 +83,8 @@ describe("Leaf", () => {
       ]
 
       testData.forEach(async (test) => {
-        const leaf = await leafInstance.operator(BigNumber.from(test.leaf))
-        expect(leaf).to.equal(test.operator)
+        const operator = await leafInstance.operator(BigNumber.from(test.leaf))
+        expect(operator).to.equal(test.operator)
       })
     })
   })
