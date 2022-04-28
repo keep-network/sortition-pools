@@ -1,28 +1,8 @@
 pragma solidity 0.8.9;
 
+import "./Constants.sol";
+
 library Leaf {
-  ////////////////////////////////////////////////////////////////////////////
-  // Parameters for configuration
-
-  // How many bits a position uses per level of the tree;
-  // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 private constant SLOT_BITS = 3;
-  ////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Derived constants, do not touch
-  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 private constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 private constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
-
-  uint256 private constant ID_WIDTH = SLOT_WIDTH;
-  uint256 private constant ID_MAX = SLOT_MAX;
-
-  uint256 private constant BLOCKHEIGHT_WIDTH = 96 - ID_WIDTH;
-  uint256 private constant BLOCKHEIGHT_MAX = (2**BLOCKHEIGHT_WIDTH) - 1;
-
-  ////////////////////////////////////////////////////////////////////////////
-
   function make(
     address _operator,
     uint256 _creationBlock,
@@ -35,10 +15,11 @@ library Leaf {
     uint256 op = uint256(bytes32(bytes20(_operator)));
     // Bitwise AND the id to erase
     // all but the 32 least significant bits
-    uint256 uid = _id & ID_MAX;
+    uint256 uid = _id & Constants.ID_MAX;
     // Erase all but the 64 least significant bits,
     // then shift left by 32 bits to make room for the id
-    uint256 cb = (_creationBlock & BLOCKHEIGHT_MAX) << ID_WIDTH;
+    uint256 cb = (_creationBlock & Constants.BLOCKHEIGHT_MAX) <<
+      Constants.ID_WIDTH;
     // Bitwise OR them all together to get
     // [address operator || uint64 creationBlock || uint32 id]
     return (op | cb | uid);
@@ -52,12 +33,12 @@ library Leaf {
 
   /// @notice Return the block number the leaf was created in.
   function creationBlock(uint256 leaf) internal pure returns (uint256) {
-    return ((leaf >> ID_WIDTH) & BLOCKHEIGHT_MAX);
+    return ((leaf >> Constants.ID_WIDTH) & Constants.BLOCKHEIGHT_MAX);
   }
 
   function id(uint256 leaf) internal pure returns (uint32) {
     // Id is stored in the 32 least significant bits.
     // Bitwise AND ensures that we only get the contents of those bits.
-    return uint32(leaf & ID_MAX);
+    return uint32(leaf & Constants.ID_MAX);
   }
 }

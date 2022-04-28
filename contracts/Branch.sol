@@ -1,26 +1,11 @@
 pragma solidity 0.8.9;
 
+import "./Constants.sol";
+
 /// @notice The implicit 8-ary trees of the sortition pool
 /// rely on packing 8 "slots" of 32-bit values into each uint256.
 /// The Branch library permits efficient calculations on these slots.
 library Branch {
-  ////////////////////////////////////////////////////////////////////////////
-  // Parameters for configuration
-
-  // How many bits a position uses per level of the tree;
-  // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 private constant SLOT_BITS = 3;
-  ////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Derived constants, do not touch
-  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 private constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 private constant LAST_SLOT = SLOT_COUNT - 1;
-  uint256 private constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
-
-  ////////////////////////////////////////////////////////////////////////////
-
   /// @notice Calculate the right shift required
   /// to make the 32 least significant bits of an uint256
   /// be the bits of the `position`th slot
@@ -31,7 +16,7 @@ library Branch {
   /// I wish solidity had macros, even C macros.
   function slotShift(uint256 position) internal pure returns (uint256) {
     unchecked {
-      return position * SLOT_WIDTH;
+      return position * Constants.SLOT_WIDTH;
     }
   }
 
@@ -43,12 +28,12 @@ library Branch {
     returns (uint256)
   {
     unchecked {
-      uint256 shiftBits = position * SLOT_WIDTH;
+      uint256 shiftBits = position * Constants.SLOT_WIDTH;
       // Doing a bitwise AND with `SLOT_MAX`
       // clears all but the 32 least significant bits.
       // Because of the right shift by `slotShift(position)` bits,
       // those 32 bits contain the 32 bits in the `position`th slot of `node`.
-      return (node >> shiftBits) & SLOT_MAX;
+      return (node >> shiftBits) & Constants.SLOT_MAX;
     }
   }
 
@@ -59,7 +44,7 @@ library Branch {
     returns (uint256)
   {
     unchecked {
-      uint256 shiftBits = position * SLOT_WIDTH;
+      uint256 shiftBits = position * Constants.SLOT_WIDTH;
       // Shifting `SLOT_MAX` left by `slotShift(position)` bits
       // gives us a number where all bits of the `position`th slot are set,
       // and all other bits are unset.
@@ -71,7 +56,7 @@ library Branch {
       // Bitwise ANDing the original `node` with this number
       // sets the bits of `position`th slot to zero,
       // leaving all other bits unchanged.
-      return node & ~(SLOT_MAX << shiftBits);
+      return node & ~(Constants.SLOT_MAX << shiftBits);
     }
   }
 
@@ -86,9 +71,9 @@ library Branch {
     uint256 weight
   ) internal pure returns (uint256) {
     unchecked {
-      uint256 shiftBits = position * SLOT_WIDTH;
+      uint256 shiftBits = position * Constants.SLOT_WIDTH;
       // Clear the `position`th slot like in `clearSlot()`.
-      uint256 clearedNode = node & ~(SLOT_MAX << shiftBits);
+      uint256 clearedNode = node & ~(Constants.SLOT_MAX << shiftBits);
       // Bitwise AND `weight` with `SLOT_MAX`
       // to clear all but the 32 least significant bits.
       //
@@ -96,7 +81,7 @@ library Branch {
       // to obtain a uint256 with all bits unset
       // except in the `position`th slot
       // which contains the 32-bit value of `weight`.
-      uint256 shiftedWeight = (weight & SLOT_MAX) << shiftBits;
+      uint256 shiftedWeight = (weight & Constants.SLOT_MAX) << shiftBits;
       // When we bitwise OR these together,
       // all other slots except the `position`th one come from the left argument,
       // and the `position`th gets filled with `weight` from the right argument.
@@ -107,14 +92,14 @@ library Branch {
   /// @notice Calculate the summed weight of all slots in the `node`.
   function sumWeight(uint256 node) internal pure returns (uint256 sum) {
     unchecked {
-      sum = node & SLOT_MAX;
+      sum = node & Constants.SLOT_MAX;
       // Iterate through each slot
       // by shifting `node` right in increments of 32 bits,
       // and adding the 32 least significant bits to the `sum`.
-      uint256 newNode = node >> SLOT_WIDTH;
+      uint256 newNode = node >> Constants.SLOT_WIDTH;
       while (newNode > 0) {
-        sum += (newNode & SLOT_MAX);
-        newNode = newNode >> SLOT_WIDTH;
+        sum += (newNode & Constants.SLOT_MAX);
+        newNode = newNode >> Constants.SLOT_WIDTH;
       }
       return sum;
     }
@@ -143,12 +128,12 @@ library Branch {
     unchecked {
       newIndex = index;
       uint256 newNode = node;
-      uint256 currentSlotWeight = newNode & SLOT_MAX;
+      uint256 currentSlotWeight = newNode & Constants.SLOT_MAX;
       while (newIndex >= currentSlotWeight) {
         newIndex -= currentSlotWeight;
         slot++;
-        newNode = newNode >> SLOT_WIDTH;
-        currentSlotWeight = newNode & SLOT_MAX;
+        newNode = newNode >> Constants.SLOT_WIDTH;
+        currentSlotWeight = newNode & Constants.SLOT_MAX;
       }
       return (slot, newIndex);
     }
