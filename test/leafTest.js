@@ -145,8 +145,8 @@ describe("Leaf", () => {
       ]
       for (let i = 0; i < testData.length; i++) {
         const test = testData[i]
-        const leaf = await leafInstance.id(BigNumber.from(test.leaf))
-        expect(leaf).to.equal(parseInt(test.id, 16))
+        const id = await leafInstance.id(BigNumber.from(test.leaf))
+        expect(id).to.equal(parseInt(test.id, 16))
       }
     })
   })
