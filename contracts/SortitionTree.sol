@@ -79,16 +79,16 @@ contract SortitionTree {
     return operatorID[operator];
   }
 
-  /// @notice Get the operator address corresponding to the given ID number. An
-  /// empty address means the ID number has not been allocated yet.
+  /// @notice Get the operator address corresponding to the given ID number. A
+  /// zero address means the ID number has not been allocated yet.
   /// @param id ID of the operator
   /// @return the address of the operator
   function getIDOperator(uint32 id) public view returns (address) {
     return idAddress.length > id ? idAddress[id] : address(0);
   }
 
-  /// @notice Gets the operator addresses corresponding to the given ID
-  /// numbers. An empty address means the ID number has not been allocated yet.
+  /// @notice Gets the operator addresses corresponding to the given ID 
+  /// numbers. A zero address means the ID number has not been allocated yet.
   /// This function works just like getIDOperator except that it allows to fetch
   /// operator addresses for multiple IDs in one call.
   /// @param ids the array of the operator ids
