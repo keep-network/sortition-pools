@@ -3,28 +3,12 @@ pragma solidity 0.8.9;
 import "./Branch.sol";
 import "./Position.sol";
 import "./Leaf.sol";
+import "./Constants.sol";
 
 contract SortitionTree {
   using Branch for uint256;
   using Position for uint256;
   using Leaf for uint256;
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Parameters for configuration
-
-  // How many bits a position uses per level of the tree;
-  // each branch of the tree contains 2**SLOT_BITS slots.
-  uint256 private constant SLOT_BITS = 3;
-  uint256 private constant LEVELS = 7;
-  ////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Derived constants, do not touch
-  uint256 private constant SLOT_COUNT = 2**SLOT_BITS;
-  uint256 private constant SLOT_WIDTH = 256 / SLOT_COUNT;
-  uint256 private constant SLOT_MAX = (2**SLOT_WIDTH) - 1;
-  uint256 private constant POOL_CAPACITY = SLOT_COUNT**LEVELS;
-  ////////////////////////////////////////////////////////////////////////////
 
   // implicit tree
   // root 8
@@ -226,7 +210,7 @@ contract SortitionTree {
 
     uint256 parent = position;
     // set levels 7 to 2
-    for (uint256 level = LEVELS; level >= 2; level--) {
+    for (uint256 level = Constants.LEVELS; level >= 2; level--) {
       childSlot = parent.slot();
       parent = parent.parent();
       treeNode = branches[level][parent];
@@ -242,7 +226,7 @@ contract SortitionTree {
 
   function getEmptyLeafPosition() internal returns (uint256) {
     uint256 rLeaf = rightmostLeaf;
-    bool spaceOnRight = (rLeaf + 1) < POOL_CAPACITY;
+    bool spaceOnRight = (rLeaf + 1) < Constants.POOL_CAPACITY;
     if (spaceOnRight) {
       rightmostLeaf = rLeaf + 1;
       return rLeaf;
@@ -266,7 +250,7 @@ contract SortitionTree {
   function getLeafWeight(uint256 position) internal view returns (uint256) {
     uint256 slot = position.slot();
     uint256 parent = position.parent();
-    uint256 node = branches[LEVELS][parent];
+    uint256 node = branches[Constants.LEVELS][parent];
     return node.getSlot(slot);
   }
 
@@ -286,7 +270,7 @@ contract SortitionTree {
     (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
 
     // get slots from levels 2 to 7
-    for (uint256 level = 2; level <= LEVELS; level++) {
+    for (uint256 level = 2; level <= Constants.LEVELS; level++) {
       currentPosition = currentPosition.child(currentSlot);
       currentNode = branches[level][currentPosition];
       (currentSlot, currentIndex) = currentNode.pickWeightedSlot(currentIndex);
