@@ -1,5 +1,3 @@
-TODO: Introduce the document
-
 ### Structure
 The data structure of the sortition pool is a root node, which is a single
 `uint256`, followed by 6 layers of branch nodes, followed by a leaf layer. Each
@@ -174,8 +172,6 @@ slot in that branch's parent, and so on, all the way up to the root.
 For an in-depth explanation of how this information is structured, refer to the
 [Branch and Root Deserialization and
 Serialization](#branch-and-root-deserialization-and-serialization) section.
-
-TODO: Joining and Leaving The Pool
 
 ### Selecting A Random Group
 
