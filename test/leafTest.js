@@ -59,7 +59,7 @@ describe("Leaf", () => {
         )
         expect(leaf).to.equal(
           test.expectation,
-          `unexpected result for text index ${i}`,
+          `unexpected result for test index ${i}`,
         )
       }
     })
@@ -93,7 +93,7 @@ describe("Leaf", () => {
         const operator = await leafInstance.operator(BigNumber.from(test.leaf))
         expect(operator).to.equal(
           test.operator,
-          `unexpected result for text index ${i}`,
+          `unexpected result for test index ${i}`,
         )
       }
     })
@@ -129,7 +129,7 @@ describe("Leaf", () => {
         )
         expect(creationBlock).to.equal(
           test.creationBlock,
-          `unexpected result for text index ${i}`,
+          `unexpected result for test index ${i}`,
         )
       }
     })
@@ -162,7 +162,7 @@ describe("Leaf", () => {
         const id = await leafInstance.id(BigNumber.from(test.leaf))
         expect(id).to.equal(
           parseInt(test.id, 16),
-          `unexpected result for text index ${i}`,
+          `unexpected result for test index ${i}`,
         )
       }
     })
