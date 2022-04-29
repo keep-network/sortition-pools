@@ -5,6 +5,7 @@ import "@keep-network/hardhat-local-networks-config"
 import "@nomiclabs/hardhat-waffle"
 import "@nomiclabs/hardhat-ethers"
 import "hardhat-deploy"
+import "hardhat-gas-reporter"
 
 const config: HardhatUserConfig = {
   solidity: {
