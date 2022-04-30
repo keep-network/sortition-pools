@@ -286,12 +286,14 @@ describe("SortitionTree", () => {
   })
 
   describe("operatorsInPool", async () => {
-    context("when the operator is in the pool", () => {
-      it("should return true", async () => {
-        await sortition.publicInsertOperator(alice.address, 1)
-        const nOperators = await sortition.operatorsInPool()
-        expect(nOperators).to.be.equal(1)
-      })
+    it("counts the number of operators in the pool", async () => {
+      await sortition.publicInsertOperator(alice.address, 1)
+      const justAlice = await sortition.operatorsInPool()
+      expect(justAlice).to.be.equal(1)
+
+      await sortition.publicInsertOperator(bob.address, 1)
+      const aliceAndBob = await sortition.operatorsInPool()
+      expect(aliceAndBob).to.be.equal(2)
     })
   })
 
