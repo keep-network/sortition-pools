@@ -104,7 +104,7 @@ describe("RNG", () => {
       // We sample the distribution, and then make sure that the count of any
       // generated number doesn't exceed a tolerance.
 
-      const delta = 10 // percentage degree of inaccuracy to tolerate
+      const delta = 20 // percentage degree of inaccuracy to tolerate
       const maxSeed = 2 ** 32
 
       // Use a low number of possible outcomes but a large number of samples to
@@ -112,7 +112,7 @@ describe("RNG", () => {
       // Higher number of possible outcomes would require higher number of
       // samples.
       const maxNumber = 6
-      const numSamples = 10000
+      const numSamples = 1000
       const count = {}
       for (let i = 0; i < numSamples; i++) {
         const val = await rngInstance.getIndex(
