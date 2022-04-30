@@ -19,22 +19,19 @@ describe("SortitionTree", () => {
 
   describe("setLeaf", async () => {
     context("when one leaf is set", () => {
-      beforeEach(async () => {
+      it("should return correct value for the tree", async () => {
         const weight1 = 0x1234
         const position1 = parseInt("00123456", 8)
 
         const leaf = await sortition.toLeaf(alice.address, weight1)
         await sortition.publicSetLeaf(position1, leaf, weight1)
-      })
-
-      it("should return correct value for the tree", async () => {
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1234")
       })
     })
 
     context("when two leaves are set", () => {
-      beforeEach(async () => {
+      it("should return correct value for the tree", async () => {
         const weight1 = 0x1234
         const position1 = parseInt("00123456", 8)
         const weight2 = 0x11
@@ -45,9 +42,6 @@ describe("SortitionTree", () => {
 
         const leaf2 = await sortition.toLeaf(bob.address, weight2)
         await sortition.publicSetLeaf(position2, leaf2, weight2)
-      })
-
-      it("should return correct value for the tree", async () => {
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1100001234")
       })
@@ -56,7 +50,7 @@ describe("SortitionTree", () => {
 
   describe("removeLeaf", () => {
     context("when leaf is removed", () => {
-      beforeEach(async () => {
+      it("should return correct value for the tree", async () => {
         const weight1 = 0x1234
         const position1 = parseInt("00123456", 8)
         const weight2 = 0x11
@@ -68,9 +62,6 @@ describe("SortitionTree", () => {
         const leaf2 = await sortition.toLeaf(bob.address, weight2)
         await sortition.publicSetLeaf(position2, leaf2, weight2)
         await sortition.publicRemoveLeaf(position1)
-      })
-
-      it("should return correct value for the tree", async () => {
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1100000000")
       })
@@ -82,23 +73,17 @@ describe("SortitionTree", () => {
     const weightB = 0x10000001
 
     context("when operators are inserted", () => {
-      beforeEach(async () => {
+      it("should return correct value for the tree", async () => {
         await sortition.publicInsertOperator(alice.address, weightA)
         await sortition.publicInsertOperator(bob.address, weightB)
-      })
-
-      it("should return correct value for the tree", async () => {
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1000fff1")
       })
     })
 
     context("when operator is already registered", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, weightA)
-      })
-
       it("should revert", async () => {
+        await sortition.publicInsertOperator(alice.address, weightA)
         await expect(
           sortition.publicInsertOperator(alice.address, weightB),
         ).to.be.revertedWith("Operator is already registered in the pool")
@@ -108,47 +93,38 @@ describe("SortitionTree", () => {
 
   describe("getOperatorID", () => {
     context("when operator is inserted", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 0xfff0)
-      })
-
       it("should return the id of the operator", async () => {
+        await sortition.publicInsertOperator(alice.address, 0xfff0)
         const aliceID = await sortition.getOperatorID(alice.address)
         expect(aliceID).to.be.equal(1)
       })
+    })
 
-      it("should return zero id when the operator is unknown", async () => {
-        const bobID = await sortition.getOperatorID(bob.address)
-        expect(bobID).to.be.equal(0)
-      })
+    it("should return zero id when the operator is unknown", async () => {
+      const bobID = await sortition.getOperatorID(bob.address)
+      expect(bobID).to.be.equal(0)
     })
   })
 
   describe("getIDOperator", () => {
     context("when operator is inserted", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 0xfff0)
-      })
-
       it("should return the address of the operator by their id", async () => {
+        await sortition.publicInsertOperator(alice.address, 0xfff0)
         const aliceAddress = await sortition.getIDOperator(1)
         expect(aliceAddress).to.be.equal(alice.address)
       })
+    })
 
-      it("should return zero address when the id of operator is unknown", async () => {
-        const aliceAddress = await sortition.getIDOperator(2)
-        expect(aliceAddress).to.be.equal(ZERO_ADDRESS)
-      })
+    it("should return zero address when the id of operator is unknown", async () => {
+      const aliceAddress = await sortition.getIDOperator(2)
+      expect(aliceAddress).to.be.equal(ZERO_ADDRESS)
     })
   })
 
   describe("removeOperator", () => {
     context("when operator is not registered", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 0x1234)
-      })
-
       it("should revert", async () => {
+        await sortition.publicInsertOperator(alice.address, 0x1234)
         await expect(
           sortition.publicRemoveOperator(bob.address),
         ).to.be.revertedWith("Operator is not registered in the pool")
@@ -182,22 +158,16 @@ describe("SortitionTree", () => {
 
   describe("isOperatorRegistered", async () => {
     context("when operator is not registered", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 0x1234)
-      })
-
       it("should return false", async () => {
+        await sortition.publicInsertOperator(alice.address, 0x1234)
         expect(await sortition.publicIsOperatorRegistered(bob.address)).to.be
           .false
       })
     })
 
     context("when operator is registered", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 0x1234)
-      })
-
       it("should return false", async () => {
+        await sortition.publicInsertOperator(alice.address, 0x1234)
         expect(await sortition.publicIsOperatorRegistered(alice.address)).to.be
           .true
       })
@@ -206,12 +176,9 @@ describe("SortitionTree", () => {
 
   describe("updateLeaf", async () => {
     context("when leaf is updated", () => {
-      beforeEach(async () => {
+      it("should return the correct value for the root", async () => {
         await sortition.publicInsertOperator(alice.address, 0x1234)
         await sortition.publicUpdateLeaf(0x00000, 0x9876)
-      })
-
-      it("should return the correct value for the root", async () => {
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x9876")
       })
@@ -262,11 +229,8 @@ describe("SortitionTree", () => {
 
   describe("operatorsInPool", async () => {
     context("when the operator is in the pool", () => {
-      beforeEach(async () => {
-        await sortition.publicInsertOperator(alice.address, 1)
-      })
-
       it("should return true", async () => {
+        await sortition.publicInsertOperator(alice.address, 1)
         const nOperators = await sortition.operatorsInPool()
         expect(nOperators).to.be.equal(1)
       })
