@@ -113,13 +113,22 @@ describe("SortitionTree", () => {
   describe("insertOperator", () => {
     const weightA = 0xfff0
     const weightB = 0x10000001
+    // weightA + weightB = 0x1000fff1
 
     context("when operators are inserted", () => {
       it("should return correct value for the tree", async () => {
+        // insertion begins left to right, so alice is inserted at position 0,
+        // and bob is inserted at position 1. Their weights will propagate to
+        // the root's first slot.
         await sortition.publicInsertOperator(alice.address, weightA)
         await sortition.publicInsertOperator(bob.address, weightB)
         const root = await sortition.getRoot()
-        expect(ethers.utils.hexlify(root)).to.be.equal("0x1000fff1")
+        expect(ethers.utils.hexlify(root)).to.be.equal("0x1000fff1") // weightA + weightB
+        // The full output here looks like
+        // 0x00000000,00000000,00000000,00000000,00000000,00000000,00000000,1000fff1
+        //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
+        // without the commas added for readability. All the padding zeros are
+        // dropped when we hexlify, which simplifies to 0x1100000000.
       })
     })
 
