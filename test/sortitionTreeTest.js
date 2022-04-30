@@ -267,6 +267,8 @@ describe("SortitionTree", () => {
       const index1 = 450
       const index2 = 451
 
+      // alice is assigned weights [0-450] (451 values) and bob has weight
+      // [451-2434] (1984 values).
       const position1 = await sortition.publicPickWeightedLeaf(index1)
       expect(position1).to.be.equal(0)
 
