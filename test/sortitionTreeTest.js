@@ -88,9 +88,10 @@ describe("SortitionTree", () => {
     context("when leaf is removed", () => {
       it("should return correct value for the tree", async () => {
         const weight1 = 0x1234
-        const position1 = parseInt("00123456", 8)
+        const position1 = 42798
+
         const weight2 = 0x11
-        const position2 = parseInt("01234567", 8)
+        const position2 = 342391
 
         const leaf1 = await sortition.toLeaf(alice.address, weight1)
         await sortition.publicSetLeaf(position1, leaf1, weight1)
@@ -100,6 +101,11 @@ describe("SortitionTree", () => {
         await sortition.publicRemoveLeaf(position1)
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1100000000")
+        // The full output here looks like
+        // 0x00000000,00000000,00000000,00000000,00000000,00000000,00000011,00000000
+        //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
+        // without the commas added for readability. All the padding zeros are
+        // dropped when we hexlify, which simplifies to 0x1100000000.
       })
     })
   })
