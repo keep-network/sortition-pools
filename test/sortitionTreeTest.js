@@ -20,22 +20,53 @@ describe("SortitionTree", () => {
   describe("setLeaf", async () => {
     context("when one leaf is set", () => {
       it("should return correct value for the tree", async () => {
-        const weight1 = 0x1234
-        const position1 = parseInt("00123456", 8)
+        const weight = 0x1234
+        const position = 42798
 
-        const leaf = await sortition.toLeaf(alice.address, weight1)
-        await sortition.publicSetLeaf(position1, leaf, weight1)
+        const leaf = await sortition.toLeaf(alice.address, weight)
+        await sortition.publicSetLeaf(position, leaf, weight)
         const root = await sortition.getRoot()
+        //
+        // Since the only leaf in the tree is the one we set, that's the only
+        // weight that propagates to the root node. The first slot in the root
+        // covers the sum of the first 8^6 = 262144 leaves. The next slot in
+        // the root covers the sum of the next 262144, and so on.
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1234")
+        // The full output here looks like
+        // 0x00000000,00000000,00000000,00000000,00000000,00000000,00000000,00001234
+        //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
+        // without the commas added for readability. All the padding zeros are
+        // dropped when we hexlify.
       })
+    })
+
+    it("should return correct value for the tree with a leaf in a second slot", async () => {
+      const weight = 0x1234
+      const position = 262145
+
+      const leaf = await sortition.toLeaf(alice.address, weight)
+      await sortition.publicSetLeaf(position, leaf, weight)
+      const root = await sortition.getRoot()
+      //
+      // Since the only leaf in the tree is the one we set, that's the only
+      // weight that propagates to the root node. The first slot in the root
+      // covers the sum of the first 8^6 = 262144 leaves. The next slot in
+      // the root covers the sum of the next 262144, and so on.
+      expect(ethers.utils.hexlify(root)).to.be.equal("0x123400000000")
+      // The full output here looks like
+      // 0x00000000,00000000,00000000,00000000,00000000,00000000,00001234,00000000
+      //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
+      // without the commas added for readability. All the padding zeros are
+      // dropped when we hexlify, which simplifies to 0x123400000000.
     })
 
     context("when two leaves are set", () => {
       it("should return correct value for the tree", async () => {
         const weight1 = 0x1234
-        const position1 = parseInt("00123456", 8)
+        const position1 = 42798
+
         const weight2 = 0x11
-        const position2 = parseInt("01234567", 8)
+        const position2 = 342391
 
         const leaf1 = await sortition.toLeaf(alice.address, weight1)
         await sortition.publicSetLeaf(position1, leaf1, weight1)
@@ -44,6 +75,11 @@ describe("SortitionTree", () => {
         await sortition.publicSetLeaf(position2, leaf2, weight2)
         const root = await sortition.getRoot()
         expect(ethers.utils.hexlify(root)).to.be.equal("0x1100001234")
+        // The full output here looks like
+        // 0x00000000,00000000,00000000,00000000,00000000,00000000,00000011,00001234
+        //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
+        // without the commas added for readability. All the padding zeros are
+        // dropped when we hexlify, which simplifies to 0x1100001234.
       })
     })
   })
