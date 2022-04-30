@@ -11,6 +11,7 @@ describe("RNG", () => {
 
   describe("bitsRequired", async () => {
     it("Returns the number of bits required", async () => {
+      // Any number higher than 2**32 will just return 32
       expect(await rngInstance.bitsRequired(2 ** 32 + 1)).to.be.equal(32)
       expect(await rngInstance.bitsRequired(2 ** 32)).to.be.equal(32)
       expect(await rngInstance.bitsRequired(2 ** 32 - 1)).to.be.equal(32)
@@ -28,6 +29,22 @@ describe("RNG", () => {
       expect(await rngInstance.bitsRequired(2 ** 2 - 1)).to.be.equal(2)
 
       expect(await rngInstance.bitsRequired(2)).to.be.equal(1)
+
+      // Generative Testing
+      const numberOfSamples = 100
+      const maxNumber = 2 ** 32 - 1
+      for (let i = 0; i < numberOfSamples; i++) {
+        const randomNumber = Math.floor(Math.random() * maxNumber)
+        const bitsRequired = await rngInstance.bitsRequired(randomNumber)
+        // We can represent 0 and 1 with 1 bit, 0-3 with 2 bits, 0-7 with 3
+        // bits, etc. Every bit doubles the number of numbers we can represent,
+        // so working backwards is log base 2.
+        const expectation = Math.ceil(Math.log2(randomNumber))
+        expect(bitsRequired).to.equal(
+          expectation,
+          `something went wrong calculating the bits required for ${randomNumber}`,
+        )
+      }
     })
   })
 
