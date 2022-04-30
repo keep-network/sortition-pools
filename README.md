@@ -14,6 +14,7 @@ To familiarize yourself with the sortition pool and it's design, we provide
 
 + [Building Intuition](docs/building-intuition.md)
 + [Implementation Details](docs/implementation-details.md)
++ [Rewards](docs/rewards.md)
 
 [Building Intuition](docs/building-intuition.md) starts the reader from the
 problem description and an easy-to-understand naive solution, and then works
@@ -26,6 +27,10 @@ the finer points about the data structure, data (de)serialization, how
 operators join/leave the pool, and how it all comes together to select a full
 group.
 
+[Rewards](docs/rewards.md) is a deep-dive into how the sortition pool keeps
+track of rewards. It features code explanations and walk-throughs of state
+transitions for common situations.
+
 ## Important Facts
 
 + The max number of operators is `2,097,152`
@@ -34,6 +39,7 @@ group.
 + The sortition pool can be [optimistic](#optimisic-group-selection)! The
   on-chain code then is only run in the case that the selection submission is
   challenged.
++ The sortition pool tracks rewards!
 
 ## Safe Use
 
