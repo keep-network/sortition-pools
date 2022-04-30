@@ -50,14 +50,14 @@ describe("RNG", () => {
 
   describe("truncate", async () => {
     it("Truncates a number to the correct number of bits", async () => {
-      a = 0xffffffff
+      const a = 0xffffffff
 
-      b = await rngInstance.truncate(1, a)
-      c = await rngInstance.truncate(2, a)
-      d = await rngInstance.truncate(16, a)
-      e = await rngInstance.truncate(31, a)
-      f = await rngInstance.truncate(32, a)
-      g = await rngInstance.truncate(64, a)
+      const b = await rngInstance.truncate(1, a)
+      const c = await rngInstance.truncate(2, a)
+      const d = await rngInstance.truncate(16, a)
+      const e = await rngInstance.truncate(31, a)
+      const f = await rngInstance.truncate(32, a)
+      const g = await rngInstance.truncate(64, a)
 
       expect(b).to.be.equal(0x1)
       expect(c).to.be.equal(0x3)
