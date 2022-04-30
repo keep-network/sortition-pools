@@ -96,5 +96,47 @@ describe("RNG", () => {
       const num = ethers.BigNumber.from(hex)
       expect(num).to.be.below(r)
     })
+
+    it("Produces a uniform distribution", async () => {
+      // Algorithm adapted from
+      // https://www.rosettacode.org/wiki/Verify_distribution_uniformity/Naive#JavaScript
+      //
+      // We sample the distribution, and then make sure that the count of any
+      // generated number doesn't exceed a tolerance.
+
+      const delta = 10 // percentage degree of inaccuracy to tolerate
+      const maxSeed = 2 ** 32
+
+      // Use a low number of possible outcomes but a large number of samples to
+      // make good use of the time-costly runtime to evaluate uniformity.
+      // Higher number of possible outcomes would require higher number of
+      // samples.
+      const maxNumber = 6
+      const numSamples = 10000
+      const count = {}
+      for (let i = 0; i < numSamples; i++) {
+        const val = await rngInstance.getIndex(
+          maxNumber,
+          Math.floor(Math.random() * maxSeed),
+        )
+        // Count the number of occurences of each random number
+        count[val] = (count[val] || 0) + 1
+      }
+      const vals = Object.keys(count)
+
+      const target = numSamples / maxNumber
+
+      // Tolerate counts that are within delta% of true uniformity
+      const tolerance = (target * delta) / 100
+
+      for (let i = 0; i < vals.length; i++) {
+        const val = vals[i]
+        const distance = Math.abs(count[val] - target)
+        expect(distance).to.be.below(
+          tolerance,
+          `${val}'s count of ${count[val]}] was too far away from the uniform expectation of ${target}`,
+        )
+      }
+    })
   })
 })
