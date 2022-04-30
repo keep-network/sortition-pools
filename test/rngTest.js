@@ -65,6 +65,23 @@ describe("RNG", () => {
       expect(e).to.be.equal(0x7fffffff)
       expect(f).to.be.equal(a)
       expect(g).to.be.equal(a)
+
+      // Generative Testing
+      const numberOfSamples = 3
+      const maxNumber = 2 ** 32 - 1
+      for (let i = 0; i < numberOfSamples; i++) {
+        // Truncating to `bits` is mathematically equivalent to
+        // `number % (2 ** bits)`
+        for (let bits = 1; bits < 65; bits++) {
+          const randomNumber = Math.floor(Math.random() * maxNumber)
+          const truncatedNumber = await rngInstance.truncate(bits, randomNumber)
+          const expectation = randomNumber % 2 ** bits
+          expect(truncatedNumber).to.be.equal(
+            expectation,
+            `something went wrong truncating ${randomNumber} to ${bits} bits`,
+          )
+        }
+      }
     })
   })
 
