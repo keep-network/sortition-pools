@@ -238,19 +238,24 @@ describe("SortitionTree", () => {
 
   describe("trunk stacks", async () => {
     it("works as expected", async () => {
+      // inserted in the first position
       await sortition.publicInsertOperator(alice.address, 0x1234)
+      // inserted in the second position
       await sortition.publicInsertOperator(bob.address, 0x9876)
 
       await sortition.publicRemoveOperator(alice.address)
       const deletedLeaf = await sortition.getLeaf(0x00000)
       expect(deletedLeaf).to.be.equal(0)
 
+      // the first position isn't reused until we've inserted 8^7 = 2097152
+      // operators. Alice is inserted in the third position.
       await sortition.publicInsertOperator(alice.address, 0xdead)
 
       const stillDeletedLeaf = await sortition.getLeaf(0x00000)
       expect(stillDeletedLeaf).to.be.equal(0)
 
       const root = await sortition.getRoot()
+      // 0x9876 + 0xdead = 0x17723
       expect(ethers.utils.hexlify(root)).to.be.equal("0x017723")
     })
   })
