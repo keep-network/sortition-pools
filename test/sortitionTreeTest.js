@@ -19,7 +19,7 @@ describe("SortitionTree", () => {
 
   describe("setLeaf", async () => {
     context("when one leaf is set", () => {
-      it("should return correct value for the tree", async () => {
+      it("should return correct value for the tree with a leaf in the first slot", async () => {
         const weight = 0x1234
         const position = 42798
 
