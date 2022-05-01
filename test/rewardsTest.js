@@ -245,15 +245,16 @@ describe("Rewards", () => {
       // Alice: 10; Bob: 90
       await rewards.payReward(100)
 
-      // Make Bob ineligible for 10 units of time
+      // Make Bob ineligible for 10 seconds
       await rewards.makeIneligible(bob, 10)
 
       // Reward only to Alice
       // Alice: 20; Bob: 90; Ineligible: 90
       await rewards.payReward(100)
 
-      // Ineligibility is set for a duration. Bob was ineligible for 10 units,
-      // so we move forward 11 units to allow us to make him eligible again.
+      // Ineligibility is set for a duration. Bob was ineligible for 10
+      // seconds, so we move forward 11 seconds to allow us to make him
+      // eligible again.
       await helpers.time.increaseTime(11)
 
       await rewards.makeEligible(bob)
