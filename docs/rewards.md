@@ -36,8 +36,8 @@ carry-over, which is stored in (2) `rewardRoundingDust`.
 Finally, the (3) `operatorRewards` keep track of each operator's individual
 state indexed by their `id`. An operator's `accumulated` value represents a
 snapshot of the `globalRewardAccumulator` at the time they were last updated.
-Their `available` value represents how much reward is available for withdraw.
-Their `weight` is their weight in the pool.
+Their `available` value represents how much reward is available for withdraw,
+as of their most recent update. Their `weight` is their weight in the pool.
 
 To see how all of these pieces of state interact, we can go through some
 event logs.
