@@ -11,7 +11,7 @@ describe("RNG", () => {
 
   describe("bitsRequired", async () => {
     it("Returns the number of bits required", async () => {
-      // Any number higher than 2**32 will just return 32
+      // Any number higher than 2**32 - 1 will return 32
       expect(await rngInstance.bitsRequired(2 ** 32 + 1)).to.be.equal(32)
       expect(await rngInstance.bitsRequired(2 ** 32)).to.be.equal(32)
       expect(await rngInstance.bitsRequired(2 ** 32 - 1)).to.be.equal(32)
