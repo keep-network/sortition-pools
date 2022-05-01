@@ -19,7 +19,7 @@ describe("SortitionTree", () => {
 
   describe("setLeaf", async () => {
     context("when one leaf is set", () => {
-      it("should return correct value for the tree", async () => {
+      it("should return correct value for the tree with a leaf in the first slot", async () => {
         const weight = 0x1234
         const position = 42798
 
@@ -128,7 +128,7 @@ describe("SortitionTree", () => {
         // 0x00000000,00000000,00000000,00000000,00000000,00000000,00000000,1000fff1
         //  slot 7     slot 6   slot 5   slot 4   slot 3   slot 2   slot 1   slot 0
         // without the commas added for readability. All the padding zeros are
-        // dropped when we hexlify, which simplifies to 0x1100000000.
+        // dropped when we hexlify, which simplifies to 0x1000fff1.
       })
     })
 
