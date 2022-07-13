@@ -388,14 +388,13 @@ describe("SortitionPool", () => {
 
       await pool.connect(owner).setRewardIneligibility([bobID], now + 100)
 
-      await expect(await pool.isEligibleForRewards(bob.address)).to.be.false
-      await expect(await pool.isEligibleForRewards(alice.address)).to.be.true
+      expect(await pool.isEligibleForRewards(bob.address)).to.be.false
+      expect(await pool.isEligibleForRewards(alice.address)).to.be.true
 
-      await expect(await pool.canRestoreRewardEligibility(bob.address)).to.be
-        .false
-      await expect(
-        await pool.rewardsEligibilityRestorableAt(bob.address),
-      ).to.equal(now + 100)
+      expect(await pool.canRestoreRewardEligibility(bob.address)).to.be.false
+      expect(await pool.rewardsEligibilityRestorableAt(bob.address)).to.equal(
+        now + 100,
+      )
 
       await expect(
         pool.restoreRewardEligibility(bob.address),
@@ -406,10 +405,9 @@ describe("SortitionPool", () => {
       // eligible again.
       await helpers.time.increaseTime(101)
 
-      await expect(await pool.canRestoreRewardEligibility(bob.address)).to.be
-        .true
+      expect(await pool.canRestoreRewardEligibility(bob.address)).to.be.true
       await pool.restoreRewardEligibility(bob.address)
-      await expect(await pool.isEligibleForRewards(bob.address)).to.be.true
+      expect(await pool.isEligibleForRewards(bob.address)).to.be.true
     })
 
     it("can set many operators ineligible", async () => {
