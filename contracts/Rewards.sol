@@ -72,13 +72,13 @@ contract Rewards {
   }
 
   /// @notice Return whether the operator is eligible for rewards or not.
-  function isEligibleForRewards(uint32 operator) public view returns (bool) {
+  function isEligibleForRewards(uint32 operator) internal view returns (bool) {
     return operatorRewards[operator].ineligibleUntil == 0;
   }
 
   /// @notice Return the time the operator's reward eligibility can be restored.
   function rewardsEligibilityRestorableAt(uint32 operator)
-    public
+    internal
     view
     returns (uint256)
   {
@@ -87,10 +87,10 @@ contract Rewards {
     return (uint256(until) + ineligibleOffsetStart);
   }
 
-  /// @notice Return whether the operator is able
-  /// to restore their eligibility for rewards right away.
+  /// @notice Return whether the operator is able to restore their eligibility
+  ///         for rewards right away.
   function canRestoreRewardEligibility(uint32 operator)
-    public
+    internal
     view
     returns (bool)
   {

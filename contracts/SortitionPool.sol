@@ -137,6 +137,8 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     }
   }
 
+  /// @notice Set the given operators as ineligible for rewards.
+  ///         The operators can restore their eligibility at the given time.
   function setRewardIneligibility(uint32[] calldata operators, uint256 until)
     public
     onlyOwner
@@ -145,10 +147,38 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
     emit IneligibleForRewards(operators, until);
   }
 
+  /// @notice Restores reward eligibility for the operator.
   function restoreRewardEligibility(address operator) public {
     uint32 id = getOperatorID(operator);
     Rewards.restoreEligibility(id);
     emit RewardEligibilityRestored(operator, id);
+  }
+
+  /// @notice Returns whether the operator is eligible for rewards or not.
+  function isEligibleForRewards(address operator) public view returns (bool) {
+    uint32 id = getOperatorID(operator);
+    return Rewards.isEligibleForRewards(id);
+  }
+
+  /// @notice Returns the time the operator's reward eligibility can be restored.
+  function rewardsEligibilityRestorableAt(address operator)
+    public
+    view
+    returns (uint256)
+  {
+    uint32 id = getOperatorID(operator);
+    return Rewards.rewardsEligibilityRestorableAt(id);
+  }
+
+  /// @notice Returns whether the operator is able to restore their eligibility
+  ///         for rewards right away.
+  function canRestoreRewardEligibility(address operator)
+    public
+    view
+    returns (bool)
+  {
+    uint32 id = getOperatorID(operator);
+    return Rewards.canRestoreRewardEligibility(id);
   }
 
   /// @notice Returns the amount of rewards withdrawable for the given operator.
