@@ -280,6 +280,13 @@ describe("SortitionPool", () => {
       ).to.be.revertedWith("Ownable: caller is not the owner")
     })
 
+    it("can not be allocated for an empty pool", async () => {
+      await token.connect(deployer).mint(deployer.address, 1000)
+      await expect(
+        token.connect(deployer).approveAndCall(pool.address, 300, []),
+      ).to.be.revertedWith("No recipients in pool")
+    })
+
     it("pays rewards correctly", async () => {
       await token.connect(deployer).mint(deployer.address, 1000)
       await pool.connect(owner).insertOperator(alice.address, 10000)
