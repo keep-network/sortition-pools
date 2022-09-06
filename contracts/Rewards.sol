@@ -100,7 +100,7 @@ contract Rewards {
 
   /// @notice Internal function for updating the global state of rewards.
   function addRewards(uint96 rewardAmount, uint32 currentPoolWeight) internal {
-    require(currentPoolWeight >= 0, "No recipients in pool");
+    require(currentPoolWeight > 0, "No recipients in pool");
 
     uint96 totalAmount = rewardAmount + rewardRoundingDust;
     uint96 perWeightReward = totalAmount / currentPoolWeight;
