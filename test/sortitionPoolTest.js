@@ -24,7 +24,7 @@ describe("SortitionPool", () => {
     ;[
       deployer,
       owner,
-      chaosnetMaestro,
+      chaosnetOwner,
       alice,
       bob,
       carol,
@@ -44,7 +44,7 @@ describe("SortitionPool", () => {
     await pool.connect(deployer).transferOwnership(owner.address)
     await pool
       .connect(deployer)
-      .transferChaosnetMaestroRole(chaosnetMaestro.address)
+      .transferChaosnetOwnerRole(chaosnetOwner.address)
   })
 
   describe("constructor", () => {
@@ -117,7 +117,7 @@ describe("SortitionPool", () => {
             context("when operator is beta operator", () => {
               beforeEach(async () => {
                 await pool
-                  .connect(chaosnetMaestro)
+                  .connect(chaosnetOwner)
                   .addBetaOperators([alice.address])
                 await pool
                   .connect(owner)
@@ -144,7 +144,7 @@ describe("SortitionPool", () => {
             context("when operator is beta operator", () => {
               beforeEach(async () => {
                 await pool
-                  .connect(chaosnetMaestro)
+                  .connect(chaosnetOwner)
                   .addBetaOperators([alice.address])
               })
 
@@ -161,7 +161,7 @@ describe("SortitionPool", () => {
 
         context("when chaosnet is not active", () => {
           beforeEach(async () => {
-            await pool.connect(chaosnetMaestro).deactivateChaosnet()
+            await pool.connect(chaosnetOwner).deactivateChaosnet()
           })
 
           context("when operator is eligible", () => {
@@ -214,7 +214,7 @@ describe("SortitionPool", () => {
 
   describe("updateOperatorStatus", () => {
     beforeEach(async () => {
-      await pool.connect(chaosnetMaestro).deactivateChaosnet()
+      await pool.connect(chaosnetOwner).deactivateChaosnet()
       await pool.connect(owner).insertOperator(alice.address, 2000)
     })
 
@@ -270,7 +270,7 @@ describe("SortitionPool", () => {
 
   describe("selectGroup", async () => {
     beforeEach(async () => {
-      await pool.connect(chaosnetMaestro).deactivateChaosnet()
+      await pool.connect(chaosnetOwner).deactivateChaosnet()
     })
 
     context("when sortition pool is locked", () => {
@@ -348,7 +348,7 @@ describe("SortitionPool", () => {
 
   describe("pool rewards", async () => {
     beforeEach(async () => {
-      await pool.connect(chaosnetMaestro).deactivateChaosnet()
+      await pool.connect(chaosnetOwner).deactivateChaosnet()
     })
 
     async function withdrawRewards(
@@ -534,7 +534,7 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(thirdParty).addBetaOperators([alice.address]),
-        ).to.be.revertedWith("Not the chaosnet maestro")
+        ).to.be.revertedWith("Not the chaosnet owner")
       })
     })
 
@@ -542,16 +542,16 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(alice).addBetaOperators([alice.address]),
-        ).to.be.revertedWith("Not the chaosnet maestro")
+        ).to.be.revertedWith("Not the chaosnet owner")
       })
     })
 
-    context("when called by the chaosnet maestro", () => {
+    context("when called by the chaosnet owner", () => {
       let tx
 
       beforeEach(async () => {
         tx = await pool
-          .connect(chaosnetMaestro)
+          .connect(chaosnetOwner)
           .addBetaOperators([alice.address, bob.address])
       })
 
@@ -569,25 +569,25 @@ describe("SortitionPool", () => {
     })
   })
 
-  describe("transferChaosnetMaestroRole", () => {
+  describe("transferChaosnetOwnerRole", () => {
     context("when called by third party", () => {
       it("should revert", async () => {
         await expect(
           pool
             .connect(thirdParty)
-            .transferChaosnetMaestroRole(thirdParty.address),
-        ).to.be.revertedWith("Not the chaosnet maestro")
+            .transferChaosnetOwnerRole(thirdParty.address),
+        ).to.be.revertedWith("Not the chaosnet owner")
       })
     })
 
-    context("when called by the current chaosnet maestro", () => {
+    context("when called by the current chaosnet owner", () => {
       context("when called with the new address set to zero", () => {
         it("should revert", async () => {
           await expect(
             pool
-              .connect(chaosnetMaestro)
-              .transferChaosnetMaestroRole(ZERO_ADDRESS),
-          ).to.be.revertedWith("New chaosnet maestro must not be zero address")
+              .connect(chaosnetOwner)
+              .transferChaosnetOwnerRole(ZERO_ADDRESS),
+          ).to.be.revertedWith("New chaosnet owner must not be zero address")
         })
       })
 
@@ -596,18 +596,18 @@ describe("SortitionPool", () => {
 
         beforeEach(async () => {
           tx = await pool
-            .connect(chaosnetMaestro)
-            .transferChaosnetMaestroRole(alice.address)
+            .connect(chaosnetOwner)
+            .transferChaosnetOwnerRole(alice.address)
         })
 
         it("should transfer the role", async () => {
-          expect(await pool.chaosnetMaestro()).to.equal(alice.address)
+          expect(await pool.chaosnetOwner()).to.equal(alice.address)
         })
 
-        it("should emit ChaosnetMaestroRoleTransferred event", async () => {
+        it("should emit ChaosnetOwnerRoleTransferred event", async () => {
           await expect(tx)
-            .to.emit(pool, "ChaosnetMaestroRoleTransferred")
-            .withArgs(chaosnetMaestro.address, alice.address)
+            .to.emit(pool, "ChaosnetOwnerRoleTransferred")
+            .withArgs(chaosnetOwner.address, alice.address)
         })
       })
     })
@@ -618,19 +618,19 @@ describe("SortitionPool", () => {
       it("should revert", async () => {
         await expect(
           pool.connect(thirdParty).deactivateChaosnet(),
-        ).to.be.revertedWith("Not the chaosnet maestro")
+        ).to.be.revertedWith("Not the chaosnet owner")
       })
     })
 
-    context("when called by the chaosnet maestro", () => {
+    context("when called by the chaosnet owner", () => {
       context("when chaosnet is not active", () => {
         beforeEach(async () => {
-          await pool.connect(chaosnetMaestro).deactivateChaosnet()
+          await pool.connect(chaosnetOwner).deactivateChaosnet()
         })
 
         it("should revert", async () => {
           await expect(
-            pool.connect(chaosnetMaestro).deactivateChaosnet(),
+            pool.connect(chaosnetOwner).deactivateChaosnet(),
           ).to.be.revertedWith("Chaosnet is not active")
         })
       })
@@ -639,7 +639,7 @@ describe("SortitionPool", () => {
         let tx
 
         beforeEach(async () => {
-          tx = await pool.connect(chaosnetMaestro).deactivateChaosnet()
+          tx = await pool.connect(chaosnetOwner).deactivateChaosnet()
         })
 
         it("should deactivate chaosnet", async () => {

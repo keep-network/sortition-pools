@@ -16,32 +16,32 @@ contract Chaosnet {
   mapping(address => bool) public isBetaOperator;
 
   /// @notice Address controlling chaosnet status and beta operator addresses.
-  address public chaosnetMaestro;
+  address public chaosnetOwner;
 
   event BetaOperatorsAdded(address[] operators);
 
-  event ChaosnetMaestroRoleTransferred(
-    address oldChaosnetMaestro,
-    address newChaosnetMaestro
+  event ChaosnetOwnerRoleTransferred(
+    address oldChaosnetOwner,
+    address newChaosnetOwner
   );
 
   event ChaosnetDeactivated();
 
   constructor() {
-    _transferChaosnetMaestro(msg.sender);
+    _transferChaosnetOwner(msg.sender);
     isChaosnetActive = true;
   }
 
-  modifier onlyChaosnetMaestro() {
-    require(msg.sender == chaosnetMaestro, "Not the chaosnet maestro");
+  modifier onlyChaosnetOwner() {
+    require(msg.sender == chaosnetOwner, "Not the chaosnet owner");
     _;
   }
 
   /// @notice Adds beta operator to chaosnet. Can be called only by the
-  /// chaosnet maestro.
+  /// chaosnet owner.
   function addBetaOperators(address[] calldata operators)
     public
-    onlyChaosnetMaestro
+    onlyChaosnetOwner
   {
     for (uint256 i = 0; i < operators.length; i++) {
       isBetaOperator[operators[i]] = true;
@@ -51,28 +51,28 @@ contract Chaosnet {
   }
 
   /// @notice Deactivates the chaosnet. Can be called only by the chaosnet
-  /// maestro. Once deactivated chaosnet can not be activated again.
-  function deactivateChaosnet() public onlyChaosnetMaestro {
+  /// owner. Once deactivated chaosnet can not be activated again.
+  function deactivateChaosnet() public onlyChaosnetOwner {
     require(isChaosnetActive, "Chaosnet is not active");
     isChaosnetActive = false;
     emit ChaosnetDeactivated();
   }
 
-  /// @notice Transfers the chaosnet maestro role to another non-zero address.
-  function transferChaosnetMaestroRole(address newChaosnetMaestro)
+  /// @notice Transfers the chaosnet owner role to another non-zero address.
+  function transferChaosnetOwnerRole(address newChaosnetOwner)
     public
-    onlyChaosnetMaestro
+    onlyChaosnetOwner
   {
     require(
-      newChaosnetMaestro != address(0),
-      "New chaosnet maestro must not be zero address"
+      newChaosnetOwner != address(0),
+      "New chaosnet owner must not be zero address"
     );
-    _transferChaosnetMaestro(newChaosnetMaestro);
+    _transferChaosnetOwner(newChaosnetOwner);
   }
 
-  function _transferChaosnetMaestro(address newChaosnetMaestro) internal {
-    address oldChaosnetMaestro = chaosnetMaestro;
-    chaosnetMaestro = newChaosnetMaestro;
-    emit ChaosnetMaestroRoleTransferred(oldChaosnetMaestro, newChaosnetMaestro);
+  function _transferChaosnetOwner(address newChaosnetOwner) internal {
+    address oldChaosnetOwner = chaosnetOwner;
+    chaosnetOwner = newChaosnetOwner;
+    emit ChaosnetOwnerRoleTransferred(oldChaosnetOwner, newChaosnetOwner);
   }
 }
