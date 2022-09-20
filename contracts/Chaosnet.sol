@@ -37,10 +37,16 @@ contract Chaosnet {
     _;
   }
 
+  modifier onlyOnChaosnet() {
+    require(isChaosnetActive, "Chaosnet is not active");
+    _;
+  }
+
   /// @notice Adds beta operator to chaosnet. Can be called only by the
-  /// chaosnet owner.
+  /// chaosnet owner when the chaosnet is active.
   function addBetaOperators(address[] calldata operators)
     public
+    onlyOnChaosnet
     onlyChaosnetOwner
   {
     for (uint256 i = 0; i < operators.length; i++) {
@@ -52,8 +58,7 @@ contract Chaosnet {
 
   /// @notice Deactivates the chaosnet. Can be called only by the chaosnet
   /// owner. Once deactivated chaosnet can not be activated again.
-  function deactivateChaosnet() public onlyChaosnetOwner {
-    require(isChaosnetActive, "Chaosnet is not active");
+  function deactivateChaosnet() public onlyOnChaosnet onlyChaosnetOwner {
     isChaosnetActive = false;
     emit ChaosnetDeactivated();
   }

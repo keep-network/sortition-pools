@@ -547,24 +547,40 @@ describe("SortitionPool", () => {
     })
 
     context("when called by the chaosnet owner", () => {
-      let tx
+      context("when chaosnet is not active", () => {
+        beforeEach(async () => {
+          await pool.connect(chaosnetOwner).deactivateChaosnet()
+        })
 
-      beforeEach(async () => {
-        tx = await pool
-          .connect(chaosnetOwner)
-          .addBetaOperators([alice.address, bob.address])
+        it("should revert", async () => {
+          await expect(
+            pool
+              .connect(chaosnetOwner)
+              .addBetaOperators([alice.address, bob.address]),
+          ).to.be.revertedWith("Chaosnet is not active")
+        })
       })
 
-      it("should set selected operators as beta operators", async () => {
-        expect(await pool.isBetaOperator(alice.address)).to.be.true
-        expect(await pool.isBetaOperator(bob.address)).to.be.true
-        expect(await pool.isBetaOperator(carol.address)).to.be.false
-      })
+      context("when chaosnet is active", () => {
+        let tx
 
-      it("should emit BetaOperatorsAdded event", async () => {
-        await expect(tx)
-          .to.emit(pool, "BetaOperatorsAdded")
-          .withArgs([alice.address, bob.address])
+        beforeEach(async () => {
+          tx = await pool
+            .connect(chaosnetOwner)
+            .addBetaOperators([alice.address, bob.address])
+        })
+
+        it("should set selected operators as beta operators", async () => {
+          expect(await pool.isBetaOperator(alice.address)).to.be.true
+          expect(await pool.isBetaOperator(bob.address)).to.be.true
+          expect(await pool.isBetaOperator(carol.address)).to.be.false
+        })
+
+        it("should emit BetaOperatorsAdded event", async () => {
+          await expect(tx)
+            .to.emit(pool, "BetaOperatorsAdded")
+            .withArgs([alice.address, bob.address])
+        })
       })
     })
   })
@@ -584,9 +600,7 @@ describe("SortitionPool", () => {
       context("when called with the new address set to zero", () => {
         it("should revert", async () => {
           await expect(
-            pool
-              .connect(chaosnetOwner)
-              .transferChaosnetOwnerRole(ZERO_ADDRESS),
+            pool.connect(chaosnetOwner).transferChaosnetOwnerRole(ZERO_ADDRESS),
           ).to.be.revertedWith("New chaosnet owner must not be zero address")
         })
       })
