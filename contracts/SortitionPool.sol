@@ -8,12 +8,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./RNG.sol";
 import "./SortitionTree.sol";
 import "./Rewards.sol";
+import "./Chaosnet.sol";
 
 /// @title Sortition Pool
 /// @notice A logarithmic data structure used to store the pool of eligible
 /// operators weighted by their stakes. It allows to select a group of operators
 /// based on the provided pseudo-random seed.
-contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
+contract SortitionPool is
+  SortitionTree,
+  Rewards,
+  Ownable,
+  Chaosnet,
+  IReceiveApproval
+{
   using Branch for uint256;
   using Leaf for uint256;
   using Position for uint256;
@@ -98,7 +105,9 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   }
 
   /// @notice Inserts an operator to the pool. Reverts if the operator is
-  /// already present.
+  /// already present. Reverts if the operator is not eligible because of their
+  /// authorized stake. Reverts if the chaosnet is active and the operator is
+  /// not a beta operator.
   /// @dev Can be called only by the contract owner.
   /// @param operator Address of the inserted operator.
   /// @param authorizedStake Inserted operator's authorized stake for the application.
@@ -111,6 +120,10 @@ contract SortitionPool is SortitionTree, Rewards, Ownable, IReceiveApproval {
   {
     uint256 weight = getWeight(authorizedStake);
     require(weight > 0, "Operator not eligible");
+
+    if (isChaosnetActive) {
+      require(isBetaOperator[operator], "Not beta operator for chaosnet");
+    }
 
     _insertOperator(operator, weight);
     uint32 id = getOperatorID(operator);
