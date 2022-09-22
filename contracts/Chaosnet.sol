@@ -43,7 +43,8 @@ contract Chaosnet {
   }
 
   /// @notice Adds beta operator to chaosnet. Can be called only by the
-  /// chaosnet owner when the chaosnet is active.
+  /// chaosnet owner when the chaosnet is active. Once the operator is added
+  /// as a beta operator, it can not be removed.
   function addBetaOperators(address[] calldata operators)
     public
     onlyOnChaosnet
