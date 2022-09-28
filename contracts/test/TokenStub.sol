@@ -1,4 +1,4 @@
-pragma solidity 0.8.9;
+pragma solidity 0.8.17;
 
 import "@thesis/solidity-contracts/contracts/token/ERC20WithPermit.sol";
 import "@thesis/solidity-contracts/contracts/token/IReceiveApproval.sol";

@@ -1,4 +1,4 @@
-pragma solidity 0.8.9;
+pragma solidity 0.8.17;
 
 /// @title Chaosnet
 /// @notice This is a beta staker program for stakers willing to go the extra
