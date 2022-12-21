@@ -1,6 +1,6 @@
 # Sortition Pools
 
-[![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/keep-network/sortition-pools/Test%20Solidity?event=schedule&label=Solidity%20tests)](https://github.com/keep-network/sortition-pools/actions/workflows/solidity-test.yml) 
+[![GitHub Workflow Status (event)](https://img.shields.io/github/actions/workflow/status/keep-network/sortition-pools/solidity-test.yml?branch=main&event=schedule&label=Solidity%20tests)](https://github.com/keep-network/sortition-pools/actions/workflows/solidity-test.yml) 
 
 Sortition pool is a logarithmic data structure used to store the pool of
 eligible operators weighted by their stakes. In the Keep network the stake
