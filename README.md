@@ -10,6 +10,34 @@ on the provided pseudo-random seed.
 Each privileged application has its own sortition pool and is responsible for
 maintaining operator weights up-to-date.
 
+## Setup
+
+### Prerequisites
+
+* clone the repository
+* link:https://nodejs.org/en/[Node.js] v14.21.2
+* configure git to use https
+
+```
+git config --global url."https://".insteadOf git://
+```
+
+* Python 3.11.1 for `node-gyp`. It is
+  [suggested](https://opensource.com/article/19/5/python-3-default-mac) to use
+  `pyenv` to manage multiple Python versions.
+
+```
+brew install pyenv
+pyenv install 3.11.1
+```
+
+### Build And Test
+
+```
+npm ci
+npm test
+```
+
 ## In-Depth Reading
 
 To familiarize yourself with the sortition pool and it's design, we provide
