@@ -3,9 +3,9 @@
 [![GitHub Workflow Status (event)](https://img.shields.io/github/actions/workflow/status/keep-network/sortition-pools/solidity-test.yml?branch=main&event=schedule&label=Solidity%20tests)](https://github.com/keep-network/sortition-pools/actions/workflows/solidity-test.yml) 
 
 Sortition pool is a logarithmic data structure used to store the pool of
-eligible operators weighted by their stakes. In the Keep network the stake
-consists of staked KEEP tokens. It allows to select a group of operators based
-on the provided pseudo-random seed.
+eligible operators weighted by their stakes. In the [Threshold
+network](https://threshold.org/) the stake consists of staked T tokens. It
+allows to select a group of operators based on the provided pseudo-random seed.
 
 Each privileged application has its own sortition pool and is responsible for
 maintaining operator weights up-to-date.
