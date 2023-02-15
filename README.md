@@ -15,7 +15,7 @@ maintaining operator weights up-to-date.
 ### Prerequisites
 
 * clone the repository
-* link:https://nodejs.org/en/[Node.js] v14.21.2
++ [Node.js](https://nodejs.org/en/) v14.21.2
 * configure git to use https
 
 ```
