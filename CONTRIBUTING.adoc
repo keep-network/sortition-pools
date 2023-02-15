@@ -50,6 +50,7 @@ To run the linters and formatters manually, use the following commands:
 
 If you want to change a rule, or add a custom rule, to the JavaScript or
 Solidity linting, please propose these changes to our
-https://github.com/keep-network/solium-config-keep[solium-config-keep] and
-https://github.com/keep-network/eslint-config-keep[eslint-config-keep] packages.
-All other packages have it as a dependency.
+https://github.com/keep-network/solium-config-keep[solium-config-keep], 
+https://github.com/keep-network/eslint-config-keep[eslint-config-keep], or 
+https://github.com/keep-network/prettier-config-keep[prettier-config-keep]
+packages. All other packages have them as a dependency.
