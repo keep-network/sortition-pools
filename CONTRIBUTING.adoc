@@ -37,6 +37,14 @@ be signed].
 Keep uses https://github.com/keep-network/sortition-pools/actions[Github
 Actions] for continuous integration. All jobs must be green to merge a PR.
 
+=== Pre-commit
+
+Pre-commit is a tool to install hooks that check code before commits are made.
+It can be helpful to install this, to automatically run linter checks and avoid
+pushing code that will not be accepted. Follow the
+https://pre-commit.com/[installation instructions here], and then run
+`pre-commit install` to install the hooks.
+
 === Linting
 
 Linters and formatters for Solidity, JavaScript, and Go code are set up and run
