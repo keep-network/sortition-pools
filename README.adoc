@@ -1,76 +1,82 @@
-# Sortition Pools
+:toc: macro
 
-[![GitHub Workflow Status (event)](https://img.shields.io/github/actions/workflow/status/keep-network/sortition-pools/solidity-test.yml?branch=main&event=schedule&label=Solidity%20tests)](https://github.com/keep-network/sortition-pools/actions/workflows/solidity-test.yml) 
+= Sortition Pools
+
+https://github.com/keep-network/sortition-pools/actions/workflows/solidity-test.yml[image:https://img.shields.io/github/actions/workflow/status/keep-network/sortition-pools/solidity-test.yml?branch=main&event=schedule&label=Solidity%20tests[GitHub Workflow Status]]
 
 Sortition pool is a logarithmic data structure used to store the pool of
-eligible operators weighted by their stakes. In the [Threshold
-network](https://threshold.org/) the stake consists of staked T tokens. It
-allows to select a group of operators based on the provided pseudo-random seed.
+eligible operators weighted by their stakes. In the
+https://threshold.org/[Threshold Network] the stake consists of staked T tokens.
+It allows to select a group of operators based on the provided pseudo-random
+seed.
 
 Each privileged application has its own sortition pool and is responsible for
 maintaining operator weights up-to-date.
 
-## Setup
+== Setup
 
-### Prerequisites
+=== Prerequisites
 
 * clone the repository
-+ [Node.js](https://nodejs.org/en/) v14.21.2
+* https://nodejs.org/en/[Node.js] v14.21.2
 * configure git to use https
 
-```
+[source,sh]
+----
 git config --global url."https://".insteadOf git://
-```
+----
 
 * Python 3.11.1 for `node-gyp`. It is
-  [suggested](https://opensource.com/article/19/5/python-3-default-mac) to use
+  https://opensource.com/article/19/5/python-3-default-mac[suggested] to use
   `pyenv` to manage multiple Python versions.
 
-```
+[source,sh]
+----
 brew install pyenv
 pyenv install 3.11.1
-```
+----
 
-### Build And Test
+=== Build And Test
 
-```
+[source,sh]
+----
 npm ci
 npm test
-```
+----
 
-## In-Depth Reading
+== In-Depth Reading
 
 To familiarize yourself with the sortition pool and it's design, we provide
 
-+ [Building Intuition](docs/building-intuition.md)
-+ [Implementation Details](docs/implementation-details.md)
-+ [Rewards](docs/rewards.md)
+* link:docs/building-intuition.md[Building Intuition]
+* link:docs/implementation-details.md[Implementation Details]
+* link:docs/rewards.md[Rewards]
 
-[Building Intuition](docs/building-intuition.md) starts the reader from the
+link:docs/building-intuition.md[Building Intuition] starts the reader from the
 problem description and an easy-to-understand naive solution, and then works its
 way up to the current design of the sortition pool through a series of
 optimizations.
 
-[Implementation Details](docs/implementation-details.md) builds off of the
-knowledge in [Building Intuition](docs/building-intuition.md), and gets into the
-finer points about the data structure, data (de)serialization, how operators
+link:docs/implementation-details.md[Implementation Details] builds off of the
+knowledge in link:docs/building-intuition.md[Building Intuition], and gets into
+the finer points about the data structure, data (de)serialization, how operators
 join/leave the pool, and how it all comes together to select a full group.
 
-[Rewards](docs/rewards.md) is a deep-dive into how the sortition pool keeps
+link:docs/rewards.md[Rewards] is a deep-dive into how the sortition pool keeps
 track of rewards. It features code explanations and walk-throughs of state
 transitions for common situations.
 
-## Important Facts
+== Important Facts
 
-+ The max number of operators is `2,097,152`
-+ The sortition pool is for general purpose group selection. Feel free to use
+* The max number of operators is `2,097,152`
+* The sortition pool is for general purpose group selection. Feel free to use
   or fork it!
-+ The sortition pool can be [optimistic](#optimisic-group-selection)! The
+* The sortition pool can be <<optimisic-group-selection,optimistic>>! The
   on-chain code then is only run in the case that the selection submission is
   challenged.
-+ The sortition pool tracks rewards!
+* The sortition pool tracks rewards!
 
-## Safe Use
+== Safe Use
 
 Miners and other actors that can predict the selection seed (due to frontrunning
 the beacon or a public cached seed being used) may be able to manipulate
@@ -81,12 +87,13 @@ state before seed used for the new selection is known and should unlock the pool
 once the selection process is over, keeping in mind potential timeouts and
 result challenges.
 
-## Optimistic Group Selection
+[[optimistic-group-selection]]
+== Optimistic Group Selection
 
-When an application (like the [Random
-Beacon](https://github.com/keep-network/keep-core/tree/main/solidity/random-beacon#group-creation))
-needs a new group, sortition is performed off-chain according to the same
-algorithm that would be performed on-chain, and the results are submitted
+When an application (like the
+https://github.com/keep-network/keep-core/tree/main/solidity/random-beacon#group-creation[Random
+Beacon]) needs a new group, sortition is performed off-chain according to the
+same algorithm that would be performed on-chain, and the results are submitted
 on-chain.
 
 Then, we enter a challenge period where anyone can claim that the submitted
