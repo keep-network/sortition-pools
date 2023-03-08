@@ -114,7 +114,9 @@ contract SortitionPool is
   function insertOperator(address operator, uint256 authorizedStake)
     public
     onlyOwner
-    onlyUnlocked
+  // TODO: Disabled temporarily for a test environment. This should never be disabled
+  // in normal circumstances.
+  // onlyUnlocked
   {
     uint256 weight = getWeight(authorizedStake);
     require(weight > 0, "Operator not eligible");
